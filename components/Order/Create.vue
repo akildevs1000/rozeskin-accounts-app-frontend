@@ -1,0 +1,611 @@
+<template>
+  <div class="text-center">
+    <v-dialog v-model="dialog" width="800">
+      <AssetsIconClose left="790" @click="close" />
+      <template v-slot:activator="{ on, attrs }">
+        <v-btn
+          small
+          color="primary"
+          class="white--text"
+          dark
+          v-bind="attrs"
+          v-on="on"
+        >
+          <v-icon color="white" small> mdi-plus </v-icon> New
+        </v-btn>
+      </template>
+
+      <v-card>
+        <v-alert flat class="grey lighten-3" dense>
+          <v-row>
+            <v-col><span>Create Order</span></v-col>
+            <v-col class="text-right"
+              ><CustomerSearch @customer="getCustomerInfo"
+            /></v-col>
+          </v-row>
+        </v-alert>
+
+        <v-card-text>
+          <v-row>
+            <v-col cols="12">
+              <v-card outlined>
+                <v-container>
+                  <v-row>
+                    <v-col cols="12">Customer Info</v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.customer.first_name"
+                        label="First Name"
+                      ></v-text-field>
+                    </v-col>
+
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.customer.last_name"
+                        label="Last Name"
+                      ></v-text-field>
+                    </v-col>
+
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.customer.email"
+                        label="Email"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.customer.phone"
+                        label="Phone"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </v-container>
+              </v-card>
+            </v-col>
+
+            <v-col cols="6">
+              <v-card outlined>
+                <v-container>
+                  <v-row>
+                    <v-col cols="12">Shipping Address</v-col>
+                    <v-col cols="12">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.shipping_address.address_1"
+                        label="Address 1"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.shipping_address.address_2"
+                        label="Address 1"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.shipping_address.city"
+                        label="City"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.shipping_address.state"
+                        label="State"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.shipping_address.postcode"
+                        label="Post Code"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.shipping_address.country"
+                        label="Country"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </v-container>
+              </v-card>
+            </v-col>
+
+            <v-col cols="6">
+              <v-card outlined>
+                <v-container>
+                  <v-row>
+                    <v-col cols="12">Billing Address</v-col>
+                    <v-col cols="12">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.billing_address.address_1"
+                        label="Address 1"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.billing_address.address_2"
+                        label="Address 2"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.billing_address.city"
+                        label="City"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.billing_address.state"
+                        label="State"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.billing_address.postcode"
+                        label="Post Code"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.billing_address.country"
+                        label="Country"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </v-container>
+              </v-card>
+            </v-col>
+
+            <v-col cols="12">
+              <v-card outlined>
+                <v-container>
+                  <v-row>
+                    <v-col cols="12">Other Info</v-col>
+                    <v-col cols="4">
+                      <v-text-field
+                        type="number"
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.order_id"
+                        label="Order Id"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="4">
+                      <v-autocomplete
+                        v-model="payload.delivery_service_id"
+                        :items="delivery_services"
+                        item-text="name"
+                        item-value="id"
+                        label="Deliver Service"
+                        outlined
+                        dense
+                        hide-details
+                      ></v-autocomplete>
+                    </v-col>
+                    <v-col cols="4">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.tracking_number"
+                        label="Tracking Number"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-autocomplete
+                        v-model="payload.business_source_id"
+                        :items="business_sources"
+                        item-text="name"
+                        item-value="id"
+                        label="Business Source"
+                        outlined
+                        dense
+                        hide-details
+                      ></v-autocomplete>
+                    </v-col>
+
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.shipping_method"
+                        label="Shipping Method"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-autocomplete
+                        v-model="payload.payment_method"
+                        :items="payment_modes"
+                        item-text="name"
+                        item-value="name"
+                        label="Payment Mode"
+                        outlined
+                        dense
+                        hide-details
+                      ></v-autocomplete>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.payment_method_title"
+                        label="Payment Mode Title"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </v-container>
+              </v-card>
+            </v-col>
+
+            <v-col>
+              <style scoped>
+                .order-table {
+                  font-family: arial, sans-serif;
+                  border-collapse: collapse;
+                  width: 100%;
+                }
+
+                .order-table td,
+                .order-table th {
+                  border: 1px solid #dddddd;
+                  text-align: left;
+                  padding: 8px;
+                }
+                .right-align-input .v-text-field__slot > input {
+                  text-align: right !important;
+                }
+              </style>
+              <table class="order-table">
+                <tr class="grey lighten-3">
+                  <td width="200px">Product</td>
+                  <td class="text-right">Qty</td>
+                  <td class="text-right">Rate</td>
+                  <td class="text-right">Tax</td>
+                  <td class="text-right">Total</td>
+                </tr>
+
+                <tr
+                  cols="12"
+                  v-for="(item, index) in payload.items"
+                  :key="index"
+                >
+                  <td>
+                    <v-autocomplete
+                      flat
+                      append-icon=""
+                      v-model="item.item"
+                      :items="products"
+                      item-text="product_with_item_name"
+                      item-value="product_with_item_name"
+                      dense
+                      hide-details
+                      placeholder="Product"
+                      @change="getProductDetails(item)"
+                      return-object
+                    ></v-autocomplete>
+                  </td>
+                  <td>
+                    <v-text-field
+                      class="right-align-input"
+                      type="number"
+                      dense
+                      hide-details
+                      v-model="item.quantity"
+                      @input="doCalculate(item)"
+                    >
+                    </v-text-field>
+                  </td>
+                  <td>
+                    <v-text-field
+                      class="right-align-input"
+                      type="number"
+                      dense
+                      hide-details
+                      v-model="item.rate"
+                      @input="doCalculate(item)"
+                    ></v-text-field>
+                  </td>
+                  <td>
+                    <v-text-field
+                      class="right-align-input"
+                      type="number"
+                      dense
+                      hide-details
+                      v-model="item.tax"
+                      @input="doTaxCalculate(item)"
+                    ></v-text-field>
+                  </td>
+                  <td>
+                    <v-text-field
+                      readonly
+                      class="right-align-input"
+                      type="number"
+                      dense
+                      hide-details
+                      v-model="item.total"
+                    ></v-text-field>
+                  </td>
+                </tr>
+              </table>
+            </v-col>
+
+            <v-col cols="12" class="">
+              <v-row>
+                <v-col cols="8">
+                  <v-icon small @click="deleteItem" class="mr-1"
+                    >mdi-delete</v-icon
+                  ><v-icon small @click="addItem">mdi-plus-circle</v-icon>
+                </v-col>
+                <v-col cols="4">
+                  <div>
+                    <div class="d-flex justify-end justify-space-between">
+                      <div><small>Shipping Chargress</small></div>
+                      <div>
+                        <small>
+                          <input
+                            style="
+                              font-size: 11px !important;
+                              color: #868686;
+                              border: none;
+                              outline: none;
+                              box-shadow: none;
+                              text-align: right;
+                              width: 100px;
+                            "
+                            type="number"
+                            v-model="payload.shipping_charges"
+                            @input="getGrandTotal"
+                          />
+                        </small>
+                      </div>
+                    </div>
+                    <div class="d-flex justify-end justify-space-between">
+                      <div><small>Total</small></div>
+                      <div>
+                        <small>{{ payload.total }}</small>
+                      </div>
+                    </div>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-col>
+
+            <v-col cols="12" v-if="errorResponse">
+              <span class="red--text">{{ errorResponse }}</span>
+            </v-col>
+            <v-col cols="12" class="text-right">
+              <AssetsButton
+                :options="{
+                  label: `Cancel`,
+                  color: `red`,
+                }"
+                @click="close"
+              />
+              &nbsp;
+              <AssetsButton
+                :options="{
+                  label: `Submit`,
+                  color: `green`,
+                }"
+                @click="submit"
+              />
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </div>
+</template>
+<script>
+export default {
+  props: ["endpoint", "model"],
+
+  data() {
+    return {
+      payload: {
+        user_id: 1,
+        username: "admin_rozeskin",
+        email: "rozeskincaredubai@gmail.com",
+        order_id: 0,
+        order_date: "2025-01-27 16:13:44",
+        order_status: "pending",
+        currency: "AED",
+        total: "10.00",
+        payment_method: "COD",
+        payment_method_title: "",
+        shipping_method: "",
+        shipping_charges: 0,
+
+        business_source_id: 0,
+        delivery_service_id: 0,
+        tracking_number: 0,
+
+        customer: {
+          first_name: null,
+          last_name: null,
+          email: null,
+          phone: null,
+        },
+        shipping_address: {
+          address_1: null,
+          address_2: null,
+          city: null,
+          state: null,
+          postcode: null,
+          country: null,
+        },
+        billing_address: {
+          address_1: null,
+          address_2: null,
+          city: null,
+          state: null,
+          postcode: null,
+          country: null,
+        },
+        items: [
+          {
+            item: "",
+            quantity: 1,
+            rate: 1,
+            tax: 1,
+            total: 1,
+          },
+        ],
+      },
+      dialog: false,
+      loading: false,
+      successResponse: null,
+      errorResponse: null,
+      payment_modes: [],
+      business_sources: [],
+      delivery_services: [],
+      products: [],
+    };
+  },
+  async created() {
+    let { data: products } = await this.$axios.get(`product-list`);
+    this.products = products;
+
+    let { data } = await this.$axios.get(`payment-mode-list`);
+    this.payment_modes = data;
+
+    let { data: business_sources } = await this.$axios.get(
+      `business-source-list`
+    );
+    this.business_sources = business_sources;
+
+    let { data: delivery_services } = await this.$axios.get(
+      `delivery-service-list`
+    );
+    this.delivery_services = delivery_services;
+  },
+  methods: {
+    getProductDetails(item) {
+      if (!item.item) return;
+      let qty = parseFloat(item?.item?.qty || 0);
+      let rate = parseFloat(item?.item?.price || 0);
+
+      item.quantity = qty;
+      item.rate = rate;
+
+      item.tax = qty * rate * 0;
+      item.total = qty * rate + item.tax;
+      this.getGrandTotal();
+    },
+    doCalculate(item) {
+      if (!item.item) return;
+      let qty = parseFloat(item?.quantity || 0);
+      let rate = parseFloat(item?.rate || 0);
+      item.tax = qty * rate * 0;
+      item.total = qty * rate + item.tax;
+      this.getGrandTotal();
+    },
+    doTaxCalculate(item) {
+      let qty = parseFloat(item?.quantity || 0);
+      let rate = parseFloat(item?.rate || 0);
+      let tax = parseFloat(item?.tax || 0);
+      item.total = qty * rate + tax;
+      this.getGrandTotal();
+    },
+    addItem() {
+      this.payload.items.push({
+        item: "",
+        quantity: 1,
+        rate: 1,
+        tax: 1,
+        total: 1,
+      });
+
+      this.getGrandTotal();
+    },
+    deleteItem() {
+      if (this.payload.items.length < 2) return;
+      this.payload.items.pop();
+      this.getGrandTotal();
+    },
+    getGrandTotal() {
+      let sub_total = this.payload.items.reduce(
+        (cur, acc) => cur + acc.total,
+        0
+      );
+
+      this.payload.total = parseFloat(this.payload.shipping_charges || 0) + sub_total
+    },
+    getCustomerInfo(payload) {
+      if (payload) {
+        this.payload = {
+          ...this.payload,
+          ...payload,
+        };
+        console.log(payload);
+      }
+    },
+    close() {
+      this.dialog = false;
+      this.loading = false;
+      this.errorResponse = null;
+    },
+    async submit() {
+      this.loading = true;
+      try {
+        await this.$axios.post(this.endpoint, this.payload);
+        this.close();
+        this.$emit("response", "Record has been inserted");
+      } catch (error) {
+        this.errorResponse = error?.response?.data?.message || "Unknown error";
+        this.loading = false;
+      }
+    },
+  },
+};
+</script>

@@ -1,0 +1,33 @@
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node --max-old-space-size=4096 node_modules/nuxt/bin/nuxt.js",
+    "build": "nuxt build",
+    "start": "nuxt start",
+    "generate": "nuxt generate"
+  },
+  "dependencies": {
+    "@nuxtjs/auth-next": "5.0.0-1624817847.21691f1",
+    "@nuxtjs/axios": "^5.13.6",
+    "@nuxtjs/dotenv": "^1.4.1",
+    "@nuxtjs/pwa": "^3.3.5",
+    "axios": "^0.27.2",
+    "core-js": "^3.15.1",
+    "dotenv": "^16.0.2",
+    "html2canvas": "^1.4.1",
+    "jsbarcode": "^3.11.6",
+    "jspdf": "^3.0.1",
+    "nuxt": "^2.15.7",
+    "nuxt-sweetalert2": "^1.0.0",
+    "qrcode": "^1.5.3",
+    "vue-session": "^1.0.0",
+    "vue2-datepicker": "^3.11.1",
+    "vuetify": "^2.5.5",
+    "ws": "^8.8.1"
+  },
+  "devDependencies": {
+    "@nuxtjs/vuetify": "^1.12.1"
+  }
+}
