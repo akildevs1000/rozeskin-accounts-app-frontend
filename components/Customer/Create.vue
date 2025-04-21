@@ -73,7 +73,20 @@
               <v-card outlined>
                 <v-container>
                   <v-row>
-                    <v-col cols="12">Shipping Address</v-col>
+                    <v-col cols="6">Shipping Address</v-col>
+                    <v-col cols="6" class="pa-0">
+                      <v-checkbox
+                        dense
+                        hide-details
+                        v-model="useAsBillingAddress"
+                      >
+                        <template v-slot:label>
+                          <span style="font-size: 11px !important"
+                            >Use as Billing Address</span
+                          >
+                        </template>
+                      </v-checkbox></v-col
+                    >
                     <v-col cols="12">
                       <v-text-field
                         outlined
@@ -89,7 +102,7 @@
                         dense
                         hide-details
                         v-model="payload.shipping_address.address_2"
-                        label="Address 1"
+                        label="Address 2"
                       ></v-text-field>
                     </v-col>
                     <v-col cols="6">
@@ -258,7 +271,25 @@ export default {
       loading: false,
       successResponse: null,
       errorResponse: null,
+      useAsBillingAddress: false,
+
+      default_address: {
+        address_1: null,
+        address_2: null,
+        city: null,
+        state: null,
+        postcode: null,
+        country: null,
+      },
     };
+  },
+  watch: {
+    useAsBillingAddress(val) {
+      this.payload.billing_address =
+        val == true
+          ? { ...this.payload.shipping_address }
+          : { ...this.default_address };
+    },
   },
   created() {},
   methods: {
