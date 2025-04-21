@@ -25,46 +25,13 @@
           />
         </v-toolbar>
       </template>
-
       <template v-slot:item.shipping_address="{ item }">
         <div v-if="item.shipping_address">
-          <ul class="pa-2">
-            <li>
-              <strong>Address 1:</strong> {{ item?.shipping_address?.address_1 }}
-            </li>
-            <li>
-              <strong>Address 2:</strong> {{ item?.shipping_address?.address_2 }}
-            </li>
-            <li><strong>City:</strong> {{ item?.shipping_address?.city }}</li>
-            <li><strong>State:</strong> {{ item?.shipping_address?.state }}</li>
-            <li>
-              <strong>Postcode:</strong> {{ item?.shipping_address?.postcode }}
-            </li>
-            <li>
-              <strong>Country:</strong> {{ item?.shipping_address?.country }}
-            </li>
-          </ul>
-        </div>
-      </template>
-
-      <template v-slot:item.billing_address="{ item }">
-        <div v-if="item.billing_address">
-          <ul class="pa-2">
-            <li>
-              <strong>Address 1:</strong> {{ item?.billing_address?.address_1 }}
-            </li>
-            <li>
-              <strong>Address 2:</strong> {{ item?.billing_address?.address_2 }}
-            </li>
-            <li><strong>City:</strong> {{ item?.billing_address?.city }}</li>
-            <li><strong>State:</strong> {{ item?.billing_address?.state }}</li>
-            <li>
-              <strong>Postcode:</strong> {{ item?.billing_address?.postcode }}
-            </li>
-            <li>
-              <strong>Country:</strong> {{ item?.billing_address?.country }}
-            </li>
-          </ul>
+          <small>
+            {{ item?.shipping_address?.address_1 }},{{
+              item?.shipping_address?.state
+            }},{{ item?.shipping_address?.postcode }}
+          </small>
         </div>
       </template>
 
@@ -116,6 +83,10 @@ export default {
     errors: [],
     headers: [
       {
+        text:"Ref #",
+        value:"reference_id",
+      },
+      {
         text: "Full Name",
         value: "full_name",
       },
@@ -128,15 +99,21 @@ export default {
         value: "phone",
       },
       {
+        text: "City",
+        value: "shipping_address.city",
+      },
+      {
         text: "Shipping Address",
         value: "shipping_address",
       },
-
       {
-        text: "Billing Address",
-        value: "billing_address",
+        text: "Orders",
+        value: "orders_count",
       },
-
+      {
+        text: "Registed At",
+        value: "date_time",
+      },
       {
         text: "Action",
         align: "center",

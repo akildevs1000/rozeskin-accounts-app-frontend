@@ -19,10 +19,10 @@
             <v-autocomplete
               :items="[
                 { id: null, name: 'Select All' },
-                { id: 'pending', name: 'pending' },
-                { id: 'completed', name: 'completed' },
-                { id: 'dispatched', name: 'dispatched' },
-                { id: 'cancelled', name: 'cancelled' },
+                { id: 'Pending', name: 'Pending' },
+                { id: 'Paid', name: 'Paid' },
+                { id: 'Unpaid', name: 'Unpaid' },
+                { id: 'Cancelled', name: 'Cancelled' },
               ]"
               item-text="name"
               item-value="id"
@@ -115,52 +115,7 @@
             />
           </v-toolbar>
         </template>
-        <template v-slot:item.order_id="{ item }">
-          <small>
-            {{ item.order_id }}
-          </small>
-        </template>
-        <template v-slot:item.tracking_number="{ item }">
-          <small>
-            {{ item.tracking_number }}
-          </small>
-        </template>
-        <template v-slot:item.business_source="{ item }">
-          <small>
-            {{ item?.business_source?.name }}
-          </small>
-        </template>
-        <template v-slot:item.delivery_service="{ item }">
-          <small>
-            {{ item?.delivery_service?.name }}
-          </small>
-        </template>
-        <template v-slot:item.customer="{ item }">
-          <small>
-            {{ item?.customer?.full_name }}
-          </small>
-        </template>
 
-        <template v-slot:item.date_time="{ item }">
-          <small>
-            {{ item.date_time }}
-          </small>
-        </template>
-        <template v-slot:item.order_status="{ item }">
-          <small :class="statusColor(item.order_status)">
-            {{ item.order_status }}
-          </small>
-        </template>
-        <template v-slot:item.shipping_charges="{ item }">
-          <small>
-            {{ item.shipping_charges }}
-          </small>
-        </template>
-        <template v-slot:item.total="{ item }">
-          <small>
-            {{ item.total }}
-          </small>
-        </template>
         <template v-slot:item.payment="{ item }">
           <small>
             {{ item.payment_method }}
@@ -170,14 +125,14 @@
             {{ item.payment_method_title }}
           </small>
         </template>
-        <template v-slot:item.shipping_method="{ item }">
-          <small>
-            {{ item?.shipping_method }}
-          </small>
-        </template>
+
         <template v-slot:item.invoice="{ item }">
           <small>
-            {{ item?.invoice?.invoice_reference_id || "---" }}
+            {{ item?.invoice?.reference_id || "Pending" }}
+          </small>
+          <br>
+          <small v-if="item?.invoice?.reference_id">
+            {{ item?.invoice?.date_time }}
           </small>
         </template>
 
@@ -277,7 +232,7 @@ export default {
       },
       {
         text: "Customer",
-        value: "customer",
+        value: "customer.full_name",
       },
       {
         text: "Date Time",
@@ -291,15 +246,11 @@ export default {
 
       {
         text: "Business Source",
-        value: "business_source",
+        value: "business_source.name",
       },
       {
         text: "Delivery Service",
-        value: "delivery_service",
-      },
-      {
-        text: "Status",
-        value: "order_status",
+        value: "delivery_service.name",
       },
       {
         text: "Shipping Charges",
@@ -369,13 +320,15 @@ export default {
   methods: {
     statusColor(status) {
       switch (status.toLowerCase()) {
-        case "pending":
+        case "Pending":
           return "orange--text";
-        case "completed":
+        case "Paid":
           return "green--text";
-        case "dispatched":
+        case "Dispatched":
           return "blue--text";
-        case "cancelled":
+        case "Unpaid":
+          return "red--text";
+        case "Cancelled":
           return "red--text";
         default:
           return "grey--text"; // fallback

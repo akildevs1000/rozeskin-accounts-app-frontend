@@ -19,42 +19,54 @@
             <v-card outlined>
               <v-container>
                 <v-row>
-                  <v-col cols="6">
+                  <v-col cols="4">
                     <v-text-field
                       outlined
                       dense
                       hide-details
-                      v-model="payload.first_name"
+                      v-model="payload.customer.first_name"
                       label="First Name"
                     ></v-text-field>
                   </v-col>
 
-                  <v-col cols="6">
+                  <v-col cols="4">
                     <v-text-field
                       outlined
                       dense
                       hide-details
-                      v-model="payload.last_name"
+                      v-model="payload.customer.last_name"
                       label="Last Name"
                     ></v-text-field>
                   </v-col>
 
-                  <v-col cols="6">
+                  <v-col cols="4">
                     <v-text-field
                       outlined
                       dense
                       hide-details
-                      v-model="payload.email"
+                      v-model="payload.customer.email"
                       label="Email"
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6">
                     <v-text-field
+                      type="tel"
                       outlined
                       dense
                       hide-details
-                      v-model="payload.phone"
+                      v-model="payload.customer.phone"
                       label="Phone"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="6">
+                    <v-text-field
+                      type="tel"
+                      min="7"
+                      outlined
+                      dense
+                      hide-details
+                      v-model="payload.customer.whatsapp"
+                      label="Whatsapp"
                     ></v-text-field>
                   </v-col>
                 </v-row>
@@ -234,10 +246,13 @@ export default {
   data() {
     return {
       payload: {
-        first_name: "",
-        last_name: "",
-        email: "",
-        phone: "",
+        customer: {
+          first_name: null,
+          last_name: null,
+          email: null,
+          phone: null,
+          whatsapp: null,
+        },
 
         shipping_address: {
           address_1: null,
@@ -261,7 +276,7 @@ export default {
       loading: false,
       successResponse: null,
       errorResponse: null,
-      useAsBillingAddress:false,
+      useAsBillingAddress: false,
       default_address: {
         address_1: null,
         address_2: null,
@@ -279,11 +294,24 @@ export default {
           ? { ...this.payload.shipping_address }
           : { ...this.default_address };
     },
+
+    "payload.customer.phone"(newVal) {
+      this.payload.customer.whatsapp = newVal;
+    },
   },
   created() {
+    const customer = this.item || {};
+
     this.payload = {
-      ...this.payload,
-      ...this.item,
+      ...(this.payload || {}),
+      ...(this.item || {}),
+      customer: {
+        first_name: customer.first_name || "",
+        last_name: customer.last_name || "",
+        email: customer.email || "",
+        phone: customer.phone || "",
+        whatsapp: customer.whatsapp || "",
+      },
     };
   },
   methods: {

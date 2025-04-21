@@ -191,7 +191,100 @@
             </v-card>
           </v-col>
 
-         
+          <v-col cols="12">
+            <v-card outlined>
+              <v-container>
+                <v-row>
+                  <v-col cols="12">Other Info</v-col>
+                  <v-col cols="4">
+                    <v-text-field
+                      type="number"
+                      outlined
+                      dense
+                      hide-details
+                      v-model="payload.order_id"
+                      label="Order Id"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="4">
+                    <v-autocomplete
+                      v-model="payload.delivery_service_id"
+                      :items="delivery_services"
+                      item-text="name"
+                      item-value="id"
+                      label="Delivery Service"
+                      outlined
+                      dense
+                      hide-details
+                    ></v-autocomplete>
+                  </v-col>
+                  <v-col cols="4">
+                    <v-text-field
+                      outlined
+                      dense
+                      hide-details
+                      v-model="payload.tracking_number"
+                      label="Tracking Number"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="6">
+                    <v-autocomplete
+                      v-model="payload.business_source_id"
+                      :items="business_sources"
+                      item-text="name"
+                      item-value="id"
+                      label="Business Source"
+                      outlined
+                      dense
+                      hide-details
+                    ></v-autocomplete>
+                  </v-col>
+
+                  <v-col cols="6">
+                    <v-text-field
+                      outlined
+                      dense
+                      hide-details
+                      v-model="payload.shipping_method"
+                      label="Shipping Method"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="4">
+                    <v-autocomplete
+                      v-model="payload.payment_method"
+                      :items="payment_modes"
+                      item-text="name"
+                      item-value="name"
+                      label="Payment Mode"
+                      outlined
+                      dense
+                      hide-details
+                    ></v-autocomplete>
+                  </v-col>
+                  <v-col cols="4">
+                    <v-text-field
+                      outlined
+                      dense
+                      hide-details
+                      v-model="payload.payment_method_title"
+                      label="Payment Mode Title"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="4">
+                    <v-autocomplete
+                      v-model="payload.status"
+                      :items="['Paid', 'Unpaid','Cancelled']"
+                      label="Status"
+                      outlined
+                      dense
+                      hide-details
+                    ></v-autocomplete>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-card>
+          </v-col>
+
           <v-col>
             <style scoped>
               .order-table {
@@ -280,107 +373,43 @@
             </table>
           </v-col>
 
-          <v-col cols="12">
-            <v-card outlined>
-              <v-container>
-                <v-row>
-                  <v-col cols="12">Other Info</v-col>
-                  <v-col cols="4">
-                    <v-text-field
-                      type="number"
-                      outlined
-                      dense
-                      hide-details
-                      v-model="payload.order_id"
-                      label="Order Id"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="4">
-                    <v-text-field
-                      outlined
-                      dense
-                      hide-details
-                      v-model="payload.tracking_number"
-                      label="Tracking Number"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="4">
-                    <v-autocomplete
-                      v-model="payload.business_source_id"
-                      :items="business_sources"
-                      item-text="name"
-                      item-value="id"
-                      label="Business Source"
-                      outlined
-                      dense
-                      hide-details
-                    ></v-autocomplete>
-                  </v-col>
-                  <v-col cols="6">
-                    <v-autocomplete
-                      v-model="payload.delivery_service_id"
-                      :items="delivery_services"
-                      item-text="name"
-                      item-value="id"
-                      label="Delivery Service"
-                      outlined
-                      dense
-                      hide-details
-                    ></v-autocomplete>
-                  </v-col>
-                  <v-col cols="6">
-                    <v-text-field
-                      outlined
-                      dense
-                      hide-details
-                      v-model="payload.shipping_method"
-                      label="Shipping Method"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="6">
-                    <v-autocomplete
-                      v-model="payload.payment_method"
-                      :items="payment_modes"
-                      item-text="name"
-                      item-value="name"
-                      label="Payment Mode"
-                      outlined
-                      dense
-                      hide-details
-                    ></v-autocomplete>
-                  </v-col>
-                  <v-col cols="6">
-                    <v-text-field
-                      outlined
-                      dense
-                      hide-details
-                      v-model="payload.payment_method_title"
-                      label="Payment Mode Title"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="6">
-                    <v-autocomplete
-                      v-model="payload.status"
-                      :items="['Paid', 'Unpaid']"
-                      label="Status"
-                      outlined
-                      dense
-                      hide-details
-                    ></v-autocomplete>
-                  </v-col>
-                  <v-col cols="6">
-                    <v-text-field
-                      outlined
-                      dense
-                      hide-details
-                      v-model="payload.total"
-                      label="Total"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </v-card>
+          <v-col cols="12" class="">
+            <v-row>
+              <v-col cols="8"> </v-col>
+              <v-col cols="4">
+                <div>
+                  <div class="d-flex justify-end justify-space-between">
+                    <div><small>Shipping Chargress</small></div>
+                    <div>
+                      <small>
+                        <input
+                          style="
+                            font-size: 11px !important;
+                            color: #868686;
+                            border: none;
+                            outline: none;
+                            box-shadow: none;
+                            text-align: right;
+                            width: 100px;
+                          "
+                          type="number"
+                          v-model="payload.shipping_charges"
+                          @input="getGrandTotal"
+                        />
+                      </small>
+                    </div>
+                  </div>
+                  <div class="d-flex justify-end justify-space-between">
+                    <div><small>Total</small></div>
+                    <div>
+                      <small>{{ payload.total }}</small>
+                    </div>
+                  </div>
+                </div>
+              </v-col>
+            </v-row>
           </v-col>
+
           <v-col cols="12" v-if="errorResponse">
             <span class="red--text">{{ errorResponse }}</span>
           </v-col>
@@ -472,8 +501,6 @@ export default {
     };
   },
   async created() {
-   
-
     let { data: products } = await this.$axios.get(`product-list`);
     this.products = products;
 

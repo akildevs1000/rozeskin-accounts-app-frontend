@@ -21,7 +21,7 @@
 
     <v-card>
       <v-alert flat class="grey lighten-3" dense>
-        <span>Payment For {{ item.invoice_reference_id }}</span>
+        <span>Payment For {{ item.reference_id }}</span>
       </v-alert>
 
       <v-card-text v-if="payload && payload.id">

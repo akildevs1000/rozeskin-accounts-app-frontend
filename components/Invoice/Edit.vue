@@ -2,18 +2,29 @@
   <v-dialog v-model="dialog" width="800">
     <AssetsIconClose left="790" @click="close" />
     <template v-slot:activator="{ on, attrs }">
-      <div v-bind="attrs" v-on="on">
-        <v-icon color="primary" small> mdi-eye </v-icon>
-        View
-      </div>
+      <span
+        v-bind="attrs"
+        v-on="on"
+        class="hover-bold"
+        text
+        style="
+          background: none;
+          border: none !important;
+          font-size: 13px;
+          cursor: pointer;
+        "
+        small
+      >
+        Edit <v-icon x-small class="ml-1 mr-3">mdi-pencil</v-icon>
+      </span>
     </template>
 
     <v-card>
       <v-alert flat class="grey lighten-3" dense>
-        <span>View</span>
+        <span>Edit</span>
       </v-alert>
 
-      <v-card-text>
+      <v-card-text v-if="payload && payload.id">
         <v-row>
           <v-col cols="12">
             <v-card outlined>
@@ -25,6 +36,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.customer.first_name"
                       label="First Name"
                     ></v-text-field>
@@ -35,6 +47,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.customer.last_name"
                       label="Last Name"
                     ></v-text-field>
@@ -45,6 +58,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.customer.email"
                       label="Email"
                     ></v-text-field>
@@ -54,6 +68,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.customer.phone"
                       label="Phone"
                     ></v-text-field>
@@ -73,6 +88,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.shipping_address.address_1"
                       label="Address 1"
                     ></v-text-field>
@@ -82,6 +98,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.shipping_address.address_2"
                       label="Address 1"
                     ></v-text-field>
@@ -91,6 +108,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.shipping_address.city"
                       label="City"
                     ></v-text-field>
@@ -100,6 +118,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.shipping_address.state"
                       label="State"
                     ></v-text-field>
@@ -109,6 +128,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.shipping_address.postcode"
                       label="Post Code"
                     ></v-text-field>
@@ -118,6 +138,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.shipping_address.country"
                       label="Country"
                     ></v-text-field>
@@ -137,6 +158,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.billing_address.address_1"
                       label="Address 1"
                     ></v-text-field>
@@ -146,6 +168,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.billing_address.address_2"
                       label="Address 2"
                     ></v-text-field>
@@ -155,6 +178,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.billing_address.city"
                       label="City"
                     ></v-text-field>
@@ -164,6 +188,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.billing_address.state"
                       label="State"
                     ></v-text-field>
@@ -173,6 +198,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.billing_address.postcode"
                       label="Post Code"
                     ></v-text-field>
@@ -182,6 +208,7 @@
                       outlined
                       dense
                       hide-details
+                      readonly
                       v-model="payload.billing_address.country"
                       label="Country"
                     ></v-text-field>
@@ -190,84 +217,6 @@
               </v-container>
             </v-card>
           </v-col>
-
-          <v-col
-            cols="12"
-            v-for="(item, index) in payload.order.items"
-            :key="index"
-          >
-            <v-card outlined>
-              <v-container>
-                <v-row>
-                  <v-col cols="6">Items {{ index + 1 }}</v-col>
-
-                  <v-col cols="12">
-                    <v-row>
-                      <v-col cols="4">
-                        <v-text-field
-                          outlined
-                          dense
-                          hide-details
-                          v-model="item.product_id"
-                          label="Product Id"
-                        ></v-text-field>
-                      </v-col>
-                      <v-col cols="4">
-                        <v-text-field
-                          outlined
-                          dense
-                          hide-details
-                          v-model="item.sku"
-                          label="SKU"
-                        ></v-text-field>
-                      </v-col>
-
-                      <v-col cols="4">
-                        <v-text-field
-                          outlined
-                          dense
-                          hide-details
-                          v-model="item.name"
-                          label="Name"
-                        ></v-text-field>
-                      </v-col>
-                      <v-col cols="4">
-                        <v-text-field
-                          outlined
-                          dense
-                          hide-details
-                          v-model="item.quantity"
-                          label="Quantity"
-                        ></v-text-field>
-                      </v-col>
-                      <v-col cols="4">
-                        <v-text-field
-                          outlined
-                          dense
-                          hide-details
-                          v-model="item.subtotal"
-                          label="Subtotal"
-                        ></v-text-field>
-                      </v-col>
-                      <v-col cols="4">
-                        <v-text-field
-                          outlined
-                          dense
-                          hide-details
-                          v-model="item.total"
-                          label="Total"
-                        ></v-text-field>
-                      </v-col>
-                    </v-row>
-                  </v-col>
-                </v-row>
-              </v-container>
-            </v-card>
-          </v-col>
-          <!-- <v-col cols="12" class=""
-            ><v-icon @click="deleteItem" class="mr-1">mdi-delete</v-icon
-            ><v-icon @click="addItem">mdi-plus-circle</v-icon></v-col
-          > -->
           <v-col cols="12">
             <v-card outlined>
               <v-container>
@@ -349,42 +298,147 @@
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6">
-                    <v-text-field
-                      readonly
-                      outlined
-                      dense
-                      hide-details
-                      v-model="payload.order.total"
-                      label="Total"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="6">
                     <v-autocomplete
                       v-model="payload.status"
-                      :items="['Paid', 'Unpaid']"
+                      :items="['Paid', 'Unpaid','Cancelled']"
                       label="Status"
                       outlined
                       dense
                       hide-details
                     ></v-autocomplete>
                   </v-col>
-                  <v-col cols="12">
-                    <v-text-field
-                      outlined
-                      dense
-                      hide-details
-                      v-model="payload.order.paid_amount"
-                      label="Paid Amount"
-                    ></v-text-field>
-                  </v-col>
                 </v-row>
               </v-container>
             </v-card>
           </v-col>
+          <v-col>
+            <style scoped>
+              .order-table {
+                font-family: arial, sans-serif;
+                border-collapse: collapse;
+                width: 100%;
+              }
+
+              .order-table td,
+              .order-table th {
+                border: 1px solid #dddddd;
+                text-align: left;
+                padding: 8px;
+              }
+              .right-align-input .v-text-field__slot > input {
+                text-align: right !important;
+              }
+            </style>
+            <table class="order-table">
+              <tr class="grey lighten-3">
+                <td width="200px">Product</td>
+                <td class="text-right">Qty</td>
+                <td class="text-right">Rate</td>
+                <td class="text-right">Tax</td>
+                <td class="text-right">Total</td>
+              </tr>
+
+              <tr
+                cols="12"
+                v-for="(item, index) in payload.order.items"
+                :key="index"
+              >
+                <td>
+                  <v-autocomplete
+                    flat
+                    append-icon=""
+                    v-model="item.item"
+                    :items="products"
+                    item-text="product_with_item_name"
+                    item-value="product_with_item_name"
+                    dense
+                    hide-details
+                    placeholder="Product"
+                    return-object
+                  ></v-autocomplete>
+                </td>
+                <td>
+                  <v-text-field
+                    class="right-align-input"
+                    type="number"
+                    dense
+                    hide-details
+                    v-model="item.quantity"
+                  >
+                  </v-text-field>
+                </td>
+                <td>
+                  <v-text-field
+                    class="right-align-input"
+                    type="number"
+                    dense
+                    hide-details
+                    v-model="item.rate"
+                  ></v-text-field>
+                </td>
+                <td>
+                  <v-text-field
+                    class="right-align-input"
+                    type="number"
+                    dense
+                    hide-details
+                    v-model="item.tax"
+                  ></v-text-field>
+                </td>
+                <td>
+                  <v-text-field
+                    readonly
+                    class="right-align-input"
+                    type="number"
+                    dense
+                    hide-details
+                    v-model="item.total"
+                  ></v-text-field>
+                </td>
+              </tr>
+            </table>
+          </v-col>
+
+          <v-col cols="12" class="">
+            <v-row>
+              <v-col cols="8"> </v-col>
+              <v-col cols="4">
+                <div>
+                  <div class="d-flex justify-end justify-space-between">
+                    <div><small>Shipping Chargress</small></div>
+                    <div>
+                      <small>
+                        <input
+                          style="
+                            font-size: 11px !important;
+                            color: #868686;
+                            border: none;
+                            outline: none;
+                            box-shadow: none;
+                            text-align: right;
+                            width: 100px;
+                          "
+                          type="number"
+                          v-model="payload.order.shipping_charges"
+                        />
+                      </small>
+                    </div>
+                  </div>
+                  <div class="d-flex justify-end justify-space-between">
+                    <div><small>Total</small></div>
+                    <div>
+                      <small>{{ payload?.order?.total }}</small>
+                    </div>
+                  </div>
+                </div>
+              </v-col>
+            </v-row>
+          </v-col>
+
           <v-col cols="12" v-if="errorResponse">
             <span class="red--text">{{ errorResponse }}</span>
           </v-col>
-          <!-- <v-col cols="12" class="text-right">
+          <v-col cols="12" class="text-right">
             <AssetsButton
               :options="{
                 label: `Cancel`,
@@ -400,7 +454,7 @@
               }"
               @click="submit"
             />
-          </v-col> -->
+          </v-col>
         </v-row>
       </v-card-text>
     </v-card>
@@ -469,14 +523,12 @@ export default {
       payment_modes: [],
       business_sources: [],
       delivery_services: [],
+      products: [],
     };
   },
   async created() {
-    this.payload = {
-      ...this.item,
-      shipping_address: this.item.customer.shipping_address,
-      billing_address: this.item.customer.billing_address,
-    };
+    let { data: products } = await this.$axios.get(`product-list`);
+    this.products = products;
 
     let { data } = await this.$axios.get(`payment-mode-list`);
     this.payment_modes = data;
@@ -490,6 +542,12 @@ export default {
       `delivery-service-list`
     );
     this.delivery_services = delivery_services;
+
+    this.payload = {
+      ...this.item,
+      shipping_address: this.item.customer.shipping_address,
+      billing_address: this.item.customer.billing_address,
+    };
   },
   methods: {
     addItem() {

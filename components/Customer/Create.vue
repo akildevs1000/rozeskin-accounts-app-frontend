@@ -26,7 +26,7 @@
               <v-card outlined>
                 <v-container>
                   <v-row>
-                    <v-col cols="6">
+                    <v-col cols="4">
                       <v-text-field
                         outlined
                         dense
@@ -36,7 +36,7 @@
                       ></v-text-field>
                     </v-col>
 
-                    <v-col cols="6">
+                    <v-col cols="4">
                       <v-text-field
                         outlined
                         dense
@@ -46,7 +46,7 @@
                       ></v-text-field>
                     </v-col>
 
-                    <v-col cols="6">
+                    <v-col cols="4">
                       <v-text-field
                         outlined
                         dense
@@ -57,11 +57,22 @@
                     </v-col>
                     <v-col cols="6">
                       <v-text-field
+                        type="tel"
                         outlined
                         dense
                         hide-details
                         v-model="payload.customer.phone"
                         label="Phone"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        type="tel"
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.customer.whatsapp"
+                        label="Whatsapp"
                       ></v-text-field>
                     </v-col>
                   </v-row>
@@ -248,6 +259,7 @@ export default {
           last_name: null,
           email: null,
           phone: null,
+          whatsapp: null,
         },
         shipping_address: {
           address_1: null,
@@ -290,6 +302,10 @@ export default {
           ? { ...this.payload.shipping_address }
           : { ...this.default_address };
     },
+
+    "payload.customer.phone"(newVal) {
+      this.payload.customer.whatsapp = newVal;
+    },
   },
   created() {},
   methods: {
@@ -304,6 +320,7 @@ export default {
           last_name: null,
           email: null,
           phone: null,
+          whatsapp: null,
         },
         shipping_address: {
           address_1: null,

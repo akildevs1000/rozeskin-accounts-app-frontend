@@ -20,7 +20,7 @@
               <v-container>
                 <v-row>
                   <v-col cols="12">Customer Info</v-col>
-                  <v-col cols="6">
+                  <v-col cols="4">
                     <v-text-field
                       outlined
                       dense
@@ -30,7 +30,7 @@
                     ></v-text-field>
                   </v-col>
 
-                  <v-col cols="6">
+                  <v-col cols="4">
                     <v-text-field
                       outlined
                       dense
@@ -40,7 +40,7 @@
                     ></v-text-field>
                   </v-col>
 
-                  <v-col cols="6">
+                  <v-col cols="4">
                     <v-text-field
                       outlined
                       dense
@@ -58,6 +58,15 @@
                       label="Phone"
                     ></v-text-field>
                   </v-col>
+                  <v-col cols="6">
+                    <v-text-field
+                      outlined
+                      dense
+                      hide-details
+                      v-model="payload.customer.whatsapp"
+                      label="Whatsapp"
+                    ></v-text-field>
+                  </v-col>
                 </v-row>
               </v-container>
             </v-card>
@@ -67,7 +76,20 @@
             <v-card outlined>
               <v-container>
                 <v-row>
-                  <v-col cols="12">Shipping Address</v-col>
+                  <v-col cols="6">Shipping Address</v-col>
+                  <v-col cols="6" class="pa-0">
+                    <v-checkbox
+                      dense
+                      hide-details
+                      v-model="useAsBillingAddress"
+                    >
+                      <template v-slot:label>
+                        <span style="font-size: 11px !important"
+                          >Use as Billing Address</span
+                        >
+                      </template>
+                    </v-checkbox></v-col
+                  >
                   <v-col cols="12">
                     <v-text-field
                       outlined
@@ -363,45 +385,45 @@
             </table>
           </v-col>
           <v-col cols="12" class="">
-              <v-row>
-                <v-col cols="8">
-                  <v-icon small @click="deleteItem" class="mr-1"
-                    >mdi-delete</v-icon
-                  ><v-icon small @click="addItem">mdi-plus-circle</v-icon>
-                </v-col>
-                <v-col cols="4">
-                  <div>
-                    <div class="d-flex justify-end justify-space-between">
-                      <div><small>Shipping Chargress</small></div>
-                      <div>
-                        <small>
-                          <input
-                            style="
-                              font-size: 11px !important;
-                              color: #868686;
-                              border: none;
-                              outline: none;
-                              box-shadow: none;
-                              text-align: right;
-                              width: 100px;
-                            "
-                            type="number"
-                            v-model="payload.shipping_charges"
-                            @input="getGrandTotal"
-                          />
-                        </small>
-                      </div>
-                    </div>
-                    <div class="d-flex justify-end justify-space-between">
-                      <div><small>Total</small></div>
-                      <div>
-                        <small>{{ payload.total }}</small>
-                      </div>
+            <v-row>
+              <v-col cols="8">
+                <v-icon small @click="deleteItem" class="mr-1"
+                  >mdi-delete</v-icon
+                ><v-icon small @click="addItem">mdi-plus-circle</v-icon>
+              </v-col>
+              <v-col cols="4">
+                <div>
+                  <div class="d-flex justify-end justify-space-between">
+                    <div><small>Shipping Chargress</small></div>
+                    <div>
+                      <small>
+                        <input
+                          style="
+                            font-size: 11px !important;
+                            color: #868686;
+                            border: none;
+                            outline: none;
+                            box-shadow: none;
+                            text-align: right;
+                            width: 100px;
+                          "
+                          type="number"
+                          v-model="payload.shipping_charges"
+                          @input="getGrandTotal"
+                        />
+                      </small>
                     </div>
                   </div>
-                </v-col>
-              </v-row>
-            </v-col>
+                  <div class="d-flex justify-end justify-space-between">
+                    <div><small>Total</small></div>
+                    <div>
+                      <small>{{ payload.total }}</small>
+                    </div>
+                  </div>
+                </div>
+              </v-col>
+            </v-row>
+          </v-col>
           <v-col cols="12" v-if="errorResponse">
             <span class="red--text">{{ errorResponse }}</span>
           </v-col>
@@ -491,7 +513,28 @@ export default {
       business_sources: [],
       delivery_services: [],
       products: [],
+      useAsBillingAddress: false,
+      default_address: {
+        address_1: null,
+        address_2: null,
+        city: null,
+        state: null,
+        postcode: null,
+        country: null,
+      },
     };
+  },
+  watch: {
+    useAsBillingAddress(val) {
+      this.payload.billing_address =
+        val == true
+          ? { ...this.payload.shipping_address }
+          : { ...this.default_address };
+    },
+
+    "payload.customer.phone"(newVal) {
+      this.payload.customer.whatsapp = newVal;
+    },
   },
   async created() {
     let { data: products } = await this.$axios.get(`product-list`);

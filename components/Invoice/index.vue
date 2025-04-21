@@ -30,10 +30,23 @@
           </v-col>
           <v-col>
             <v-autocomplete
+              v-model="filters.delivery_service_id"
+              :items="delivery_services"
+              item-text="name"
+              item-value="id"
+              label="Delivery Service"
+              outlined
+              dense
+              hide-details
+            ></v-autocomplete>
+          </v-col>
+          <v-col>
+            <v-autocomplete
               :items="[
                 { id: null, name: 'Select All' },
                 { id: 'Paid', name: 'Paid' },
                 { id: 'Unpaid', name: 'Unpaid' },
+                { id: 'Cancelled', name: 'Cancelled' },
               ]"
               item-text="name"
               item-value="id"
@@ -89,13 +102,12 @@
                   </v-avatar>
                 </v-col>
                 <v-col cols="6" class="text-left">
-                  <div class="caption">Akil Security & Alarm Systems LLC</div>
+                  <div class="caption">Roze Skincare LLC</div>
                   <div class="caption">
                     P.O.Box : 83481, Dubai, United Arab Emirates<br />
                     +971 4 3939 562 / +971 55 330 3991<br />
-                    <a href="mailto:mail@akilgroup.com">mail@akilgroup.com</a>,
-                    <a href="https://www.akilgroup.com" target="_blank"
-                      >www.akilgroup.com</a
+                    <a href="mailto:rozeskincaredubai@gmail.com"
+                      >rozeskincaredubai@gmail.com </a
                     ><br />
                     TRN : 100391417100003
                   </div>
@@ -180,15 +192,11 @@
                     </div>
                     <div class="body-2" style="cursor: pointer">
                       {{ item?.id || "---" }} -
-                      {{ item?.invoice_reference_id || "---" }}
+                      {{ item?.reference_id || "---" }}
                     </div>
                     <div>
                       <span
-                        :class="
-                          item.status == 'Unpaid'
-                            ? 'red--text'
-                            : 'success--text'
-                        "
+                        :class="statusColor(item?.status)"
                         >{{ item?.status }}</span
                       >
                     </div>
@@ -221,6 +229,19 @@
           <v-toolbar class="grey lighten-3" flat dense>
             <v-row>
               <v-col>
+                <span>
+                  <InvoiceEdit
+                    :key="InvoicePayComponentKey"
+                    :item="selectedItem"
+                    :endpoint="endpoint"
+                    @response="
+                      () => {
+                        getDataFromApi();
+                        InvoicePayComponentKey++;
+                      }
+                    "
+                  />
+                </span>
                 <InvoicePayForShortView
                   :key="InvoicePayComponentKey"
                   :item="selectedItem"
@@ -392,20 +413,19 @@
                     />
                   </v-avatar>
                   <br />
-                  <div class="caption">Akil Security & Alarm Systems LLC</div>
+                  <div class="caption">Roze Skincare LLC</div>
                   <div class="caption">
                     P.O.Box : 83481, Dubai, United Arab Emirates<br />
                     +971 4 3939 562 / +971 55 330 3991<br />
-                    <a href="mailto:mail@akilgroup.com">mail@akilgroup.com</a>,
-                    <a href="https://www.akilgroup.com" target="_blank"
-                      >www.akilgroup.com</a
+                    <a href="mailto:rozeskincaredubai@gmail.com"
+                      >rozeskincaredubai@gmail.com</a
                     ><br />
                     TRN : 100391417100003
                   </div>
                 </v-col>
                 <v-col class="text-right pt-10">
                   <div class="text-h4 text-grey-darken-4">INVOICE</div>
-                  <div class=""># {{ selectedItem?.invoice_reference_id }}</div>
+                  <div class=""># {{ selectedItem?.reference_id }}</div>
                   <br />
                   <div class="caption">Balance Due</div>
                   <div class="caption">
@@ -416,6 +436,9 @@
                       )
                     }}
                   </div>
+                  <div class="caption">
+                    {{ $dateFormat.dmy(selectedItem?.created_at) }}
+                  </div>
                 </v-col>
                 <v-col cols="8">
                   <div class="caption">Invoice To</div>
@@ -425,16 +448,10 @@
                   <div class="caption">{{ selectedItem?.customer?.phone }}</div>
                 </v-col>
                 <v-col cols="4" class="text-right">
-                  <v-row>
-                    <v-col cols="6">
-                      <div class="caption">Invoice Date</div>
-                    </v-col>
-                    <v-col cols="6">
-                      <div class="caption">
-                        {{ $dateFormat.dmy(new Date()) }}
-                      </div>
-                    </v-col>
-                  </v-row>
+                  <div class="caption">
+                    <b>Shipping Address:</b>
+                    {{ selectedItem?.customer.shipping_address?.full_address }}
+                  </div>
                 </v-col>
                 <v-col cols="12">
                   <style scoped>
@@ -548,9 +565,9 @@
                 {{ item.date_time }}
               </small>
             </template>
-            <template v-slot:item.invoice_reference_id="{ item }">
+            <template v-slot:item.reference_id="{ item }">
               <small class="blue--text">
-                {{ item.invoice_reference_id }}
+                {{ item.reference_id }}
               </small>
             </template>
             <template v-slot:item.order_id="{ item }">
@@ -573,13 +590,11 @@
                 {{ item?.order?.total_paid_amount }}
               </small>
             </template>
+
             <template v-slot:item.status="{ item }">
-              <small
-                :class="`${
-                  item.status == 'Paid' ? 'green--text' : 'red--text'
-                }`"
-                >{{ item.status }}</small
-              >
+              <small :class="statusColor(item.status)">
+                {{ item.status }}
+              </small>
             </template>
             <template v-slot:item.customer="{ item }">
               <small>
@@ -682,7 +697,7 @@ export default {
     headers: [
       {
         text: "Invoice #",
-        value: "invoice_reference_id",
+        value: "reference_id",
       },
       {
         text: "Date Time",
@@ -692,6 +707,10 @@ export default {
       {
         text: "Customer",
         value: "customer",
+      },
+      {
+        text: "Delivery Service",
+        value: "delivery_service.name",
       },
       {
         text: "Order Ref #",
@@ -706,10 +725,10 @@ export default {
         text: "Total",
         value: "total",
       },
-      {
-        text: "Paid Amount",
-        value: "total_paid_amount",
-      },
+      // {
+      //   text: "Paid Amount",
+      //   value: "total_paid_amount",
+      // },
       {
         text: "Status",
         value: "status",
@@ -723,11 +742,20 @@ export default {
     ],
     componentKey: 1,
     customer_list: [],
+    delivery_services: [],
   }),
 
   async created() {
     let { data } = await this.$axios.get(`customer-list`);
     this.customer_list = [{ id: null, full_name: "Select All" }, ...data];
+
+    let { data: delivery_services } = await this.$axios.get(
+      `delivery-service-list`
+    );
+    this.delivery_services = [
+      { id: null, name: "Select All" },
+      ...delivery_services,
+    ];
   },
   watch: {
     options: {
@@ -738,6 +766,22 @@ export default {
     },
   },
   methods: {
+    statusColor(status) {
+      switch (status) {
+        case "Pending":
+          return "orange--text";
+        case "Paid":
+          return "green--text";
+        case "Dispatched":
+          return "blue--text";
+        case "Unpaid":
+          return "red--text";
+        case "Cancelled":
+          return "red--text";
+        default:
+          return "grey--text"; // fallback
+      }
+    },
     openPaymentDialog(item) {
       this.paymentDialog = true;
       this.paymentItem = item;

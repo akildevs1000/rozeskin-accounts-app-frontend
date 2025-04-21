@@ -542,6 +542,7 @@ td {
 }
 .v-data-table td {
   color: #8a8a8a !important; /* Table cell text color */
+  font-size: 11px !important; /* Table cell text color */
 }
 .available {
   background-color: #139c4a;

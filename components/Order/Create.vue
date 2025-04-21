@@ -32,7 +32,7 @@
                 <v-container>
                   <v-row>
                     <v-col cols="12">Customer Info</v-col>
-                    <v-col cols="6">
+                    <v-col cols="4">
                       <v-text-field
                         outlined
                         dense
@@ -42,7 +42,7 @@
                       ></v-text-field>
                     </v-col>
 
-                    <v-col cols="6">
+                    <v-col cols="4">
                       <v-text-field
                         outlined
                         dense
@@ -52,7 +52,7 @@
                       ></v-text-field>
                     </v-col>
 
-                    <v-col cols="6">
+                    <v-col cols="4">
                       <v-text-field
                         outlined
                         dense
@@ -70,6 +70,15 @@
                         label="Phone"
                       ></v-text-field>
                     </v-col>
+                    <v-col cols="6">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.customer.whatsapp"
+                        label="Whatsapp"
+                      ></v-text-field>
+                    </v-col>
                   </v-row>
                 </v-container>
               </v-card>
@@ -79,7 +88,20 @@
               <v-card outlined>
                 <v-container>
                   <v-row>
-                    <v-col cols="12">Shipping Address</v-col>
+                    <v-col cols="6">Shipping Address</v-col>
+                    <v-col cols="6" class="pa-0">
+                      <v-checkbox
+                        dense
+                        hide-details
+                        v-model="useAsBillingAddress"
+                      >
+                        <template v-slot:label>
+                          <span style="font-size: 11px !important"
+                            >Use as Billing Address</span
+                          >
+                        </template>
+                      </v-checkbox></v-col
+                    >
                     <v-col cols="12">
                       <v-text-field
                         outlined
@@ -510,7 +532,28 @@ export default {
       business_sources: [],
       delivery_services: [],
       products: [],
+      useAsBillingAddress: false,
+      default_address: {
+        address_1: null,
+        address_2: null,
+        city: null,
+        state: null,
+        postcode: null,
+        country: null,
+      },
     };
+  },
+  watch: {
+    useAsBillingAddress(val) {
+      this.payload.billing_address =
+        val == true
+          ? { ...this.payload.shipping_address }
+          : { ...this.default_address };
+    },
+
+    "payload.customer.phone"(newVal) {
+      this.payload.customer.whatsapp = newVal;
+    },
   },
   async created() {
     let { data: products } = await this.$axios.get(`product-list`);
@@ -579,7 +622,8 @@ export default {
         0
       );
 
-      this.payload.total = parseFloat(this.payload.shipping_charges || 0) + sub_total
+      this.payload.total =
+        parseFloat(this.payload.shipping_charges || 0) + sub_total;
     },
     getCustomerInfo(payload) {
       if (payload) {
@@ -594,6 +638,57 @@ export default {
       this.dialog = false;
       this.loading = false;
       this.errorResponse = null;
+
+      this.payload = {
+        user_id: 1,
+        username: "admin_rozeskin",
+        email: "rozeskincaredubai@gmail.com",
+        order_id: 0,
+        order_date: "2025-01-27 16:13:44",
+        order_status: "pending",
+        currency: "AED",
+        total: "10.00",
+        payment_method: "COD",
+        payment_method_title: "",
+        shipping_method: "",
+        shipping_charges: 0,
+
+        business_source_id: 0,
+        delivery_service_id: 0,
+        tracking_number: 0,
+
+        customer: {
+          first_name: null,
+          last_name: null,
+          email: null,
+          phone: null,
+        },
+        shipping_address: {
+          address_1: null,
+          address_2: null,
+          city: null,
+          state: null,
+          postcode: null,
+          country: null,
+        },
+        billing_address: {
+          address_1: null,
+          address_2: null,
+          city: null,
+          state: null,
+          postcode: null,
+          country: null,
+        },
+        items: [
+          {
+            item: "",
+            quantity: 1,
+            rate: 1,
+            tax: 1,
+            total: 1,
+          },
+        ],
+      };
     },
     async submit() {
       this.loading = true;
