@@ -1,5 +1,9 @@
 <template>
   <v-card style="background: none">
+    <v-dialog persistent v-model="myDialog" width="1300">
+        <AssetsIconClose left="1290" @click="myDialog = false" />
+        <CustomerOrders :key="customer_id" :customer_id="customer_id" />
+      </v-dialog>
     <v-data-table
       dense
       :headers="headers"
@@ -34,7 +38,7 @@
           </small>
         </div>
       </template>
-
+     
       <template v-slot:item.options="{ item }">
         <v-menu bottom left>
           <template v-slot:activator="{ on, attrs }">
@@ -44,6 +48,21 @@
           </template>
 
           <v-list width="120" dense>
+            <v-list-item
+              @click="
+                () => {
+                  customer_id = item.id;
+                  myDialog = true;
+                }
+              "
+            >
+              <v-list-item-title>
+                <div>
+                  <v-icon color="primary" small> mdi-cart </v-icon>
+                  Orders
+                </div>
+              </v-list-item-title>
+            </v-list-item>
             <v-list-item>
               <v-list-item-title>
                 <CustomerEdit
@@ -73,6 +92,7 @@
 <script>
 export default {
   data: () => ({
+    myDialog: false,
     Model: "Customer",
     endpoint: "customers",
     filters: {},
@@ -83,8 +103,8 @@ export default {
     errors: [],
     headers: [
       {
-        text:"Ref #",
-        value:"reference_id",
+        text: "Ref #",
+        value: "reference_id",
       },
       {
         text: "Full Name",
