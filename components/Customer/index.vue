@@ -1,9 +1,9 @@
 <template>
   <v-card style="background: none">
     <v-dialog persistent v-model="myDialog" width="1300">
-        <AssetsIconClose left="1290" @click="myDialog = false" />
-        <CustomerOrders :key="customer_id" :customer_id="customer_id" />
-      </v-dialog>
+      <AssetsIconClose left="1290" @click="myDialog = false" />
+      <CustomerOrders :key="customer_id" :customer_id="customer_id" />
+    </v-dialog>
     <v-data-table
       dense
       :headers="headers"
@@ -38,7 +38,7 @@
           </small>
         </div>
       </template>
-     
+
       <template v-slot:item.options="{ item }">
         <v-menu bottom left>
           <template v-slot:activator="{ on, attrs }">
@@ -92,6 +92,7 @@
 <script>
 export default {
   data: () => ({
+    customer_id: 0,
     myDialog: false,
     Model: "Customer",
     endpoint: "customers",

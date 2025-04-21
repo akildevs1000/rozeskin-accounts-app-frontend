@@ -107,7 +107,7 @@
                       dense
                       hide-details
                       v-model="payload.shipping_address.address_2"
-                      label="Address 1"
+                      label="Address 2"
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6">
