@@ -1,5 +1,11 @@
 <template>
   <v-card style="background: none">
+    <v-dialog v-model="imageDialog" max-width="500">
+      <AssetsIconClose left="490" @click="imageDialog = false" />
+      <v-card>
+        <v-img :src="selectedImage" aspect-ratio="1" contain />
+      </v-card>
+    </v-dialog>
     <v-data-table
       dense
       :headers="headers"
@@ -24,6 +30,17 @@
             @response="getDataFromApi"
           />
         </v-toolbar>
+      </template>
+      <template v-slot:item.display_image="{ item }">
+        <v-avatar
+          class="my-3"
+          tile
+          size="50"
+          @click="showImage(item.display_image)"
+          style="cursor: pointer"
+        >
+          <img :src="item.display_image" alt="Image thumbnail" />
+        </v-avatar>
       </template>
       <template v-slot:item.options="{ item }">
         <v-menu bottom left>
@@ -63,6 +80,9 @@
 <script>
 export default {
   data: () => ({
+    imageDialog: false,
+    selectedImage: null,
+
     Model: "Product",
     endpoint: "products",
     filters: {},
@@ -73,17 +93,38 @@ export default {
     errors: [],
     headers: [
       {
+        text: "Product Id",
+        value: "item_number",
+      },
+      {
         text: "Description",
         value: "description",
       },
       {
-        text: "Price",
+        text: "Purchase Price",
+        value: "purchase_price",
+      },
+      {
+        text: "Sell Price",
         value: "price",
+      },
+      {
+        text: "Qty",
+        value: "qty",
+      },
+      {
+        text: "Image",
+        value: "display_image",
       },
       {
         text: "Product Category",
         value: "product_category.name",
       },
+      {
+        text: "Created At",
+        value: "date_time",
+      },
+      
       {
         text: "Action",
         align: "center",
@@ -107,6 +148,10 @@ export default {
     },
   },
   methods: {
+    showImage(image) {
+      this.selectedImage = image;
+      this.imageDialog = true;
+    },
     async getDataFromApi() {
       this.loading = true;
       let { data } = await this.$axios.get(this.endpoint);
