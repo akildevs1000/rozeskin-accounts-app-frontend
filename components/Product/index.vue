@@ -73,8 +73,8 @@ export default {
     errors: [],
     headers: [
       {
-        text: "Name",
-        value: "name",
+        text: "Description",
+        value: "description",
       },
       {
         text: "Price",
@@ -83,10 +83,6 @@ export default {
       {
         text: "Product Category",
         value: "product_category.name",
-      },
-      {
-        text: "Description",
-        value: "description",
       },
       {
         text: "Action",

@@ -43,7 +43,7 @@
               ></v-text-field>
             </v-col>
 
-            <v-col cols="12">
+            <!-- <v-col cols="12">
               <v-text-field
                 outlined
                 dense
@@ -51,7 +51,7 @@
                 v-model="payload.name"
                 label="Name"
               ></v-text-field>
-            </v-col>
+            </v-col> -->
 
             <v-col cols="12">
               <v-text-field
@@ -120,7 +120,7 @@ export default {
   data() {
     return {
       payload: {
-        name: "",
+        name: "ignore",
       },
       dialog: false,
       loading: false,
