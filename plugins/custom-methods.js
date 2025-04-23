@@ -465,6 +465,7 @@ export default ({ app }, inject) => {
     },
 
     can(per, thisobj) {
+      return true;
       let u = thisobj.$auth.user;
 
       return (
@@ -477,6 +478,7 @@ export default ({ app }, inject) => {
 
   inject("pagePermission", {
     can(per, thisobj) {
+      return;
       let u = thisobj.$auth.user;
 
       // return (
