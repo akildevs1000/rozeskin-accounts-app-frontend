@@ -353,7 +353,6 @@
                       hide-details
                       placeholder="Product"
                       @change="getProductDetails(item)"
-                      return-object
                     ></v-autocomplete>
                   </td>
                   <td>
@@ -573,16 +572,15 @@ export default {
     this.delivery_services = delivery_services;
   },
   methods: {
-    getProductDetails(item) {
-      if (!item.item) return;
-      let qty = parseFloat(item?.item?.qty || 0);
-      let rate = parseFloat(item?.item?.price || 0);
-
-      item.quantity = qty;
-      item.rate = rate;
-
-      item.tax = qty * rate * 0;
-      item.total = qty * rate + item.tax;
+    getProductDetails(payload) {
+      let item = this.products.find(e => e.product_with_item_name == payload.item);
+      if (!item) return;
+      let qty = parseFloat(item?.qty || 0);
+      let rate = parseFloat(item?.price || 0);
+      payload.quantity = qty;
+      payload.rate = rate;
+      payload.tax = qty * rate * 0;
+      payload.total = qty * rate + payload.tax;
       this.getGrandTotal();
     },
     doCalculate(item) {

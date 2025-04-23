@@ -149,24 +149,27 @@ export default {
     this.products = products;
 
     let { data } = await this.$axios.get(`payment-mode-list`);
-
     this.payment_modes = data;
 
-    let { order } = this.item;
+    // Ensure item and item.order exist before accessing
+    if (this.item && this.item.order) {
+      let { order } = this.item;
+      this.payload = { ...order }; // make a copy to avoid mutating the original
 
-    this.payload = order;
+      let total_paid_amount = parseFloat(order?.total_paid_amount || 0);
+      this.previously_paid = total_paid_amount;
 
-    let total_paid_amount = parseFloat(order.total_paid_amount);
+      let total = parseFloat(order?.total || 0);
 
-    this.previously_paid = total_paid_amount;
+      this.payload.paid_amount = parseFloat(
+        (total - total_paid_amount).toFixed(2)
+      );
 
-    let total = parseFloat(order.total);
-
-    this.payload.paid_amount = parseFloat(
-      (total - total_paid_amount).toFixed(2)
-    );
-
-    this.remaing_amount_to_pay = parseFloat(total - total_paid_amount);
+      this.remaing_amount_to_pay = parseFloat(total - total_paid_amount);
+    } else {
+      console.warn("No item.order found");
+      this.payload = {}; // fallback to empty object to prevent further errors
+    }
   },
   methods: {
     getProductDetails(item) {

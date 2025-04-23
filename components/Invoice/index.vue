@@ -195,10 +195,9 @@
                       {{ item?.reference_id || "---" }}
                     </div>
                     <div>
-                      <span
-                        :class="statusColor(item?.status)"
-                        >{{ item?.status }}</span
-                      >
+                      <span :class="statusColor(item?.status)">{{
+                        item?.status
+                      }}</span>
                     </div>
                   </td>
                   <td class="text-right">
@@ -226,7 +225,7 @@
               color: black !important;
             }
           </style>
-          <v-toolbar class="grey lighten-3" flat dense>
+          <v-alert class="primary" flat dense dark>
             <v-row>
               <v-col>
                 <span>
@@ -253,7 +252,6 @@
                     }
                   "
                 />
-                <!-- <OrderDelete /> -->
                 <v-menu bottom right>
                   <template v-slot:activator="{ on, attrs }">
                     <span
@@ -270,14 +268,6 @@
                       v-on="on"
                     >
                       Print/PDF <v-icon>mdi-chevron-down</v-icon>
-                      <!-- <v-progress-circular
-                        class="ml-1"
-                        v-if="invoiceLoader"
-                        size="15"
-                        width="2"
-                        indeterminate
-                      ></v-progress-circular>
-                       -->
                     </span>
                   </template>
 
@@ -298,110 +288,113 @@
                     </v-list-item>
                   </v-list>
                 </v-menu>
+
+                <v-menu bottom right>
+                  <template v-slot:activator="{ on, attrs }">
+                    <span
+                      class="hover-bold ml-5"
+                      text
+                      style="
+                        background: none;
+                        border: none !important;
+                        font-size: 13px;
+                        cursor: pointer;
+                      "
+                      small
+                      v-bind="attrs"
+                      v-on="on"
+                    >
+                      Payments <v-icon>mdi-chevron-down</v-icon>
+                    </span>
+                  </template>
+
+                  <v-list>
+                    <v-list-item>
+                      <style scoped>
+                        .payment-table {
+                          font-family: arial, sans-serif;
+                          border-collapse: collapse;
+                          width: 100%;
+                        }
+
+                        .payment-table td {
+                          border: 1px solid #dddddd;
+                          text-align: left;
+                          padding: 5px;
+                        }
+
+                        .flat-expansion-panels {
+                          box-shadow: none !important;
+                          border: none !important;
+                        }
+
+                        .v-expansion-panel {
+                          box-shadow: none !important;
+                          margin: 0 !important;
+                        }
+
+                        .v-expansion-panel-header {
+                          padding: 8px 12px;
+                          font-weight: bold;
+                        }
+
+                        .v-expansion-panel-content {
+                          padding: 8px 12px;
+                        }
+                      </style>
+                      <table class="payment-table">
+                        <tr>
+                          <td>ID</td>
+                          <td>Payment Mode</td>
+                          <td>Payment Reference</td>
+                          <td class="text-right">Paid Amount</td>
+                          <td>Created At</td>
+                          <td class="text-center">Action</td>
+                        </tr>
+                        <tr
+                          v-for="(item, i) in selectedItem?.payments"
+                          :key="i"
+                        >
+                          <td>
+                            {{ item.id }}
+                          </td>
+                          <td>
+                            {{ item?.payment_mode?.name }}
+                          </td>
+                          <td>
+                            {{ item.payment_reference }}
+                          </td>
+                          <td class="text-right">
+                            {{ item.paid_amount }}
+                          </td>
+                          <td>
+                            {{ item.created_at }}
+                          </td>
+                          <td class="text-center">
+                            <v-btn
+                              x-small
+                              text
+                              class="blue--text"
+                              @click="openPaymentDialog(item)"
+                              >View</v-btn
+                            >
+                          </td>
+                        </tr>
+                      </table>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
               </v-col>
               <v-col>
                 <div class="text-right">
-                  <v-icon color="primary" @click="isShortView = false"
+                  <v-icon small @click="isShortView = false"
                     >mdi-close</v-icon
                   >
                 </div>
               </v-col>
             </v-row>
-          </v-toolbar>
+          </v-alert>
           <v-container>
-            <v-menu
-              bottom
-              origin="center center"
-              transition="scale-transition"
-              offset-y
-            >
-              <template v-slot:activator="{ on, attrs }">
-                <div
-                  v-bind="attrs"
-                  v-on="on"
-                  dense
-                  flat
-                  class="primary py-1 px-2 white--text caption"
-                  style="border-radius: 2px"
-                >
-                  Payments <v-icon color="white">mdi-chevron-down</v-icon>
-                </div>
-              </template>
-
-              <v-list>
-                <v-list-item>
-                  <style scoped>
-                    .payment-table {
-                      font-family: arial, sans-serif;
-                      border-collapse: collapse;
-                      width: 100%;
-                    }
-
-                    .payment-table td {
-                      border: 1px solid #dddddd;
-                      text-align: left;
-                      padding: 5px;
-                    }
-
-                    .flat-expansion-panels {
-                      box-shadow: none !important;
-                      border: none !important;
-                    }
-
-                    .v-expansion-panel {
-                      box-shadow: none !important;
-                      margin: 0 !important;
-                    }
-
-                    .v-expansion-panel-header {
-                      padding: 8px 12px;
-                      font-weight: bold;
-                    }
-
-                    .v-expansion-panel-content {
-                      padding: 8px 12px;
-                    }
-                  </style>
-                  <table class="payment-table">
-                    <tr>
-                      <td>ID</td>
-                      <td>Payment Mode</td>
-                      <td>Payment Reference</td>
-                      <td class="text-right">Paid Amount</td>
-                      <td>Created At</td>
-                      <td class="text-center">Action</td>
-                    </tr>
-                    <tr v-for="(item, i) in selectedItem?.payments" :key="i">
-                      <td>
-                        {{ item.id }}
-                      </td>
-                      <td>
-                        {{ item?.payment_mode?.name }}
-                      </td>
-                      <td>
-                        {{ item.payment_reference }}
-                      </td>
-                      <td class="text-right">
-                        {{ item.paid_amount }}
-                      </td>
-                      <td>
-                        {{ item.created_at }}
-                      </td>
-                      <td class="text-center">
-                        <v-btn
-                          x-small
-                          text
-                          class="blue--text"
-                          @click="openPaymentDialog(item)"
-                          >View</v-btn
-                        >
-                      </td>
-                    </tr>
-                  </table>
-                </v-list-item>
-              </v-list>
-            </v-menu>
-
             <v-card id="capture" class="pa-5 mx-auto" max-width="750">
               <v-row class="">
                 <v-col>
@@ -485,7 +478,7 @@
                       :key="index"
                     >
                       <td>
-                        {{ item?.item?.name }}
+                        {{ item?.item }}
                       </td>
                       <td class="text-right">
                         {{ item?.quantity }}
