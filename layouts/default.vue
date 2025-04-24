@@ -42,26 +42,6 @@
 
         <v-list light nav dense>
           <v-list-item-group color="primary">
-            <v-list-item @click="goToCompany()">
-              <v-list-item-icon>
-                <v-icon>mdi-account-multiple-outline</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title class="grey--text"
-                  >Profile</v-list-item-title
-                >
-              </v-list-item-content>
-            </v-list-item>
-
-            <!-- <v-list-item @click="goToReport()">
-              <v-list-item-icon>
-                <v-icon>mdi mdi-text-account</v-icon>
-              </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title class="grey--text">Report</v-list-item-title>
-              </v-list-item-content>
-            </v-list-item> -->
-
             <v-list-item @click="logout">
               <v-list-item-icon>
                 <v-icon>mdi-logout</v-icon>

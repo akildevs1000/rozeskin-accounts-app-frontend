@@ -67,6 +67,10 @@ export default {
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
     "~/plugins/axios.js",
+    {
+      src: "~/plugins/TiptapVuetify",
+      mode: "client",
+    },
     "~/plugins/qrcode.js",
     "~/plugins/custom-methods.js",
   ],
