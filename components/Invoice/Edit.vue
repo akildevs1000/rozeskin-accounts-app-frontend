@@ -41,7 +41,6 @@
                       label="First Name"
                     ></v-text-field>
                   </v-col>
-
                   <v-col cols="6">
                     <v-text-field
                       outlined
@@ -52,7 +51,6 @@
                       label="Last Name"
                     ></v-text-field>
                   </v-col>
-
                   <v-col cols="6">
                     <v-text-field
                       outlined
@@ -65,11 +63,31 @@
                   </v-col>
                   <v-col cols="6">
                     <v-text-field
+                      v-model="payload.customer.dob"
+                      label="Date of Birth"
+                      readonly
+                      outlined
+                      dense
+                      hide-details
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="6">
+                    <v-text-field
                       outlined
                       dense
                       hide-details
                       readonly
                       v-model="payload.customer.phone"
+                      label="Phone"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="6">
+                    <v-text-field
+                      outlined
+                      dense
+                      hide-details
+                      readonly
+                      v-model="payload.customer.whatsapp"
                       label="Phone"
                     ></v-text-field>
                   </v-col>

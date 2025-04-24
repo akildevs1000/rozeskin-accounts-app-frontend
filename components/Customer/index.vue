@@ -120,6 +120,10 @@ export default {
         value: "phone",
       },
       {
+        text: "Date of Birth",
+        value: "dob_display",
+      },
+      {
         text: "City",
         value: "shipping_address.city",
       },

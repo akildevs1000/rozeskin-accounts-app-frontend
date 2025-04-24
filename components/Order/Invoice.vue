@@ -22,6 +22,7 @@
                   <v-col cols="12">Customer Info</v-col>
                   <v-col cols="6">
                     <v-text-field
+                      readonly
                       outlined
                       dense
                       hide-details
@@ -29,9 +30,9 @@
                       label="First Name"
                     ></v-text-field>
                   </v-col>
-
                   <v-col cols="6">
                     <v-text-field
+                      readonly
                       outlined
                       dense
                       hide-details
@@ -39,9 +40,9 @@
                       label="Last Name"
                     ></v-text-field>
                   </v-col>
-
                   <v-col cols="6">
                     <v-text-field
+                      readonly
                       outlined
                       dense
                       hide-details
@@ -51,11 +52,30 @@
                   </v-col>
                   <v-col cols="6">
                     <v-text-field
+                      v-model="payload.customer.dob"
+                      label="Date of Birth"
+                      readonly
+                      outlined
+                      dense
+                      hide-details
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="6">
+                    <v-text-field
                       outlined
                       dense
                       hide-details
                       v-model="payload.customer.phone"
                       label="Phone"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="6">
+                    <v-text-field
+                      outlined
+                      dense
+                      hide-details
+                      v-model="payload.customer.whatsapp"
+                      label="Whatsapp"
                     ></v-text-field>
                   </v-col>
                 </v-row>
@@ -126,7 +146,6 @@
               </v-container>
             </v-card>
           </v-col>
-
           <v-col cols="6">
             <v-card outlined>
               <v-container>
@@ -190,7 +209,6 @@
               </v-container>
             </v-card>
           </v-col>
-
           <v-col cols="12">
             <v-card outlined>
               <v-container>
@@ -273,7 +291,7 @@
                   <v-col cols="4">
                     <v-autocomplete
                       v-model="payload.status"
-                      :items="['Paid', 'Unpaid','Cancelled']"
+                      :items="['Paid', 'Unpaid', 'Cancelled']"
                       label="Status"
                       outlined
                       dense
@@ -284,7 +302,6 @@
               </v-container>
             </v-card>
           </v-col>
-
           <v-col>
             <style scoped>
               .order-table {
@@ -372,7 +389,6 @@
               </tr>
             </table>
           </v-col>
-
           <v-col cols="12" class="">
             <v-row>
               <v-col cols="8"> </v-col>

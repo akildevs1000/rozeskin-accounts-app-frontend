@@ -2,7 +2,7 @@
   <v-app style="background-color: #333959fc;">
     <v-container fluid fill-height>
       <v-row align="center" justify="center">
-        <v-col cols="12" sm="8" md="3">
+        <v-col cols="12" sm="8" md="3" style="max-width: 330px;">
           <v-card class="pa-6" elevation="3">
             <v-card-title class="text-h5 justify-center">
               Invoice App

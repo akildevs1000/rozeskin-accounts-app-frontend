@@ -32,7 +32,7 @@
                 <v-container>
                   <v-row>
                     <v-col cols="12">Customer Info</v-col>
-                    <v-col cols="4">
+                    <v-col cols="6">
                       <v-text-field
                         outlined
                         dense
@@ -42,7 +42,7 @@
                       ></v-text-field>
                     </v-col>
 
-                    <v-col cols="4">
+                    <v-col cols="6">
                       <v-text-field
                         outlined
                         dense
@@ -51,8 +51,7 @@
                         label="Last Name"
                       ></v-text-field>
                     </v-col>
-
-                    <v-col cols="4">
+                    <v-col cols="6">
                       <v-text-field
                         outlined
                         dense
@@ -60,6 +59,35 @@
                         v-model="payload.customer.email"
                         label="Email"
                       ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
+                      <v-menu
+                        ref="menu"
+                        v-model="menu"
+                        :close-on-content-click="false"
+                        transition="scale-transition"
+                        offset-y
+                        min-width="auto"
+                      >
+                        <template v-slot:activator="{ on, attrs }">
+                          <v-text-field
+                            v-model="payload.customer.dob"
+                            label="Date of Birth"
+                            readonly
+                            v-bind="attrs"
+                            v-on="on"
+                            outlined
+                            dense
+                            hide-details
+                          ></v-text-field>
+                        </template>
+                        <v-date-picker
+                          v-model="payload.customer.dob"
+                          @input="menu = false"
+                          :show-current="false"
+                          no-title
+                        ></v-date-picker>
+                      </v-menu>
                     </v-col>
                     <v-col cols="6">
                       <v-text-field
@@ -473,6 +501,7 @@ export default {
 
   data() {
     return {
+      menu:false,
       payload: {
         user_id: 1,
         username: "admin_rozeskin",
@@ -573,7 +602,9 @@ export default {
   },
   methods: {
     getProductDetails(payload) {
-      let item = this.products.find(e => e.product_with_item_name == payload.item);
+      let item = this.products.find(
+        (e) => e.product_with_item_name == payload.item
+      );
       if (!item) return;
       let qty = parseFloat(item?.qty || 0);
       let rate = parseFloat(item?.price || 0);
