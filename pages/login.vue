@@ -1,8 +1,8 @@
 <template>
-  <v-app style="background-color: #333959fc;">
+  <v-app style="background-color: #333959fc">
     <v-container fluid fill-height>
       <v-row align="center" justify="center">
-        <v-col cols="12" sm="8" md="3" style="max-width: 330px;">
+        <v-col cols="12" sm="8" md="3" style="max-width: 330px">
           <v-card class="pa-6" elevation="3">
             <v-card-title class="text-h5 justify-center">
               Invoice App
@@ -29,10 +29,23 @@
                 @click:append="show_password = !show_password"
                 class="mb-2"
               ></v-text-field>
+
+              <v-checkbox
+                v-model="remember"
+                label="Remember Me"
+                dense
+                hide-details
+                class="mt-0 mb-2"
+              />
+
               <span
                 v-if="msg"
                 class="error--text"
-                style="font-size: 12px; display: inline-block; margin-bottom: 10px"
+                style="
+                  font-size: 12px;
+                  display: inline-block;
+                  margin-bottom: 10px;
+                "
               >
                 {{ msg }}
               </span>
@@ -60,6 +73,8 @@ export default {
 
   layout: "login",
   data: () => ({
+    remember: false,
+
     // sitekey: "6Lf1wYwhAAAAAOMJYvI73SgjCSrS_OSS2kDJbVvs", // i am not robot
     // reCaptcha: null,
     // showGRC: false,
@@ -67,8 +82,8 @@ export default {
     valid: true,
     loading: false,
     snackbar: false,
-    email: "demo@gmail.com",
-    password: "demo",
+    email: "",
+    password: "",
     show_password: false,
     msg: "",
     emailRules: [
@@ -80,6 +95,17 @@ export default {
   }),
   created() {
     console.log("Login Created");
+
+    if (process.client) {
+      const rememberedEmail = localStorage.getItem("remember_email");
+      const rememberedPassword = localStorage.getItem("remember_password");
+
+      if (rememberedEmail && rememberedPassword) {
+        this.email = rememberedEmail;
+        this.password = rememberedPassword;
+        this.remember = true;
+      }
+    }
 
     try {
       const userType = this.$auth.user?.user_type;
@@ -156,6 +182,15 @@ export default {
               // setTimeout(() => {
               //   this.$router.push(`/`);
               // }, 1000);
+
+              if (this.remember) {
+                localStorage.setItem("remember_email", this.email);
+                localStorage.setItem("remember_password", this.password);
+              } else {
+                localStorage.removeItem("remember_email");
+                localStorage.removeItem("remember_password");
+              }
+
               this.$router.push(`/`);
               // return;
             }
