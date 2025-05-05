@@ -530,9 +530,8 @@ export default {
       billing_address: this.item.customer.billing_address,
     };
 
-    if (this.payload.payment_method == "COD" || this.payload.payment_method == "cod") {
-      this.payload.status = "Unpaid";
-    }
+    const method = this.payload.payment_method?.toLowerCase();
+    this.payload.status = method === "cod" ? "Unpaid" : "Paid";
   },
   methods: {
     getProductDetails(item) {
