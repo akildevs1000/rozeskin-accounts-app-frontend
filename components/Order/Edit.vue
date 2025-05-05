@@ -596,7 +596,7 @@ export default {
       let rate = parseFloat(item?.price || 0);
       payload.quantity = qty;
       payload.rate = rate;
-      payload.tax = qty * rate * 0;
+      payload.tax = qty * rate;
       payload.total = qty * rate + payload.tax;
       this.getGrandTotal();
     },
@@ -604,7 +604,7 @@ export default {
       if (!item.item) return;
       let qty = parseFloat(item?.quantity || 0);
       let rate = parseFloat(item?.rate || 0);
-      item.tax = qty * rate * 0;
+      item.tax = qty * rate;
       item.total = qty * rate + item.tax;
       this.getGrandTotal();
     },
