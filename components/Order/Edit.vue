@@ -604,7 +604,7 @@ export default {
       if (!item.item) return;
       let qty = parseFloat(item?.quantity || 0);
       let rate = parseFloat(item?.rate || 0);
-      item.tax = qty * rate * 0.05;
+      item.tax = qty * rate * 0;
       item.total = qty * rate + item.tax;
       this.getGrandTotal();
     },
