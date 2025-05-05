@@ -9,7 +9,8 @@
                 <div class="text-subtitle-1 font-weight-medium mb-2">
                   {{ stat.label }}
                 </div>
-                <div class="font-weight">{{ stat.value }}</div>
+                <!-- incread font size little -->
+                <div class="font-weight" :class="`${stat.color}--text`" style="font-size: 18px;">{{ stat.value }}</div>
               </div>
               <div>
                 <v-btn fab :class="stat.color" text small><v-icon color="white">{{ stat.icon }}</v-icon></v-btn>
