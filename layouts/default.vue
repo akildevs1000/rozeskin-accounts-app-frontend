@@ -491,7 +491,8 @@ export default {
   padding: 0;
 }
 small {
-  font-size: 11px;
+  font-size: 14px;
+  color:black;
 }
 .text-color {
   color: #8a8a8a;
@@ -521,8 +522,7 @@ td {
   border-bottom: 1px solid #e0e0e0;
 }
 .v-data-table td {
-  color: #8a8a8a !important; /* Table cell text color */
-  font-size: 11px !important; /* Table cell text color */
+  font-size: 14px !important; /* Table cell text color */
 }
 .available {
   background-color: #139c4a;
