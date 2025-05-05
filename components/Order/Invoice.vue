@@ -268,16 +268,13 @@
                     ></v-text-field>
                   </v-col>
                   <v-col cols="4">
-                    <v-autocomplete
-                      v-model="payload.payment_method"
-                      :items="payment_modes"
-                      item-text="name"
-                      item-value="name"
-                      label="Payment Mode"
+                    <v-text-field
                       outlined
                       dense
                       hide-details
-                    ></v-autocomplete>
+                      v-model="payload.payment_method"
+                      label="Payment Mode"
+                    ></v-text-field>
                   </v-col>
                   <v-col cols="4">
                     <v-text-field
@@ -532,6 +529,10 @@ export default {
       shipping_address: this.item.customer.shipping_address,
       billing_address: this.item.customer.billing_address,
     };
+
+    if (this.payload.payment_method == "COD" || this.payload.payment_method == "cod") {
+      this.payload.status = "Unpaid";
+    }
   },
   methods: {
     getProductDetails(item) {
