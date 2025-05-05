@@ -331,19 +331,13 @@
 
               <tr cols="12" v-for="(item, index) in payload.items" :key="index">
                 <td>
-                  <v-autocomplete
+                  <v-text-field
                     flat
-                    append-icon=""
                     v-model="item.item"
-                    :items="products"
-                    item-text="product_with_item_name"
-                    item-value="product_with_item_name"
                     dense
                     hide-details
                     placeholder="Product"
-                    @change="getProductDetails(item)"
-                    return-object
-                  ></v-autocomplete>
+                  ></v-text-field>
                 </td>
                 <td>
                   <v-text-field
