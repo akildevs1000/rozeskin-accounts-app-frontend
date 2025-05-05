@@ -545,7 +545,7 @@ export default {
       item.quantity = item.item.qty;
       item.rate = parseFloat(item.item.price);
       let sub_total = item.quantity * item.rate;
-      item.tax = sub_total;
+      item.tax = 0;
       item.total = sub_total + item.tax;
       this.getGrandTotal();
     },
