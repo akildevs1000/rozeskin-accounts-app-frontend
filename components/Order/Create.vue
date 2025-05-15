@@ -149,13 +149,16 @@
                       ></v-text-field>
                     </v-col>
                     <v-col cols="6">
-                      <v-text-field
+                      <v-autocomplete
                         outlined
                         dense
                         hide-details
                         v-model="payload.shipping_address.city"
+                        :items="cities"
+                        item-text="label"
+                        item-value="value"
                         label="City"
-                      ></v-text-field>
+                      ></v-autocomplete>
                     </v-col>
                     <v-col cols="6">
                       <v-text-field
@@ -213,13 +216,16 @@
                       ></v-text-field>
                     </v-col>
                     <v-col cols="6">
-                      <v-text-field
+                      <v-autocomplete
                         outlined
                         dense
                         hide-details
                         v-model="payload.billing_address.city"
+                        :items="cities"
+                        item-text="label"
+                        item-value="value"
                         label="City"
-                      ></v-text-field>
+                      ></v-autocomplete>
                     </v-col>
                     <v-col cols="6">
                       <v-text-field
@@ -501,7 +507,7 @@ export default {
 
   data() {
     return {
-      menu:false,
+      menu: false,
       payload: {
         user_id: 1,
         username: "admin_rozeskin",
@@ -569,6 +575,7 @@ export default {
         postcode: null,
         country: null,
       },
+      cities: require(`../../json/cities.json`),
     };
   },
   watch: {
