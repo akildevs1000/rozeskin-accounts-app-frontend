@@ -107,13 +107,16 @@
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6">
-                    <v-text-field
+                    <v-autocomplete
                       outlined
                       dense
                       hide-details
                       v-model="payload.shipping_address.city"
+                      :items="cities"
+                      item-text="label"
+                      item-value="value"
                       label="City"
-                    ></v-text-field>
+                    ></v-autocomplete>
                   </v-col>
                   <v-col cols="6">
                     <v-text-field
@@ -170,13 +173,16 @@
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6">
-                    <v-text-field
+                    <v-autocomplete
                       outlined
                       dense
                       hide-details
                       v-model="payload.billing_address.city"
+                      :items="cities"
+                      item-text="label"
+                      item-value="value"
                       label="City"
-                    ></v-text-field>
+                    ></v-autocomplete>
                   </v-col>
                   <v-col cols="6">
                     <v-text-field
@@ -497,6 +503,7 @@ export default {
           },
         ],
       },
+
       dialog: false,
       loading: false,
       successResponse: null,
@@ -505,7 +512,26 @@ export default {
       business_sources: [],
       delivery_services: [],
       products: [],
+      cities: require(`../../json/cities.json`)
     };
+  },
+  watch: {
+    'payload.shipping_address.city'(newCity) {
+      const matched = this.cities.find(
+        city => city.label.toLowerCase() === newCity.toLowerCase()
+      );
+      if (matched) {
+        this.payload.shipping_address.city = matched.value; // Assign value like "SHJ"
+      }
+    },
+    'payload.billing_address.city'(newCity) {
+      const matched = this.cities.find(
+        city => city.label.toLowerCase() === newCity.toLowerCase()
+      );
+      if (matched) {
+        this.payload.billing_address.city = matched.value; // Assign value like "SHJ"
+      }
+    }
   },
   async created() {
     let { data: products } = await this.$axios.get(`product-list`);
@@ -526,6 +552,8 @@ export default {
 
     this.payload = {
       ...this.item,
+      business_source_id: business_sources[0]?.id || 0,
+      delivery_service_id: delivery_services[0]?.id || 0,
       shipping_address: this.item.customer.shipping_address,
       billing_address: this.item.customer.billing_address,
     };

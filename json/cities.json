@@ -1,0 +1,11 @@
+[
+  { "value": "AUH", "label": "Abu Dhabi" },
+  { "value": "AJM", "label": "Ajman" },
+  { "value": "ALN", "label": "Al Ain" },
+  { "value": "DXB", "label": "Dubai" },
+  { "value": "FUJ", "label": "Fujairah" },
+  { "value": "DXJ", "label": "Jebel Ali" },
+  { "value": "RAK", "label": "Ras Al Khaimah" },
+  { "value": "SHJ", "label": "Sharjah" },
+  { "value": "UAQ", "label": "Umm Al Quwain" }
+]

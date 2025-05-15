@@ -1,3 +1,3 @@
 <template>
-  <div>sdf</div>
+  <Order />
 </template>

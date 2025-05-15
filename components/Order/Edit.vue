@@ -136,13 +136,16 @@
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6">
-                    <v-text-field
+                    <v-autocomplete
                       outlined
                       dense
                       hide-details
                       v-model="payload.shipping_address.city"
+                      :items="cities"
+                      item-text="label"
+                      item-value="value"
                       label="City"
-                    ></v-text-field>
+                    ></v-autocomplete>
                   </v-col>
                   <v-col cols="6">
                     <v-text-field
@@ -200,13 +203,16 @@
                     ></v-text-field>
                   </v-col>
                   <v-col cols="6">
-                    <v-text-field
+                    <v-autocomplete
                       outlined
                       dense
                       hide-details
                       v-model="payload.billing_address.city"
+                      :items="cities"
+                      item-text="label"
+                      item-value="value"
                       label="City"
-                    ></v-text-field>
+                    ></v-autocomplete>
                   </v-col>
                   <v-col cols="6">
                     <v-text-field
@@ -549,9 +555,27 @@ export default {
         postcode: null,
         country: null,
       },
+      cities: require(`../../json/cities.json`),
     };
   },
+
   watch: {
+    "payload.shipping_address.city"(newCity) {
+      const matched = this.cities.find(
+        (city) => city.label.toLowerCase() === newCity.toLowerCase()
+      );
+      if (matched) {
+        this.payload.shipping_address.city = matched.value; // Assign value like "SHJ"
+      }
+    },
+    "payload.billing_address.city"(newCity) {
+      const matched = this.cities.find(
+        (city) => city.label.toLowerCase() === newCity.toLowerCase()
+      );
+      if (matched) {
+        this.payload.billing_address.city = matched.value; // Assign value like "SHJ"
+      }
+    },
     useAsBillingAddress(val) {
       this.payload.billing_address =
         val == true
