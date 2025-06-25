@@ -392,7 +392,11 @@
               <v-col cols="4">
                 <div>
                   <div class="d-flex justify-end justify-space-between">
-                    <div><small>Shipping Chargress</small></div>
+                    <div>
+                      <small style="font-size: 11px !important"
+                        >Shipping Chargres</small
+                      >
+                    </div>
                     <div>
                       <small>
                         <input
@@ -400,6 +404,7 @@
                             font-size: 11px !important;
                             color: #868686;
                             border: none;
+                            border-bottom: 1px solid #ccc;
                             outline: none;
                             box-shadow: none;
                             text-align: right;
@@ -407,6 +412,30 @@
                           "
                           type="number"
                           v-model="payload.shipping_charges"
+                          @input="getGrandTotal"
+                        />
+                      </small>
+                    </div>
+                  </div>
+                  <div class="d-flex justify-end justify-space-between">
+                    <div>
+                      <small style="font-size: 11px !important">Discount</small>
+                    </div>
+                    <div>
+                      <small>
+                        <input
+                          style="
+                            font-size: 11px !important;
+                            color: #868686;
+                            border: none;
+                            border-bottom: 1px solid #ccc;
+                            outline: none;
+                            box-shadow: none;
+                            text-align: right;
+                            width: 100px;
+                          "
+                          type="number"
+                          v-model="payload.discount"
                           @input="getGrandTotal"
                         />
                       </small>
@@ -466,6 +495,8 @@ export default {
         payment_method: null,
         payment_method_title: null,
         shipping_method: "Free shipping",
+        shipping_charges: 0,
+        discount: 0,
 
         business_source_id: null,
         delivery_service_id: null,
@@ -512,26 +543,26 @@ export default {
       business_sources: [],
       delivery_services: [],
       products: [],
-      cities: require(`../../json/cities.json`)
+      cities: require(`../../json/cities.json`),
     };
   },
   watch: {
-    'payload.shipping_address.city'(newCity) {
+    "payload.shipping_address.city"(newCity) {
       const matched = this.cities.find(
-        city => city.label.toLowerCase() === newCity.toLowerCase()
+        (city) => city.label.toLowerCase() === newCity.toLowerCase()
       );
       if (matched) {
         this.payload.shipping_address.city = matched.value; // Assign value like "SHJ"
       }
     },
-    'payload.billing_address.city'(newCity) {
+    "payload.billing_address.city"(newCity) {
       const matched = this.cities.find(
-        city => city.label.toLowerCase() === newCity.toLowerCase()
+        (city) => city.label.toLowerCase() === newCity.toLowerCase()
       );
       if (matched) {
         this.payload.billing_address.city = matched.value; // Assign value like "SHJ"
       }
-    }
+    },
   },
   async created() {
     let { data: products } = await this.$axios.get(`product-list`);
@@ -593,10 +624,9 @@ export default {
       this.getGrandTotal();
     },
     getGrandTotal() {
-      this.payload.total = this.payload.items.reduce(
-        (cur, acc) => cur + acc.total,
-        0
-      );
+      this.payload.total =
+        this.payload.items.reduce((cur, acc) => cur + acc.total, 0) -
+        parseFloat(this.payload.discount || 0);
     },
 
     close() {
@@ -612,6 +642,9 @@ export default {
         delivery_service_id: this.payload.delivery_service_id || null,
         tracking_number: this.payload.tracking_number || null,
         status: this.payload.status,
+
+        discount: this.payload.discount,
+        total : this.payload.total,
       };
 
       this.loading = true;

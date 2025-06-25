@@ -444,7 +444,7 @@
                 <v-col cols="4">
                   <div>
                     <div class="d-flex justify-end justify-space-between">
-                      <div><small>Shipping Chargress</small></div>
+                      <div><small style="font-size: 11px !important;">Shipping Chargres</small></div>
                       <div>
                         <small>
                           <input
@@ -452,6 +452,7 @@
                               font-size: 11px !important;
                               color: #868686;
                               border: none;
+                              border-bottom: 1px solid #ccc;
                               outline: none;
                               box-shadow: none;
                               text-align: right;
@@ -459,6 +460,28 @@
                             "
                             type="number"
                             v-model="payload.shipping_charges"
+                            @input="getGrandTotal"
+                          />
+                        </small>
+                      </div>
+                    </div>
+                    <div class="d-flex justify-end justify-space-between">
+                      <div><small style="font-size: 11px !important;">Discount</small></div>
+                      <div>
+                        <small>
+                          <input
+                            style="
+                              font-size: 11px !important;
+                              color: #868686;
+                              border: none;
+                              border-bottom: 1px solid #ccc;
+                              outline: none;
+                              box-shadow: none;
+                              text-align: right;
+                              width: 100px;
+                            "
+                            type="number"
+                            v-model="payload.discount"
                             @input="getGrandTotal"
                           />
                         </small>
@@ -521,7 +544,7 @@ export default {
         payment_method_title: "",
         shipping_method: "",
         shipping_charges: 0,
-
+        discount: 0,
         business_source_id: 0,
         delivery_service_id: 0,
         tracking_number: 0,
@@ -659,7 +682,7 @@ export default {
       );
 
       this.payload.total =
-        parseFloat(this.payload.shipping_charges || 0) + sub_total;
+        (parseFloat(this.payload.shipping_charges || 0) + sub_total) - parseFloat(this.payload.discount || 0);
     },
     getCustomerInfo(payload) {
       if (payload) {

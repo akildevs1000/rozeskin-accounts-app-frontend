@@ -282,6 +282,10 @@ export default {
         value: "shipping_charges",
       },
       {
+        text: "Discount",
+        value: "discount",
+      },
+      {
         text: "Total",
         value: "total",
       },
