@@ -294,10 +294,13 @@ export default {
         value: "shipping_method",
       },
       {
+        text: "Special Instructions",
+        value: "special_instructions",
+      },
+      {
         text: "Invoice",
         value: "invoice",
       },
-
       {
         text: "Action",
         align: "center",
