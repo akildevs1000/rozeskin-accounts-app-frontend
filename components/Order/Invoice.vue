@@ -417,7 +417,7 @@
                       </small>
                     </div>
                   </div>
-                  <div class="d-flex justify-end justify-space-between">
+                  <!-- <div class="d-flex justify-end justify-space-between">
                     <div>
                       <small style="font-size: 11px !important">Discount</small>
                     </div>
@@ -440,7 +440,7 @@
                         />
                       </small>
                     </div>
-                  </div>
+                  </div> -->
                   <div class="d-flex justify-end justify-space-between">
                     <div><small>Total</small></div>
                     <div>
