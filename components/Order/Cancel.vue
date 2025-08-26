@@ -247,7 +247,7 @@ export default {
       try {
         await this.$axios.post(`cancel-order/${this.payload.order_id}`, payload);
         this.close();
-        this.$emit("response", "Record has been inserted");
+        this.$emit("response", "Order Has been cancelled.");
       } catch (error) {
         this.errorResponse = error?.response?.data?.message || "Unknown error";
         this.loading = false;
