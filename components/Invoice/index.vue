@@ -777,7 +777,7 @@ export default {
 
       {
         text: "Tracking Id",
-        value: "tracking_number",
+        value: "order.tracking_number",
       },
       {
         text: "Total",
