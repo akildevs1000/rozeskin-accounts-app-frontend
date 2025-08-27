@@ -214,7 +214,6 @@
                           </b>
                         </div>
                         <div class="body-2" style="cursor: pointer">
-                          {{ item?.id || "---" }} -
                           {{ item?.reference_id || "---" }}
                         </div>
                         <div>
@@ -407,6 +406,16 @@
                         </v-list-item>
                       </v-list>
                     </v-menu>
+
+                     <InvoiceCancel
+                        :order_id="selectedItem?.order?.order_id"
+                        :invoice_id="selectedItem?.id"
+                        @response="
+                          () => {
+                            getDataFromApi();
+                          }
+                        "
+                      />
                   </v-col>
                   <v-col>
                     <div class="text-right">
@@ -441,6 +450,7 @@
                     </v-col>
                     <v-col class="text-right pt-10">
                       <div class="text-h4 text-grey-darken-4">INVOICE</div>
+                      <div class=""># ORD-{{ selectedItem?.order?.order_id }}</div>
                       <div class=""># {{ selectedItem?.reference_id }}</div>
                       <br />
                       <div class="caption">Balance Due</div>

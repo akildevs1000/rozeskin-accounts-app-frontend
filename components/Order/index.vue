@@ -39,20 +39,14 @@
               </v-col>
               <v-col>
                 <v-autocomplete
-                  :items="[
-                    { id: null, name: 'Select All' },
-                    { id: 'Pending', name: 'Pending' },
-                    { id: 'Paid', name: 'Paid' },
-                    { id: 'Unpaid', name: 'Unpaid' },
-                    { id: 'Cancelled', name: 'Cancelled' },
-                  ]"
+                  :items="statusList"
                   item-text="name"
                   item-value="id"
                   label="Status"
                   dense
                   outlined
                   flat
-                  v-model="filters.status"
+                  v-model="filters.order_status"
                   hide-details
                 ></v-autocomplete>
               </v-col>
@@ -208,7 +202,7 @@
                       <OrderCancel
                         :model="Model"
                         :endpoint="endpoint"
-                        :item="item"
+                        :order_id="item.order_id"
                         @response="
                           () => {
                             invoiceCompKey++;
@@ -257,6 +251,7 @@ export default {
     loading: false,
     response: "",
     items: [],
+    statusList:[],
     errors: [],
     headers: [
       // {
@@ -358,6 +353,15 @@ export default {
     this.delivery_services = [
       { id: null, name: "Select All" },
       ...delivery_services,
+    ];
+
+    let { data: statusList } = await this.$axios.get(
+      `status-list`
+    );
+
+    this.statusList = [
+      { id: null, name: "Select All" },
+      ...statusList,
     ];
 
   },

@@ -1,16 +1,28 @@
 <template>
   <v-dialog v-model="dialog" width="400">
     <AssetsIconClose left="390" @click="close" />
+
     <template v-slot:activator="{ on, attrs }">
-      <span v-bind="attrs" v-on="on">
-        <v-icon color="primary" small> mdi-cancel </v-icon>
-        Cancel Order
+      <span
+        v-bind="attrs"
+        v-on="on"
+        class="hover-bold"
+        text
+        style="
+          background: none;
+          border: none !important;
+          font-size: 13px;
+          cursor: pointer;
+        "
+        small
+      >
+        Cancel <v-icon x-small class="ml-1 mr-3">mdi-cancel</v-icon>
       </span>
     </template>
 
     <v-card>
       <v-alert flat class="grey lighten-3" dense>
-        <span v-if="!loading">Canceling Order # {{ order_id }}</span>
+        <span v-if="!loading">Canceling Invoice # {{ invoice_id }}</span>
       </v-alert>
 
       <v-card-text>
@@ -52,7 +64,7 @@
 </template>
 <script>
 export default {
-  props: ["order_id", "endpoint", "model"],
+  props: ["order_id","invoice_id", "endpoint", "model"],
   data() {
     return {
       cancel_reason: null,
@@ -73,6 +85,7 @@ export default {
       let payload = {
         cancel_reason: this.cancel_reason,
         order_id: this.order_id,
+        invoice_id: this.invoice_id,
       };
       try {
         await this.$axios.post(`cancel-order`, payload);
