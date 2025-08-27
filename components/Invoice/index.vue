@@ -9,7 +9,13 @@
                 <div class="text-subtitle-1 font-weight-medium mb-2">
                   {{ stat.label }}
                 </div>
-                <div class="font-weight" :class="`${stat.color}--text`" style="font-size: 18px;">{{ stat.value }}</div>
+                <div
+                  class="font-weight"
+                  :class="`${stat.color}--text`"
+                  style="font-size: 18px"
+                >
+                  {{ stat.value }}
+                </div>
               </div>
               <div>
                 <v-btn fab :class="stat.color" text small
@@ -58,6 +64,18 @@
                   item-text="name"
                   item-value="id"
                   label="Delivery Service"
+                  outlined
+                  dense
+                  hide-details
+                ></v-autocomplete>
+              </v-col>
+              <v-col>
+                <v-autocomplete
+                  v-model="filters.payment_method"
+                  :items="payment_modes"
+                  item-text="name"
+                  item-value="id"
+                  label="Payment Mode"
                   outlined
                   dense
                   hide-details
@@ -407,15 +425,15 @@
                       </v-list>
                     </v-menu>
 
-                     <InvoiceCancel
-                        :order_id="selectedItem?.order?.order_id"
-                        :invoice_id="selectedItem?.id"
-                        @response="
-                          () => {
-                            getDataFromApi();
-                          }
-                        "
-                      />
+                    <InvoiceCancel
+                      :order_id="selectedItem?.order?.order_id"
+                      :invoice_id="selectedItem?.id"
+                      @response="
+                        () => {
+                          getDataFromApi();
+                        }
+                      "
+                    />
                   </v-col>
                   <v-col>
                     <div class="text-right">
@@ -450,7 +468,9 @@
                     </v-col>
                     <v-col class="text-right pt-10">
                       <div class="text-h4 text-grey-darken-4">INVOICE</div>
-                      <div class=""># ORD-{{ selectedItem?.order?.order_id }}</div>
+                      <div class="">
+                        # ORD-{{ selectedItem?.order?.order_id }}
+                      </div>
                       <div class=""># {{ selectedItem?.reference_id }}</div>
                       <br />
                       <div class="caption">Balance Due</div>
@@ -748,7 +768,7 @@ export default {
       },
       {
         text: "Delivery Service",
-        value: "delivery_service.name",
+        value: "order.delivery_service.name",
       },
       {
         text: "Order Ref #",
@@ -767,6 +787,10 @@ export default {
       //   text: "Paid Amount",
       //   value: "total_paid_amount",
       // },
+        {
+        text: "Payment Mode",
+        value: "order.payment_method",
+      },
       {
         text: "Status",
         value: "status",
@@ -781,10 +805,19 @@ export default {
     componentKey: 1,
     customer_list: [],
     delivery_services: [],
+    payment_modes: [],
   }),
 
   async created() {
     await this.getStats();
+
+    let { data: payment_modes } = await this.$axios.get(`payment-mode-list`);
+
+    let result = payment_modes.map((e) => ({
+      id: e.name,
+      name: e.name,
+    }));
+    this.payment_modes = [{ id: null, name: "Select All" }, ...result];
 
     let { data } = await this.$axios.get(`customer-list`);
     this.customer_list = [{ id: null, full_name: "Select All" }, ...data];
