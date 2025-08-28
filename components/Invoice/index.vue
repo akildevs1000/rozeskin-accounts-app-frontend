@@ -49,7 +49,7 @@
                 <v-autocomplete
                   v-model="filters.customer_id"
                   :items="customer_list"
-                  item-text="full_name"
+                  item-text="customer_with_phone"
                   item-value="id"
                   label="Customers"
                   outlined
@@ -819,8 +819,7 @@ export default {
     }));
     this.payment_modes = [{ id: null, name: "Select All" }, ...result];
 
-    let { data } = await this.$axios.get(`customer-list`);
-    this.customer_list = [{ id: null, full_name: "Select All" }, ...data];
+    this.customer_list = await this.$axios.$get(`customer-list`);
 
     let { data: delivery_services } = await this.$axios.get(
       `delivery-service-list`
