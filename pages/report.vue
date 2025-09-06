@@ -427,7 +427,7 @@ export default {
   methods: {
     statusColor(status) {
       switch (status.toLowerCase()) {
-        case "Pending":
+        case "Processing":
           return "orange--text";
         case "Paid":
           return "green--text";

@@ -325,6 +325,17 @@
                       label="Payment Mode Title"
                     ></v-text-field>
                   </v-col>
+
+                  <v-col cols="12">
+                    <v-textarea
+                      rows="2"
+                      outlined
+                      dense
+                      hide-details
+                      v-model="payload.special_instructions"
+                      label="Special Instructions"
+                    ></v-textarea>
+                  </v-col>
                 </v-row>
               </v-container>
             </v-card>
@@ -494,7 +505,7 @@ export default {
         email: "rozeskincaredubai@gmail.com",
         order_id: 0,
         order_date: "2025-01-27 16:13:44",
-        order_status: "pending",
+        order_status: "Processing",
         currency: "AED",
         total: 1,
         payment_method: "",

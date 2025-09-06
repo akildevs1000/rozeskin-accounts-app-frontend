@@ -1,6 +1,6 @@
 <template>
   <span>
-    <v-row>
+    <!-- <v-row>
       <v-col cols="3" v-for="(stat, index) in stats" :key="index">
         <v-card outlined>
           <v-card-text>
@@ -9,17 +9,24 @@
                 <div class="text-subtitle-1 font-weight-medium mb-2">
                   {{ stat.label }}
                 </div>
-                <!-- incread font size little -->
-                <div class="font-weight" :class="`${stat.color}--text`" style="font-size: 18px;">{{ stat.value }}</div>
+                <div
+                  class="font-weight"
+                  :class="`${stat.color}--text`"
+                  style="font-size: 18px"
+                >
+                  {{ stat.value }}
+                </div>
               </div>
               <div>
-                <v-btn fab :class="stat.color" text small><v-icon color="white">{{ stat.icon }}</v-icon></v-btn>
+                <v-btn fab :class="stat.color" text small
+                  ><v-icon color="white">{{ stat.icon }}</v-icon></v-btn
+                >
               </div>
             </div>
           </v-card-text>
         </v-card>
       </v-col>
-    </v-row>
+    </v-row> -->
     <v-row>
       <v-col>
         <v-card>
@@ -27,129 +34,94 @@
             <v-row>
               <v-col cols="1">Orders</v-col>
               <v-col>
-                <v-text-field
-                  class=""
-                  label="Search..."
-                  dense
-                  outlined
-                  flat
-                  v-model="filters.search"
-                  hide-details
-                ></v-text-field>
+                <v-text-field class="" label="Search..." dense outlined flat v-model="filters.search"
+                  hide-details></v-text-field>
               </v-col>
               <v-col>
-                <v-autocomplete
-                  :items="statusList"
-                  item-text="name"
-                  item-value="id"
-                  label="Status"
-                  dense
-                  outlined
-                  flat
-                  v-model="filters.order_status"
-                  hide-details
-                ></v-autocomplete>
+                <v-autocomplete v-model="filters.customer_id" :items="customer_list" item-text="customer_with_phone"
+                  item-value="id" label="Customers" outlined dense hide-details></v-autocomplete>
               </v-col>
               <v-col>
-                <v-autocomplete
-                  v-model="filters.business_source_id"
-                  :items="business_sources"
-                  item-text="name"
-                  item-value="id"
-                  label="Business Source"
-                  outlined
-                  dense
-                  hide-details
-                ></v-autocomplete>
+                <v-autocomplete :items="statusList" item-text="name" item-value="id" label="Status" dense outlined flat
+                  v-model="filters.order_status" hide-details></v-autocomplete>
               </v-col>
               <v-col>
-                <v-autocomplete
-                  v-model="filters.delivery_service_id"
-                  :items="delivery_services"
-                  item-text="name"
-                  item-value="id"
-                  label="Deliver Service"
-                  outlined
-                  dense
-                  hide-details
-                ></v-autocomplete>
+                <v-autocomplete v-model="filters.business_source_id" :items="business_sources" item-text="name"
+                  item-value="id" label="Business Source" outlined dense hide-details></v-autocomplete>
               </v-col>
               <v-col>
-                <v-autocomplete
-                  v-model="filters.payment_method"
-                  :items="payment_modes"
-                  item-text="name"
-                  item-value="id"
-                  label="Payment Mode"
-                  outlined
-                  dense
-                  hide-details
-                ></v-autocomplete>
+                <v-autocomplete v-model="filters.delivery_service_id" :items="delivery_services" item-text="name"
+                  item-value="id" label="Deliver Service" outlined dense hide-details></v-autocomplete>
+              </v-col>
+              <v-col>
+                <v-autocomplete v-model="filters.payment_method" :items="payment_modes" item-text="name" item-value="id"
+                  label="Payment Mode" outlined dense hide-details></v-autocomplete>
               </v-col>
               <v-col cols="2">
-                <FiltersDateRange
-                  @filter-attr="
+                <FiltersDateRange @filter-attr="
                     ({ from, to }) => {
                       filters['from'] = from;
                       filters['to'] = to;
                     }
-                  "
-                />
+                  " />
               </v-col>
-              <v-col
-                ><v-btn
-                  :loading="loading"
-                  block
-                  small
-                  class="primary"
-                  @click="getDataFromApi"
-                  >Submit</v-btn
-                ></v-col
-              >
+              <v-col><v-btn :loading="loading" block small class="primary"
+                  @click="getDataFromApi">Submit</v-btn></v-col>
             </v-row>
           </v-container>
         </v-card>
         <v-card class="mt-5">
-          <v-data-table
-            dense
-            :headers="headers"
-            :items="items"
-            :loading="loading"
-            :options.sync="options"
+          <v-data-table dense :headers="headers" :items="items" :loading="loading" :options.sync="options"
             :footer-props="{
-              itemsPerPageOptions: [100, 500, 1000],
-            }"
-            class="pa-3"
-          >
+              itemsPerPageOptions: [10, 30, 50, 100],
+              showFirstLastPage: true,
+              itemsPerPageText: 'Rows per page',
+              pageText: `{0}-{1} of {2}`,
+            }" :server-items-length="totalItems" class="elevation-1 pa-3">
             <template v-slot:top>
               <v-toolbar flat dense class="mb-5">
                 <v-spacer></v-spacer>
-                <OrderCreate
-                  :model="Model"
-                  :endpoint="endpoint"
-                  @response="getDataFromApi"
-                />
+                <OrderCreate :model="Model" :endpoint="endpoint" @response="getDataFromApi" />
               </v-toolbar>
             </template>
 
             <template v-slot:item.payment="{ item }">
-              <small>
+              <div>
                 {{ item.payment_method }}
-              </small>
-              <br />
-              <small>
+              </div>
+              <div>
                 {{ item.payment_method_title }}
-              </small>
+              </div>
             </template>
 
             <template v-slot:item.invoice="{ item }">
-              <small>
+              <div>
                 {{ item?.invoice?.reference_id || "Pending" }}
-              </small>
-              <br />
-              <small v-if="item?.invoice?.reference_id">
+              </div>
+              <div v-if="item?.invoice?.reference_id">
                 {{ item?.invoice?.date_time }}
-              </small>
+              </div>
+            </template>
+
+            <template v-slot:item.special_instructions="{ item }">
+              <div>
+                {{
+                item?.special_instructions &&
+                item.special_instructions.length > 30
+                ? item.special_instructions.slice(0, 30) + "..."
+                : item?.special_instructions
+                }}
+              </div>
+            </template>
+
+            <template v-slot:item.order_status="{ item }">
+              <v-btn v-if="item?.invoice?.reference_id && item?.order_status === 'processing'" dark text
+                :class="`green lighten-1`" x-small class="ma-1">
+                Complete
+              </v-btn>
+              <v-btn v-else dark text :class="item?.status_class" x-small class="ma-1">
+                {{ item?.order_status }}
+              </v-btn>
             </template>
 
             <template v-slot:item.options="{ item }">
@@ -163,62 +135,39 @@
                 <v-list dense>
                   <v-list-item>
                     <v-list-item-title>
-                      <OrderBillSlip
-                        :key="invoiceCompKey"
-                        :model="Model"
-                        :item="item"
-                      />
+                      <OrderBillSlip :key="invoiceCompKey" :model="Model" :item="item" />
                     </v-list-item-title>
                   </v-list-item>
                   <v-list-item>
                     <v-list-item-title>
-                      <OrderEdit
-                        :model="Model"
-                        :endpoint="endpoint"
-                        :item="item"
-                        @response="
+                      <OrderEdit :model="Model" :endpoint="endpoint" :item="item" @response="
                           () => {
                             invoiceCompKey++;
                             getDataFromApi();
                           }
-                        "
-                      />
+                        " />
                     </v-list-item-title>
                   </v-list-item>
-                  
+
                   <v-list-item>
                     <v-list-item-title>
-                      <OrderInvoice
-                        :key="invoiceCompKey"
-                        :model="Model"
-                        :endpoint="endpoint"
-                        :item="item"
-                        @response="getDataFromApi"
-                      />
+                      <OrderInvoice :key="invoiceCompKey" :model="Model" :endpoint="endpoint" :item="item"
+                        @response="getDataFromApi" />
                     </v-list-item-title>
                   </v-list-item>
                   <v-list-item>
                     <v-list-item-title>
-                      <OrderCancel
-                        :model="Model"
-                        :endpoint="endpoint"
-                        :order_id="item.order_id"
-                        @response="
+                      <OrderCancel :model="Model" :endpoint="endpoint" :order_id="item.order_id" @response="
                           () => {
                             invoiceCompKey++;
                             getDataFromApi();
                           }
-                        "
-                      />
+                        " />
                     </v-list-item-title>
                   </v-list-item>
                   <v-list-item>
                     <v-list-item-title>
-                      <OrderDelete
-                        :id="item.id"
-                        :endpoint="endpoint"
-                        @response="getDataFromApi"
-                      />
+                      <OrderDelete :id="item.id" :endpoint="endpoint" @response="getDataFromApi" />
                     </v-list-item-title>
                   </v-list-item>
                 </v-list>
@@ -243,15 +192,25 @@ export default {
       status: null,
       business_source_id: null,
       delivery_service_id: null,
+      customer_id: null,
       payment_method: null,
       from: null,
       to: null,
     },
-    options: {},
+    options: {
+      page: 1,
+      itemsPerPage: 10,
+      sortBy: [],
+      sortDesc: [],
+      groupBy: [],
+      groupDesc: [],
+      multiSort: false,
+      mustSort: false,
+    },
     loading: false,
     response: "",
     items: [],
-    statusList:[],
+    statusList: [],
     errors: [],
     headers: [
       // {
@@ -301,16 +260,12 @@ export default {
         value: "total",
       },
       {
-        text: "Shipping Method",
-        value: "shipping_method",
-      },
-      {
-        text: "Special Instructions",
-        value: "special_instructions",
-      },
-      {
         text: "Invoice",
         value: "invoice",
+      },
+      {
+        text: "Status",
+        value: "order_status",
       },
       {
         text: "Action",
@@ -320,17 +275,18 @@ export default {
       },
     ],
     componentKey: 1,
+    customer_list: [],
     payment_modes: [],
     business_sources: [],
     delivery_services: [],
   }),
 
   async created() {
-
-    await this.getStats();
-
+    // await this.getStats();
 
     let { data: payment_modes } = await this.$axios.get(`payment-mode-list`);
+
+    this.customer_list = await this.$axios.$get(`customer-list`);
 
     let result = payment_modes.map((e) => ({
       id: e.name,
@@ -355,15 +311,9 @@ export default {
       ...delivery_services,
     ];
 
-    let { data: statusList } = await this.$axios.get(
-      `status-list`
-    );
+    let { data: statusList } = await this.$axios.get(`status-list`);
 
-    this.statusList = [
-      { id: null, name: "Select All" },
-      ...statusList,
-    ];
-
+    this.statusList = [{ id: null, name: "Select All" }, ...statusList];
   },
   mounted() {},
   watch: {
@@ -375,38 +325,26 @@ export default {
     },
   },
   methods: {
-    statusColor(status) {
-      switch (status.toLowerCase()) {
-        case "Pending":
-          return "orange--text";
-        case "Paid":
-          return "green--text";
-        case "Dispatched":
-          return "blue--text";
-        case "Unpaid":
-          return "red--text";
-        case "Cancelled":
-          return "red--text";
-        default:
-          return "grey--text"; // fallback
-      }
-    },
     async getDataFromApi() {
       this.loading = true;
       try {
         const { sortBy = [], sortDesc = [], page, itemsPerPage } = this.options;
 
-        const params = {
+        let params = {
           page,
-          sortBy: sortBy[0] || "",
-          sortDesc: sortDesc[0] || "",
           per_page: itemsPerPage,
           ...this.filters,
         };
 
+        // Optionally add sorting
+        if (sortBy && sortBy.length) {
+          params.sort_by = sortBy[0];
+          params.sort_desc = sortDesc[0] || false;
+        }
+
         const { data } = await this.$axios.get(this.endpoint, { params });
         this.items = data?.data || [];
-       
+        this.totalItems = data.total || data.meta?.total || this.items.length;
       } catch (error) {
         console.error("Failed to fetch data:", error);
         // Optionally handle user notification or fallback
@@ -418,11 +356,10 @@ export default {
       try {
         const { data } = await this.$axios.get(this.endpoint + "-stats");
 
-        console.log("🚀 ~ getStats ~ data:", data)
+        console.log("🚀 ~ getStats ~ data:", data);
         this.stats = data;
       } catch (error) {
-        console.error("Failed to fetch data:", error);
-        // Optionally handle user notification or fallback
+        this.items = [];
       }
     },
   },

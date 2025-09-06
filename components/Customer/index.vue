@@ -11,8 +11,12 @@
       :loading="loading"
       :options.sync="options"
       :footer-props="{
-        itemsPerPageOptions: [100, 500, 1000],
+        itemsPerPageOptions: [10, 30, 50, 100],
+        showFirstLastPage: true,
+        itemsPerPageText: 'Rows per page',
+        pageText: `{0}-{1} of {2}`,
       }"
+      :server-items-length="totalItems"
       class="elevation-1 pa-3"
     >
       <template v-slot:top>
@@ -29,6 +33,13 @@
           />
         </v-toolbar>
       </template>
+      <template v-slot:item.full_name="{ item }">
+        <div>{{ item?.full_name }}</div>
+        <div>
+          {{ item?.phone }}
+        </div>
+      </template>
+
       <template v-slot:item.shipping_address="{ item }">
         <div v-if="item.shipping_address">
           <small>
@@ -97,7 +108,16 @@ export default {
     Model: "Customer",
     endpoint: "customers",
     filters: {},
-    options: {},
+    options: {
+      page: 1,
+      itemsPerPage: 100,
+      sortBy: [],
+      sortDesc: [],
+      groupBy: [],
+      groupDesc: [],
+      multiSort: false,
+      mustSort: false,
+    },
     loading: false,
     response: "",
     items: [],
@@ -112,31 +132,21 @@ export default {
         value: "full_name",
       },
       {
-        text: "Email",
-        value: "email",
-      },
-      {
-        text: "Phone",
-        value: "phone",
-      },
-      {
-        text: "Date of Birth",
-        value: "dob_display",
-      },
-      {
         text: "City",
         value: "shipping_address.city",
       },
-      {
-        text: "Shipping Address",
-        value: "shipping_address",
-      },
+
       {
         text: "Orders",
         value: "orders_count",
       },
+
       {
-        text: "Registed At",
+        text: "Total Amount",
+        value: "orders_sum_total",
+      },
+      {
+        text: "Registered At",
         value: "date_time",
       },
       {
@@ -147,6 +157,7 @@ export default {
       },
     ],
     componentKey: 1,
+    totalItems: 0,
   }),
 
   async created() {
@@ -164,9 +175,25 @@ export default {
   methods: {
     async getDataFromApi() {
       this.loading = true;
-      let { data } = await this.$axios.get(this.endpoint);
+      // Use options for pagination
+      const { page, itemsPerPage, sortBy, sortDesc } = this.options;
+      let params = {
+        page,
+        per_page: itemsPerPage,
+      };
+      // Optionally add sorting
+      if (sortBy && sortBy.length) {
+        params.sort_by = sortBy[0];
+        params.sort_desc = sortDesc[0] || false;
+      }
+      try {
+        let { data } = await this.$axios.get(this.endpoint, { params });
+        this.items = data.data;
+        this.totalItems = data.total || data.meta?.total || this.items.length;
+      } catch (e) {
+        this.items = [];
+      }
       this.loading = false;
-      this.items = data.data;
     },
   },
 };

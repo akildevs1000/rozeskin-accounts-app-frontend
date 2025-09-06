@@ -20,7 +20,7 @@
             <v-autocomplete
               :items="[
                 { id: null, name: 'Select All' },
-                { id: 'Pending', name: 'Pending' },
+                { id: 'Processing', name: 'Processing' },
                 { id: 'Paid', name: 'Paid' },
                 { id: 'Unpaid', name: 'Unpaid' },
                 { id: 'Cancelled', name: 'Cancelled' },

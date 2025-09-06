@@ -490,7 +490,7 @@ export default {
         email: "rozeskincaredubai@gmail.com",
         order_id: 52868,
         order_date: "2025-01-27 16:13:44",
-        order_status: "pending",
+        order_status: "processing",
         currency: "AED",
         total: "10.00",
         payment_method: "stripe_cc",

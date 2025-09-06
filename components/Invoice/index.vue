@@ -840,7 +840,7 @@ export default {
   methods: {
     statusColor(status) {
       switch (status) {
-        case "Pending":
+        case "Processing":
           return "orange--text";
         case "Paid":
           return "green--text";
