@@ -139,122 +139,6 @@
         </v-card>
       </v-col>
     </v-row>
-    <v-row>
-      <v-col>
-        <v-card>
-          <v-data-table
-            dense
-            :headers="headers"
-            :items="items"
-            :loading="loading"
-            :options.sync="options"
-            :footer-props="{
-              itemsPerPageOptions: [100, 500, 1000],
-            }"
-            class="pa-3"
-          >
-            <template v-slot:top>
-              <v-toolbar flat dense class="mb-5">
-                <v-spacer></v-spacer>
-              </v-toolbar>
-            </template>
-
-            <template v-slot:item.payment="{ item }">
-              <small>
-                {{ item.payment_method }}
-              </small>
-              <br />
-              <small>
-                {{ item.payment_method_title }}
-              </small>
-            </template>
-
-            <template v-slot:item.invoice="{ item }">
-              <small>
-                {{ item?.invoice?.reference_id || "Pending" }}
-              </small>
-              <br />
-              <small v-if="item?.invoice?.reference_id">
-                {{ item?.invoice?.date_time }}
-              </small>
-            </template>
-
-            <template v-slot:item.options="{ item }">
-              <v-menu bottom left>
-                <template v-slot:activator="{ on, attrs }">
-                  <v-btn icon v-bind="attrs" v-on="on">
-                    <v-icon>mdi-dots-vertical</v-icon>
-                  </v-btn>
-                </template>
-
-                <v-list dense>
-                  <v-list-item>
-                    <v-list-item-title>
-                      <OrderBillSlip
-                        :key="invoiceCompKey"
-                        :model="Model"
-                        :item="item"
-                      />
-                    </v-list-item-title>
-                  </v-list-item>
-                  <v-list-item>
-                    <v-list-item-title>
-                      <OrderEdit
-                        :model="Model"
-                        :endpoint="endpoint"
-                        :item="item"
-                        @response="
-                          () => {
-                            invoiceCompKey++;
-                            getDataFromApi();
-                          }
-                        "
-                      />
-                    </v-list-item-title>
-                  </v-list-item>
-
-                  <v-list-item>
-                    <v-list-item-title>
-                      <OrderInvoice
-                        :key="invoiceCompKey"
-                        :model="Model"
-                        :endpoint="endpoint"
-                        :item="item"
-                        @response="getDataFromApi"
-                      />
-                    </v-list-item-title>
-                  </v-list-item>
-                  <v-list-item>
-                    <v-list-item-title>
-                      <OrderCancel
-                        :model="Model"
-                        :endpoint="endpoint"
-                        :order_id="item.order_id"
-                        @response="
-                          () => {
-                            invoiceCompKey++;
-                            getDataFromApi();
-                          }
-                        "
-                      />
-                    </v-list-item-title>
-                  </v-list-item>
-                  <v-list-item>
-                    <v-list-item-title>
-                      <OrderDelete
-                        :id="item.id"
-                        :endpoint="endpoint"
-                        @response="getDataFromApi"
-                      />
-                    </v-list-item-title>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
-            </template>
-          </v-data-table>
-        </v-card>
-      </v-col>
-    </v-row>
   </v-container>
 </template>
 
@@ -270,11 +154,21 @@ export default {
       status: null,
       business_source_id: null,
       delivery_service_id: null,
+      customer_id: null,
       payment_method: null,
       from: null,
       to: null,
     },
-    options: {},
+    options: {
+      page: 1,
+      itemsPerPage: 10,
+      sortBy: [],
+      sortDesc: [],
+      groupBy: [],
+      groupDesc: [],
+      multiSort: false,
+      mustSort: false,
+    },
     loading: false,
     response: "",
     items: [],
@@ -328,16 +222,40 @@ export default {
         value: "total",
       },
       {
-        text: "Shipping Method",
-        value: "shipping_method",
-      },
-      {
-        text: "Special Instructions",
-        value: "special_instructions",
-      },
-      {
         text: "Invoice",
         value: "invoice",
+      },
+      {
+        text: "Status",
+        value: "order_status",
+      },
+    ],
+    customerHeaders: [
+      {
+        text: "Ref #",
+        value: "reference_id",
+      },
+      {
+        text: "Full Name",
+        value: "full_name",
+      },
+      {
+        text: "City",
+        value: "shipping_address.city",
+      },
+
+      {
+        text: "Orders",
+        value: "orders_count",
+      },
+
+      {
+        text: "Total Amount",
+        value: "orders_sum_total",
+      },
+      {
+        text: "Profile Created At",
+        value: "date_time",
       },
       {
         text: "Action",
@@ -346,17 +264,23 @@ export default {
         value: "options",
       },
     ],
+    customerItems:[],
     componentKey: 1,
+    customer_list: [],
     payment_modes: [],
     business_sources: [],
     delivery_services: [],
 
     ordersByDate: [],
     ordersSumByDate: [],
+    customerItemsTotal:0,
+    totalItems: 0,
   }),
 
   async created() {
     let { data: payment_modes } = await this.$axios.get(`payment-mode-list`);
+
+    this.customer_list = await this.$axios.$get(`customer-list`);
 
     let result = payment_modes.map((e) => ({
       id: e.name,
@@ -449,12 +373,8 @@ export default {
           this.getStats(),
           this.fetchData(),
           this.getOrderList(),
+          this.getCustomerData(),
         ]);
-
-        // If dependent (one after another), use sequential await:
-        // await this.getStats();
-        // await this.fetchData();
-        // await this.getOrderList();
       } catch (error) {
         console.error("Failed to fetch data:", error);
         this.$toast?.error("Error loading data"); // optional user feedback
@@ -504,23 +424,54 @@ export default {
       }
     },
     async getOrderList() {
+      this.loading = true;
       try {
         const { sortBy = [], sortDesc = [], page, itemsPerPage } = this.options;
 
-        const params = {
+        let params = {
           page,
-          sortBy: sortBy[0] || "",
-          sortDesc: sortDesc[0] || "",
           per_page: itemsPerPage,
           ...this.filters,
         };
 
+        // Optionally add sorting
+        if (sortBy && sortBy.length) {
+          params.sort_by = sortBy[0];
+          params.sort_desc = sortDesc[0] || false;
+        }
+
         const { data } = await this.$axios.get(this.endpoint, { params });
         this.items = data?.data || [];
+        this.totalItems = data.total || data.meta?.total || this.items.length;
       } catch (error) {
         console.error("Failed to fetch data:", error);
         // Optionally handle user notification or fallback
+      } finally {
+        this.loading = false;
       }
+    },
+    async getCustomerData() {
+      this.loading = true;
+      // Use options for pagination
+      const { page, itemsPerPage, sortBy, sortDesc } = this.options;
+      let params = {
+        page,
+        per_page: itemsPerPage,
+        ...this.filters,
+      };
+      // Optionally add sorting
+      if (sortBy && sortBy.length) {
+        params.sort_by = sortBy[0];
+        params.sort_desc = sortDesc[0] || false;
+      }
+      try {
+        let { data } = await this.$axios.get(`customers`, { params });
+        this.customerItems = data.data;
+        this.customerItemsTotal = data.total || data.meta?.total || this.customerItems.length;
+      } catch (e) {
+        this.items = [];
+      }
+      this.loading = false;
     },
   },
 };

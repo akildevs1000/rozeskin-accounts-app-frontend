@@ -213,10 +213,6 @@ export default {
     statusList: [],
     errors: [],
     headers: [
-      // {
-      //   text: "Order #",
-      //   value: "id",
-      // },
       {
         text: "Order Ref",
         value: "order_id",
