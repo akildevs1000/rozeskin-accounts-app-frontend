@@ -16,7 +16,7 @@
   >
     <template v-slot:top>
       <v-row>
-        <v-col cols="1">Orders</v-col>
+        <v-col cols="1">Customer Report</v-col>
         <v-col>
           <v-autocomplete
             v-model="filters.customer_id"

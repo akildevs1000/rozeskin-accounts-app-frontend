@@ -133,11 +133,11 @@
                 </template>
 
                 <v-list dense>
-                  <v-list-item>
+                  <!-- <v-list-item>
                     <v-list-item-title>
                       <OrderBillSlip :key="invoiceCompKey" :model="Model" :item="item" />
                     </v-list-item-title>
-                  </v-list-item>
+                  </v-list-item> -->
                   <v-list-item>
                     <v-list-item-title>
                       <OrderEdit :model="Model" :endpoint="endpoint" :item="item" @response="
@@ -275,6 +275,7 @@ export default {
     payment_modes: [],
     business_sources: [],
     delivery_services: [],
+    totalItems:0
   }),
 
   async created() {
