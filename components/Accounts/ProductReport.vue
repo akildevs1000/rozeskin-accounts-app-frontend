@@ -60,16 +60,6 @@ div
         <img :src="item.display_image" alt="Image thumbnail" />
       </v-avatar>
     </template>
-
-    <template v-slot:item.orders_count="{ item }">
-      {{ Math.floor(Math.random() * 10) + 1 }}
-      <!-- Random count between 1 and 100 -->
-    </template>
-
-    <template v-slot:item.orders_sum_total="{ item }">
-      {{ (Math.random() * 100).toFixed(2) }}
-      <!-- Random sum between 0.00 and 10000.00 -->
-    </template>
   </v-data-table>
 </template>
 
