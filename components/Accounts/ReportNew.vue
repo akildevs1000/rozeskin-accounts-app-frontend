@@ -13,12 +13,13 @@
                   <FiltersDateRange
                     @filter-attr="
                       ({ from, to }) => {
-                        filters['from'] = from;
-                        filters['to'] = to;
+                        tempFilters.from = from;
+                        tempFilters.to = to;
                       }
                     "
                   />
                 </div>
+                <v-btn color="primary" @click="applyFilters" small>Submit</v-btn>
               </div>
             </v-col>
           </v-row>
@@ -71,7 +72,16 @@ export default {
         from: null,
         to: null,
       },
+      tempFilters: {
+        from: null,
+        to: null,
+      },
     };
+  },
+  methods: {
+    applyFilters() {
+      this.filters = { ...this.tempFilters };
+    },
   },
 };
 </script>
