@@ -1,8 +1,5 @@
 <template>
-  <table
-    class="report-table"
-    border="1"
-  >
+  <table class="report-table" border="1">
     <thead>
       <tr>
         <td class="text-center" rowspan="2">DATE</td>
@@ -37,7 +34,7 @@
 
     <tbody>
       <tr v-for="(products, date) in productsJson" :key="date">
-        <td class="text-center" style="width:150px;">{{ date }}</td>
+        <td class="text-center" style="width: 150px">{{ date }}</td>
         <template v-for="product in products">
           <td class="text-center">{{ product.price }}</td>
           <td class="text-center">{{ product.quantity }}</td>
@@ -55,8 +52,12 @@
       <tr>
         <td class="text-center" rowspan="2" style="font-weight: bold">Total</td>
         <template v-for="product in productList">
-          <td class="text-center" style="font-weight: bold">{{ getTotalPrice(product) }}</td>
-          <td class="text-center" style="font-weight: bold">{{ getTotalQty(product) }}</td>
+          <td class="text-center" style="font-weight: bold">
+            {{ getTotalPrice(product) }}
+          </td>
+          <td class="text-center" style="font-weight: bold">
+            {{ getTotalQty(product) }}
+          </td>
         </template>
 
         <td class="text-center" style="font-weight: bold">
@@ -90,8 +91,10 @@
 </template>
 
 <script>
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 export default {
-  props: ["filters"],
+  props: ["filters", "downloadExcel"],
   data() {
     return {
       loading: true,
@@ -107,6 +110,12 @@ export default {
       deep: true, // watches nested changes in the object
       handler() {
         this.getData();
+      },
+    },
+    downloadExcel: {
+      deep: true, // watches nested changes in the object
+      handler() {
+        this.exportToExcel();
       },
     },
   },
@@ -177,6 +186,111 @@ export default {
         total += p.quantity;
       });
       return total;
+    },
+
+    exportToExcel() {
+      const ws = XLSX.utils.aoa_to_sheet([]);
+
+      // --- Header Rows ---
+      const header1 = ["DATE"];
+      this.productList.forEach((product) => {
+        header1.push(product, "");
+      });
+      header1.push("Total QTY", "Total Price");
+      XLSX.utils.sheet_add_aoa(ws, [header1], { origin: "A1" });
+
+      const header2 = [""];
+      this.productList.forEach(() => {
+        header2.push("PRICE", "QTY");
+      });
+      header2.push("", "");
+      XLSX.utils.sheet_add_aoa(ws, [header2], { origin: "A2" });
+
+      // --- Merges ---
+      ws["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // DATE rowspan
+        {
+          s: { r: 0, c: 1 + this.productList.length * 2 },
+          e: { r: 1, c: 1 + this.productList.length * 2 },
+        }, // Total QTY
+        {
+          s: { r: 0, c: 2 + this.productList.length * 2 },
+          e: { r: 1, c: 2 + this.productList.length * 2 },
+        }, // Total Price
+        ...this.productList.map((_, i) => ({
+          s: { r: 0, c: 1 + i * 2 },
+          e: { r: 0, c: 2 + i * 2 },
+        })),
+      ];
+
+      // --- Data Rows ---
+      const dataRows = [];
+      Object.entries(this.productsJson).forEach(([date, products]) => {
+        const row = [date];
+        this.productList.forEach((pName) => {
+          const item = Object.values(products).find((p) => p.product === pName);
+          row.push(item ? Number(item.price) : 0); // Ensure number
+          row.push(item ? Number(item.quantity) : 0); // Ensure number
+        });
+        row.push(this.getRowTotalQty(products)); // number
+        row.push(Number(this.getRowTotalPrice(products))); // number
+        dataRows.push(row);
+      });
+      XLSX.utils.sheet_add_aoa(ws, dataRows, { origin: -1 });
+
+      // --- Footer / Grand Total ---
+      const totalRow = ["Total"];
+      this.productList.forEach((pName) => {
+        totalRow.push(Number(this.getTotalPrice(pName)));
+        totalRow.push(this.getTotalQty(pName));
+      });
+
+      const grandTotalQty = Object.values(this.productsJson).reduce(
+        (acc, pObj) =>
+          acc +
+          Object.values(pObj).reduce((sum, p) => sum + Number(p.quantity), 0),
+        0
+      );
+      const grandTotalPrice = Object.values(this.productsJson).reduce(
+        (acc, pObj) =>
+          acc +
+          Object.values(pObj).reduce((sum, p) => sum + Number(p.price), 0),
+        0
+      );
+      totalRow.push(grandTotalQty, grandTotalPrice);
+      XLSX.utils.sheet_add_aoa(ws, [totalRow], { origin: -1 });
+
+      // --- Styles ---
+      const range = XLSX.utils.decode_range(ws["!ref"]);
+      for (let R = 0; R <= range.e.r; R++) {
+        for (let C = 0; C <= range.e.c; C++) {
+          const cellRef = XLSX.utils.encode_cell({ r: R, c: C });
+          const cell = ws[cellRef];
+          if (!cell) continue;
+
+          // Headers (first 2 rows) -> center
+          if (R < 2) {
+            cell.s = { alignment: { horizontal: "center" } };
+          } else {
+            // DATE column -> center, everything else -> right
+            if (C === 0) {
+              cell.s = { alignment: { horizontal: "center" } };
+            } else {
+              cell.s = { alignment: { horizontal: "right" } };
+            }
+          }
+        }
+      }
+
+      // --- Column widths ---
+      ws["!cols"] = [{ wpx: 120 }];
+      for (let i = 1; i <= this.productList.length * 2 + 2; i++)
+        ws["!cols"].push({ wpx: 80 });
+
+      // --- Export ---
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Report");
+      XLSX.writeFile(wb, "report.xlsx");
     },
   },
 };

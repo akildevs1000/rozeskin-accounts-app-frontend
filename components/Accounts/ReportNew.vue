@@ -13,6 +13,11 @@
                       >mdi-download</v-icon
                     >
                   </div>
+                   <div>
+                    <v-icon color="primary" @click="submitDownloadExcel"
+                      >mdi-file</v-icon
+                    >
+                  </div>
                 </div>
               </v-col>
               <v-col>
@@ -53,7 +58,7 @@
                 >
                   Products
                 </div>
-                <AccountsProduct :filters="filters" />
+                <AccountsProduct :downloadExcel="downloadExcel" :filters="filters" />
               </div>
             </v-card>
           </v-col>
@@ -99,11 +104,15 @@ export default {
         from: null,
         to: null,
       },
+      downloadExcel:1
     };
   },
   methods: {
     applyFilters() {
       this.filters = { ...this.tempFilters };
+    },
+    submitDownloadExcel(){
+      this.downloadExcel++;
     },
     downloadPDF() {
       const reportArea = this.$refs.reportArea;
