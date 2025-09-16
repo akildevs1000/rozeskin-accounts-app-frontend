@@ -13,11 +13,6 @@
                       >mdi-download</v-icon
                     >
                   </div>
-                   <div>
-                    <v-icon color="primary" @click="submitDownloadExcel"
-                      >mdi-file</v-icon
-                    >
-                  </div>
                 </div>
               </v-col>
               <v-col>
@@ -53,12 +48,21 @@
             <v-card flat class="rounded-card">
               <div>
                 <div
-                  class="text-center px-3 py-1 white--text"
-                  style="background: #1f2937"
+                  class="d-flex align-center px-3 py-1"
+                  style="background: #1f2937; justify-content: space-between"
                 >
-                  Products
+                  <div class="text-center flex-grow-1 white--text">
+                    Products
+                  </div>
+                  <v-icon color="#fff" @click="downloadProductsExcel">
+                    mdi-file-excel
+                  </v-icon>
                 </div>
-                <AccountsProduct :downloadExcel="downloadExcel" :filters="filters" />
+
+                <AccountsProduct
+                  ref="childComponentForProduct"
+                  :filters="filters"
+                />
               </div>
             </v-card>
           </v-col>
@@ -66,10 +70,17 @@
           <v-col cols="6">
             <v-card flat class="rounded-card">
               <div>
-                <div class="text-center px-3 py-1" style="background: #a7f3d0">
-                  Source
+                <div
+                  class="d-flex align-center px-3 py-1"
+                  style="background: #a7f3d0; justify-content: space-between"
+                >
+                  <div class="text-center flex-grow-1">Source</div>
+                  <v-icon color="#618b77" @click="downloadSourceExcel">
+                    mdi-file-excel
+                  </v-icon>
                 </div>
-                <AccountsSource :filters="filters" />
+
+                <AccountsSource ref="childComponentForSource" :filters="filters" />
               </div>
             </v-card>
           </v-col>
@@ -77,10 +88,17 @@
           <v-col cols="6">
             <v-card flat class="rounded-card">
               <div>
-                <div class="text-center px-3 py-1" style="background: #e9d5ff">
-                  Payment Mode
+                <div
+                  class="d-flex align-center px-3 py-1"
+                  style="background: #e9d5ff; justify-content: space-between"
+                >
+                  <div class="text-center flex-grow-1">Payment Mode</div>
+                  <v-icon color="#a37ccf" @click="downloadPaymentModeExcel">
+                    mdi-file-excel
+                  </v-icon>
                 </div>
-                <AccountsPaymentMode :filters="filters" />
+
+                <AccountsPaymentMode ref="childComponentForPaymentMode" :filters="filters" />
               </div>
             </v-card>
           </v-col>
@@ -104,15 +122,20 @@ export default {
         from: null,
         to: null,
       },
-      downloadExcel:1
     };
   },
   methods: {
     applyFilters() {
       this.filters = { ...this.tempFilters };
     },
-    submitDownloadExcel(){
-      this.downloadExcel++;
+    downloadProductsExcel() {
+      this.$refs.childComponentForProduct.exportToExcel();
+    },
+    downloadSourceExcel() {
+      this.$refs.childComponentForSource.exportToExcel();
+    },
+     downloadPaymentModeExcel() {
+      this.$refs.childComponentForPaymentMode.exportToExcel();
     },
     downloadPDF() {
       const reportArea = this.$refs.reportArea;

@@ -92,7 +92,6 @@
 
 <script>
 import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 export default {
   props: ["filters", "downloadExcel"],
   data() {
@@ -110,12 +109,6 @@ export default {
       deep: true, // watches nested changes in the object
       handler() {
         this.getData();
-      },
-    },
-    downloadExcel: {
-      deep: true, // watches nested changes in the object
-      handler() {
-        this.exportToExcel();
       },
     },
   },
