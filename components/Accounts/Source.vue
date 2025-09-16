@@ -1,95 +1,113 @@
 <template>
-  <table
-    class="report-table"
-    border="1"
-    style="width: 100%; text-align: center"
-  >
-    <thead>
-      <tr>
-        <td class="text-center" rowspan="2">DATE</td>
-        <td
-          class="text-center"
-          v-for="method in paymentMethods"
-          :key="method"
-          colspan="2"
-        >
-          {{ method }}
-        </td>
-        <td class="text-center" rowspan="2">Total QTY</td>
-        <td class="text-center" rowspan="2">Total Price</td>
-      </tr>
-      <tr>
-        <template v-for="method in paymentMethods">
-          <td class="text-center">PRICE</td>
-          <td class="text-center">QTY</td>
-        </template>
-      </tr>
-    </thead>
+  <div ref="reportArea" class="pa-15">
+    <div
+      class="d-flex align-center px-3 py-1"
+      style="background: #a7f3d0; justify-content: space-between"
+    >
+      <div class="text-center flex-grow-1">Source</div>
 
-    <tbody>
-      <tr v-for="(methods, date) in tableData" :key="date">
-        <td class="text-center">{{ date }}</td>
-        <template v-for="method in paymentMethods">
-          <td class="text-center custom-td">
-            {{ methods[method] ? methods[method].price : "0.00" }}
+      <v-icon v-if="showIcons" color="#618b77" @click="exportToExcel">
+        mdi-file-excel
+      </v-icon>
+
+      <v-icon v-if="showIcons" color="#618b77" @click="downloadPDF"
+        >mdi-download</v-icon
+      >
+    </div>
+    <table
+      class="report-table"
+      border="1"
+      style="width: 100%; text-align: center"
+    >
+      <thead>
+        <tr>
+          <td class="text-center" rowspan="2">DATE</td>
+          <td
+            class="text-center"
+            v-for="method in paymentMethods"
+            :key="method"
+            colspan="2"
+          >
+            {{ method }}
           </td>
-          <td class="text-center custom-td">
-            {{ methods[method] ? methods[method].quantity : 0 }}
-          </td>
-        </template>
+          <td class="text-center" rowspan="2">Total QTY</td>
+          <td class="text-center" rowspan="2">Total Price</td>
+        </tr>
+        <tr>
+          <template v-for="method in paymentMethods">
+            <td class="text-center">PRICE</td>
+            <td class="text-center">QTY</td>
+          </template>
+        </tr>
+      </thead>
 
-        <td class="text-center" style="font-weight: bold">
-          {{ getRowTotalQty(methods) }}
-        </td>
-        <td class="text-center" style="font-weight: bold">
-          {{ getRowTotalPrice(methods) }}
-        </td>
-      </tr>
-    </tbody>
+      <tbody>
+        <tr v-for="(methods, date) in tableData" :key="date">
+          <td class="text-center">{{ date }}</td>
+          <template v-for="method in paymentMethods">
+            <td class="text-center custom-td">
+              {{ methods[method] ? methods[method].price : "0.00" }}
+            </td>
+            <td class="text-center custom-td">
+              {{ methods[method] ? methods[method].quantity : 0 }}
+            </td>
+          </template>
 
-    <tfoot>
-      <tr>
-        <td class="text-center" rowspan="2" style="font-weight: bold">TOTAL</td>
-        <template v-for="method in paymentMethods">
           <td class="text-center" style="font-weight: bold">
-            {{ getTotalPrice(method) }}
+            {{ getRowTotalQty(methods) }}
           </td>
           <td class="text-center" style="font-weight: bold">
-            {{ getTotalQty(method) }}
+            {{ getRowTotalPrice(methods) }}
           </td>
-        </template>
+        </tr>
+      </tbody>
 
-        <td class="text-center" style="font-weight: bold">
-          {{
-            Object.values(tableData).reduce(
-              (acc, methodsObj) =>
-                acc +
-                Object.values(methodsObj).reduce(
-                  (sum, m) => sum + m.quantity,
-                  0
-                ),
-              0
-            )
-          }}
-        </td>
-        <td class="text-center" style="font-weight: bold">
-          {{
-            Object.values(tableData)
-              .reduce(
+      <tfoot>
+        <tr>
+          <td class="text-center" rowspan="2" style="font-weight: bold">
+            TOTAL
+          </td>
+          <template v-for="method in paymentMethods">
+            <td class="text-center" style="font-weight: bold">
+              {{ getTotalPrice(method) }}
+            </td>
+            <td class="text-center" style="font-weight: bold">
+              {{ getTotalQty(method) }}
+            </td>
+          </template>
+
+          <td class="text-center" style="font-weight: bold">
+            {{
+              Object.values(tableData).reduce(
                 (acc, methodsObj) =>
                   acc +
                   Object.values(methodsObj).reduce(
-                    (sum, m) => sum + parseFloat(m.price),
+                    (sum, m) => sum + m.quantity,
                     0
                   ),
                 0
               )
-              .toFixed(2)
-          }}
-        </td>
-      </tr>
-    </tfoot>
-  </table>
+            }}
+          </td>
+          <td class="text-center" style="font-weight: bold">
+            {{
+              Object.values(tableData)
+                .reduce(
+                  (acc, methodsObj) =>
+                    acc +
+                    Object.values(methodsObj).reduce(
+                      (sum, m) => sum + parseFloat(m.price),
+                      0
+                    ),
+                  0
+                )
+                .toFixed(2)
+            }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 </template>
 
 <script>
@@ -101,6 +119,7 @@ export default {
       loading: false,
       tableData: {}, // response from report-payment-modes
       paymentMethods: [], // dynamic payment method names
+      showIcons:true,
     };
   },
   watch: {
@@ -272,6 +291,47 @@ export default {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Report");
       XLSX.writeFile(wb, "report.xlsx");
+    },
+    downloadPDF() {
+      this.showIcons = false;
+
+      // give DOM time to update before capturing
+      setTimeout(() => {
+        const reportArea = this.$refs.reportArea;
+
+        html2canvas(reportArea, {
+          scale: 2,
+          useCORS: true,
+        }).then((canvas) => {
+          const imgData = canvas.toDataURL("image/png");
+
+          const pdf = new jsPDF("l", "mm", "a4");
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+
+          const imgWidth = pageWidth;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+          let heightLeft = imgHeight;
+          let position = 0;
+
+          while (heightLeft > 0) {
+            pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+            if (heightLeft > 0) {
+              pdf.addPage();
+              position = -pageHeight;
+            }
+          }
+
+          pdf.save("report.pdf");
+
+          // re-show icons
+          setTimeout(() => {
+            this.showIcons = true;
+          }, 3000);
+        });
+      }, 500); // delay of 300ms
     },
   },
 };

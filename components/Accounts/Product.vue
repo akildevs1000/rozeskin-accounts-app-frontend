@@ -1,97 +1,118 @@
 <template>
-  <table class="report-table" border="1">
-    <thead>
-      <tr>
-        <td class="text-center" rowspan="2">DATE</td>
-        <td
-          v-for="product in productList"
-          :key="product"
-          colspan="2"
-          class="text-center"
-        >
-          <v-tooltip bottom color="primary">
-            <template v-slot:activator="{ on, attrs }">
-              <span v-bind="attrs" v-on="on">
-                {{ product }}
-              </span>
-            </template>
-            <span>{{
-              productDropDown.find((e) => e.item_number == product)?.description
-            }}</span>
-          </v-tooltip>
-        </td>
+  <div ref="reportArea" class="pa-15">
+    <div
+      class="d-flex align-center px-3 py-1"
+      style="background: #1f2937; justify-content: space-between"
+    >
+      <div class="text-center flex-grow-1 white--text">Products</div>
 
-        <td class="text-center" rowspan="2">Total QTY</td>
-        <td class="text-center" rowspan="2">Total Price</td>
-      </tr>
-      <tr>
-        <template v-for="product in productList">
-          <td class="text-center">PRICE</td>
-          <td class="text-center">QTY</td>
-        </template>
-      </tr>
-    </thead>
+      <v-icon v-if="showIcons" color="#fff" @click="exportToExcel">
+        mdi-file-excel
+      </v-icon>
 
-    <tbody>
-      <tr v-for="(products, date) in productsJson" :key="date">
-        <td class="text-center" style="width: 150px">{{ date }}</td>
-        <template v-for="product in products">
-          <td class="text-center">{{ product.price }}</td>
-          <td class="text-center">{{ product.quantity }}</td>
-        </template>
+      <v-icon v-if="showIcons" color="#fff" @click="downloadPDF"
+        >mdi-download</v-icon
+      >
+    </div>
+    <table class="report-table" border="1">
+      <thead>
+        <tr>
+          <td class="text-center" rowspan="2">DATE</td>
+          <td
+            v-for="product in productList"
+            :key="product"
+            colspan="2"
+            class="text-center"
+          >
+            <v-tooltip bottom color="primary">
+              <template v-slot:activator="{ on, attrs }">
+                <span v-bind="attrs" v-on="on">
+                  {{ product }}
+                </span>
+              </template>
+              <span>{{
+                productDropDown.find((e) => e.item_number == product)
+                  ?.description
+              }}</span>
+            </v-tooltip>
+          </td>
 
-        <td class="text-center" style="font-weight: bold">
-          {{ getRowTotalQty(products) }}
-        </td>
-        <td class="text-center" style="font-weight: bold">
-          {{ getRowTotalPrice(products) }}
-        </td>
-      </tr>
-    </tbody>
-    <tfoot>
-      <tr>
-        <td class="text-center" rowspan="2" style="font-weight: bold">Total</td>
-        <template v-for="product in productList">
+          <td class="text-center" rowspan="2">Total QTY</td>
+          <td class="text-center" rowspan="2">Total Price</td>
+        </tr>
+        <tr>
+          <template v-for="product in productList">
+            <td class="text-center">PRICE</td>
+            <td class="text-center">QTY</td>
+          </template>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr v-for="(products, date) in productsJson" :key="date">
+          <td class="text-center" style="width: 150px">{{ date }}</td>
+          <template v-for="product in products">
+            <td class="text-center">{{ product.price }}</td>
+            <td class="text-center">{{ product.quantity }}</td>
+          </template>
+
           <td class="text-center" style="font-weight: bold">
-            {{ getTotalPrice(product) }}
+            {{ getRowTotalQty(products) }}
           </td>
           <td class="text-center" style="font-weight: bold">
-            {{ getTotalQty(product) }}
+            {{ getRowTotalPrice(products) }}
           </td>
-        </template>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td class="text-center" rowspan="2" style="font-weight: bold">
+            Total
+          </td>
+          <template v-for="product in productList">
+            <td class="text-center" style="font-weight: bold">
+              {{ getTotalPrice(product) }}
+            </td>
+            <td class="text-center" style="font-weight: bold">
+              {{ getTotalQty(product) }}
+            </td>
+          </template>
 
-        <td class="text-center" style="font-weight: bold">
-          {{
-            Object.values(productsJson).reduce(
-              (acc, pObj) =>
-                acc +
-                Object.values(pObj).reduce((sum, p) => sum + p.quantity, 0),
-              0
-            )
-          }}
-        </td>
-        <td class="text-center" style="font-weight: bold">
-          {{
-            Object.values(productsJson)
-              .reduce(
+          <td class="text-center" style="font-weight: bold">
+            {{
+              Object.values(productsJson).reduce(
                 (acc, pObj) =>
                   acc +
-                  Object.values(pObj).reduce(
-                    (sum, p) => sum + parseFloat(p.price),
-                    0
-                  ),
+                  Object.values(pObj).reduce((sum, p) => sum + p.quantity, 0),
                 0
               )
-              .toFixed(2)
-          }}
-        </td>
-      </tr>
-    </tfoot>
-  </table>
+            }}
+          </td>
+          <td class="text-center" style="font-weight: bold">
+            {{
+              Object.values(productsJson)
+                .reduce(
+                  (acc, pObj) =>
+                    acc +
+                    Object.values(pObj).reduce(
+                      (sum, p) => sum + parseFloat(p.price),
+                      0
+                    ),
+                  0
+                )
+                .toFixed(2)
+            }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
 </template>
 
 <script>
 import * as XLSX from "xlsx";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 export default {
   props: ["filters", "downloadExcel"],
   data() {
@@ -101,6 +122,7 @@ export default {
       productsJson: {}, // response from backend
       productList: [], // dynamic product names
       productDropDown: [], // dynamic product names
+      showIcons: true,
     };
   },
   watch: {
@@ -284,6 +306,48 @@ export default {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Report");
       XLSX.writeFile(wb, "report.xlsx");
+    },
+
+    downloadPDF() {
+      this.showIcons = false;
+
+      // give DOM time to update before capturing
+      setTimeout(() => {
+        const reportArea = this.$refs.reportArea;
+
+        html2canvas(reportArea, {
+          scale: 2,
+          useCORS: true,
+        }).then((canvas) => {
+          const imgData = canvas.toDataURL("image/png");
+
+          const pdf = new jsPDF("l", "mm", "a4");
+          const pageWidth = pdf.internal.pageSize.getWidth();
+          const pageHeight = pdf.internal.pageSize.getHeight();
+
+          const imgWidth = pageWidth;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+          let heightLeft = imgHeight;
+          let position = 0;
+
+          while (heightLeft > 0) {
+            pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+            if (heightLeft > 0) {
+              pdf.addPage();
+              position = -pageHeight;
+            }
+          }
+
+          pdf.save("report.pdf");
+
+          // re-show icons
+          setTimeout(() => {
+            this.showIcons = true;
+          }, 3000);
+        });
+      }, 500); // delay of 300ms
     },
   },
 };
