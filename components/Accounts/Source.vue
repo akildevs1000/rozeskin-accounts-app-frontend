@@ -112,6 +112,8 @@
 
 <script>
 import * as XLSX from "xlsx";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 export default {
   props: ["filters"],
   data() {
@@ -290,7 +292,7 @@ export default {
       // --- Export ---
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Report");
-      XLSX.writeFile(wb, "report.xlsx");
+      XLSX.writeFile(wb, "source-report.xlsx");
     },
     downloadPDF() {
       this.showIcons = false;
@@ -324,7 +326,7 @@ export default {
             }
           }
 
-          pdf.save("report.pdf");
+          pdf.save("source-report.pdf");
 
           // re-show icons
           setTimeout(() => {

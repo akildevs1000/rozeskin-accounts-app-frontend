@@ -305,7 +305,7 @@ export default {
       // --- Export ---
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Report");
-      XLSX.writeFile(wb, "report.xlsx");
+      XLSX.writeFile(wb, "product-report.xlsx");
     },
 
     downloadPDF() {
@@ -340,7 +340,7 @@ export default {
             }
           }
 
-          pdf.save("report.pdf");
+          pdf.save("product-report.pdf");
 
           // re-show icons
           setTimeout(() => {
