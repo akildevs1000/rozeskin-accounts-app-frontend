@@ -274,7 +274,46 @@
                         label="Order Id"
                       ></v-text-field>
                     </v-col>
+
                     <v-col cols="4">
+                      <v-menu
+                        v-model="dateMenu"
+                        :close-on-content-click="false"
+                        transition="scale-transition"
+                        offset-y
+                        min-width="auto"
+                      >
+                        <template v-slot:activator="{ on, attrs }">
+                          <v-text-field
+                            v-model="payload.order_date"
+                            label="Order Date"
+                            readonly
+                            v-bind="attrs"
+                            v-on="on"
+                            outlined
+                            dense
+                            hide-details
+                          ></v-text-field>
+                        </template>
+                        <v-date-picker
+                          v-model="payload.order_date"
+                          @input="dateMenu = false"
+                          :show-current="false"
+                          no-title
+                        ></v-date-picker>
+                      </v-menu>
+                    </v-col>
+
+                    <v-col cols="4">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.tracking_number"
+                        label="Tracking Number"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="6">
                       <v-autocomplete
                         v-model="payload.delivery_service_id"
                         :items="delivery_services"
@@ -285,15 +324,6 @@
                         dense
                         hide-details
                       ></v-autocomplete>
-                    </v-col>
-                    <v-col cols="4">
-                      <v-text-field
-                        outlined
-                        dense
-                        hide-details
-                        v-model="payload.tracking_number"
-                        label="Tracking Number"
-                      ></v-text-field>
                     </v-col>
                     <v-col cols="6">
                       <v-autocomplete
@@ -308,16 +338,7 @@
                       ></v-autocomplete>
                     </v-col>
 
-                    <v-col cols="6">
-                      <v-text-field
-                        outlined
-                        dense
-                        hide-details
-                        v-model="payload.shipping_method"
-                        label="Shipping Method"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="6">
+                    <v-col cols="4">
                       <v-autocomplete
                         v-model="payload.payment_method"
                         :items="payment_modes"
@@ -329,13 +350,22 @@
                         hide-details
                       ></v-autocomplete>
                     </v-col>
-                    <v-col cols="6">
+                    <v-col cols="4">
                       <v-text-field
                         outlined
                         dense
                         hide-details
                         v-model="payload.payment_method_title"
                         label="Payment Mode Title"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="4">
+                      <v-text-field
+                        outlined
+                        dense
+                        hide-details
+                        v-model="payload.shipping_method"
+                        label="Shipping Method"
                       ></v-text-field>
                     </v-col>
                   </v-row>
@@ -444,7 +474,11 @@
                 <v-col cols="4">
                   <div>
                     <div class="d-flex justify-end justify-space-between">
-                      <div><small style="font-size: 11px !important;">Shipping Chargres</small></div>
+                      <div>
+                        <small style="font-size: 11px !important"
+                          >Shipping Chargres</small
+                        >
+                      </div>
                       <div>
                         <small>
                           <input
@@ -466,7 +500,11 @@
                       </div>
                     </div>
                     <div class="d-flex justify-end justify-space-between">
-                      <div><small style="font-size: 11px !important;">Discount</small></div>
+                      <div>
+                        <small style="font-size: 11px !important"
+                          >Discount</small
+                        >
+                      </div>
                       <div>
                         <small>
                           <input
@@ -531,12 +569,13 @@ export default {
   data() {
     return {
       menu: false,
+      dateMenu:false,
       payload: {
         user_id: 1,
         username: "admin_rozeskin",
         email: "rozeskincaredubai@gmail.com",
         order_id: 0,
-        order_date: "2025-01-27 16:13:44",
+        order_date: new Date().toISOString().slice(0, 10),
         order_status: "processing",
         currency: "AED",
         total: "10.00",
@@ -682,7 +721,9 @@ export default {
       );
 
       this.payload.total =
-        (parseFloat(this.payload.shipping_charges || 0) + sub_total) - parseFloat(this.payload.discount || 0);
+        parseFloat(this.payload.shipping_charges || 0) +
+        sub_total -
+        parseFloat(this.payload.discount || 0);
     },
     getCustomerInfo(payload) {
       if (payload) {
