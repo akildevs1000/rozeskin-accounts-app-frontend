@@ -1,47 +1,39 @@
 <template>
   <v-container fluid>
+    <div class="d-flex justify-end" style="gap: 10px; width: 100%">
+      <div>
+        <FiltersDateRange
+          @filter-attr="
+            ({ from, to }) => {
+              tempFilters.from = from;
+              tempFilters.to = to;
+            }
+          "
+        />
+      </div>
+      <v-btn color="primary" @click="applyFilters" small>Submit</v-btn>
+    </div>
     <div>
-      <v-row>
-        <!-- hwo to download from result below header  -->
-        <v-col cols="12">
+      <v-tabs color="primary" centered>
+        <v-tab>Product</v-tab>
+        <v-tab>Source</v-tab>
+        <v-tab>Payment Mode</v-tab>
+        <v-tab-item>
           <v-container fluid>
-            <v-row>
-              <v-col>
-                <div class="d-flex justify-end" style="gap: 10px; width: 100%">
-                  <div>
-                    <FiltersDateRange
-                      @filter-attr="
-                        ({ from, to }) => {
-                          tempFilters.from = from;
-                          tempFilters.to = to;
-                        }
-                      "
-                    />
-                  </div>
-                  <v-btn color="primary" @click="applyFilters" small
-                    >Submit</v-btn
-                  >
-                </div>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-col>
-      </v-row>
-      <v-container>
-        <v-row>
-          <v-col cols="12">
             <AccountsProduct :filters="filters" />
-          </v-col>
-
-          <v-col cols="6">
+          </v-container>
+        </v-tab-item>
+        <v-tab-item>
+          <v-container fluid>
             <AccountsSource :filters="filters" />
-          </v-col>
-
-          <v-col cols="6">
+          </v-container>
+        </v-tab-item>
+        <v-tab-item>
+          <v-container fluid>
             <AccountsPaymentMode :filters="filters" />
-          </v-col>
-        </v-row>
-      </v-container>
+          </v-container>
+        </v-tab-item>
+      </v-tabs>
     </div>
   </v-container>
 </template>

@@ -329,7 +329,7 @@ export default {
             }
           }
 
-          pdf.save("product-report.pdf");
+          pdf.save("payment-mode-report.pdf");
 
           // re-show icons
           setTimeout(() => {
