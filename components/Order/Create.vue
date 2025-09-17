@@ -797,8 +797,7 @@ export default {
       try {
         await this.$axios.post(this.endpoint, {
           ...payload,
-          order_date: payload.order_date + " " + ts,
-          test: ts,
+          order_date: payload.order_date + " " + ts
         });
         this.close();
         this.$emit("response", "Record has been inserted");
