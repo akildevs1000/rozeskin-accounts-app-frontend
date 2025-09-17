@@ -569,7 +569,7 @@ export default {
   data() {
     return {
       menu: false,
-      dateMenu:false,
+      dateMenu: false,
       payload: {
         user_id: 1,
         username: "admin_rozeskin",
@@ -744,7 +744,7 @@ export default {
         username: "admin_rozeskin",
         email: "rozeskincaredubai@gmail.com",
         order_id: 0,
-        order_date: "2025-01-27 16:13:44",
+        order_date: new Date().toISOString().slice(0, 10),
         order_status: "processing",
         currency: "AED",
         total: "10.00",
@@ -792,8 +792,14 @@ export default {
     },
     async submit() {
       this.loading = true;
+      let payload = this.payload;
+      let ts = new Date().toTimeString().split(" ")[0];
       try {
-        await this.$axios.post(this.endpoint, this.payload);
+        await this.$axios.post(this.endpoint, {
+          ...payload,
+          order_date: payload.order_date + " " + ts,
+          test: ts,
+        });
         this.close();
         this.$emit("response", "Record has been inserted");
       } catch (error) {
