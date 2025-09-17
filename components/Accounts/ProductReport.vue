@@ -22,11 +22,14 @@ div
         </v-col>
         <v-col cols="1">
           <v-autocomplete
-            v-model="filters.business_source_id"
-            :items="business_sources"
-            item-text="name"
+            v-model="filters.product_id"
+            :items="[
+              { id: null, item_number: `Select All` },
+              ...products.filter((e) => e.item_number),
+            ]"
+            item-text="item_number"
             item-value="id"
-            label="Business Source"
+            label="Products"
             outlined
             dense
             hide-details
@@ -71,12 +74,7 @@ export default {
     Model: "Orders",
     endpoint: "orders",
     filters: {
-      search: null,
-      status: null,
-      business_source_id: null,
-      delivery_service_id: null,
-      customer_id: null,
-      payment_method: null,
+      product_id: null,
       from: null,
       to: null,
     },
@@ -124,25 +122,19 @@ export default {
     ],
     sourceItems: [],
     componentKey: 1,
-    customer_list: [],
-    payment_modes: [],
-    business_sources: [],
-    delivery_services: [],
-
-    ordersByDate: [],
-    ordersSumByDate: [],
+    products: [],
     sourceItemsTotal: 0,
     totalItems: 0,
   }),
 
   async created() {
-    let { data: business_sources } = await this.$axios.get(
-      `business-source-list`
-    );
-    this.business_sources = [
-      { id: null, name: "Select All" },
-      ...business_sources,
-    ];
+    try {
+      this.products = await this.$axios.$get("/product-list");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      this.loading = false;
+    }
   },
   mounted() {},
   watch: {
@@ -174,7 +166,7 @@ export default {
         this.sourceItemsTotal =
           data.total || data.meta?.total || this.sourceItems.length;
       } catch (e) {
-        this.items = [];
+        this.sourceItems = [];
       }
       this.loading = false;
     },
