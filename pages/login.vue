@@ -1,13 +1,13 @@
 <template>
-  <v-app style="background-color: #333959fc">
+  <v-app style="background: linear-gradient(to right, #667eea, #764ba2)">
     <v-container fluid fill-height>
       <v-row align="center" justify="center">
         <v-col cols="12" sm="8" md="3" style="max-width: 330px">
-          <v-card class="pa-6" elevation="3">
+          <v-card color="#443875" class="pa-6" elevation="3" dark>
             <v-card-title class="text-h5 justify-center">
               Invoice App
             </v-card-title>
-            <v-form ref="form" method="post" v-model="valid">
+            <v-form ref="form" method="post" v-model="valid" dark>
               <v-text-field
                 label="Email"
                 v-model="email"
@@ -55,7 +55,7 @@
                 :loading="loading"
                 @click="login"
                 class="mt-2"
-                color="primary"
+                color="#2e2651"
               >
                 Log in
               </v-btn>
