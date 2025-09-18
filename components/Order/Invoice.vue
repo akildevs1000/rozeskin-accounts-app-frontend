@@ -114,7 +114,7 @@
                       v-model="payload.shipping_address.city"
                       :items="cities"
                       item-text="label"
-                      item-value="value"
+                      item-value="label"
                       label="City"
                     ></v-autocomplete>
                   </v-col>
@@ -180,7 +180,7 @@
                       v-model="payload.billing_address.city"
                       :items="cities"
                       item-text="label"
-                      item-value="value"
+                      item-value="label"
                       label="City"
                     ></v-autocomplete>
                   </v-col>
