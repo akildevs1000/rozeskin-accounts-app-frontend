@@ -1,53 +1,44 @@
 <template>
-  <div>
+  <div class="text-center">
     <v-dialog v-model="dialog" width="400">
       <AssetsIconClose left="390" @click="close" />
       <template v-slot:activator="{ on, attrs }">
-        <div v-bind="attrs" v-on="on">
-          <v-icon color="primary" small> mdi-pencil </v-icon> Edit
-        </div>
+        <v-btn
+          small
+          color="primary"
+          class="white--text"
+          dark
+          v-bind="attrs"
+          v-on="on"
+        >
+          <v-icon color="white" small> mdi-plus </v-icon> New
+        </v-btn>
       </template>
 
       <v-card>
         <v-alert flat class="grey lighten-3" dense>
-          <span>Update {{ model }}</span>
+          <span>Create {{ model }}</span>
         </v-alert>
 
-        <v-card-text v-if="payload && payload.id">
+        <v-card-text>
           <v-row>
             <v-col cols="12">
               <v-text-field
                 outlined
                 dense
                 hide-details
-                v-model="payload.price"
-                label="Price"
+                v-model="payload.item_number"
+                label="Item Code"
               ></v-text-field>
             </v-col>
             <v-col cols="12">
-              <v-autocomplete
-                multiple
-                v-model="payload.inventory_item_ids"
-                :items="inventoryItems"
-                item-text="name"
-                item-value="id"
-                label="Items"
+              <v-text-field
                 outlined
                 dense
                 hide-details
-              ></v-autocomplete>
-            </v-col>
-            <v-col cols="12">
-              <v-autocomplete
-                v-model="payload.product_category_id"
-                :items="product_categories"
-                item-text="name"
-                item-value="id"
-                label="Product Category"
-                outlined
-                dense
-                hide-details
-              ></v-autocomplete>
+                v-model="payload.name"
+                label="Name"
+              ></v-text-field>
             </v-col>
             <v-col cols="12">
               <v-textarea
@@ -62,12 +53,13 @@
             <v-col cols="12">
               <v-file-input
                 v-model="payload.image"
-                label="Upload Product Image"
+                label="Upload Item Image"
                 accept="image/*"
                 append-icon="mdi-camera"
                 prepend-icon=""
                 dense
                 outlined
+                show-size
                 @change="previewImage"
                 hide-details
               ></v-file-input>
@@ -108,7 +100,7 @@
 </template>
 <script>
 export default {
-  props: ["endpoint", "model", "item"],
+  props: ["endpoint", "model"],
 
   data() {
     return {
@@ -117,20 +109,8 @@ export default {
       loading: false,
       successResponse: null,
       errorResponse: null,
-      product_categories: [],
       imagePreview: null,
-      inventoryItems: [],
     };
-  },
-  async created() {
-    this.loading = true;
-    this.product_categories = await this.$axios.$get(`product-category-list`);
-    this.payload = {...this.item};
-    this.payload.inventory_item_ids = this.item.mappings.map(e => e.inventory_item_id)
-    this.imagePreview = this.item.display_image;
-    this.loading = false;
-
-    this.inventoryItems = await this.$axios.$get(`inventory-items-list`);
   },
   methods: {
     previewImage(file) {
@@ -148,31 +128,20 @@ export default {
       this.dialog = false;
       this.loading = false;
       this.errorResponse = null;
+      this.payload = {};
+      this.imagePreview = null;
     },
     async submit() {
       this.loading = true;
 
       try {
         const formData = new FormData();
-        formData.append("id", this.payload.id);
-        formData.append("name", this.payload.description);
+        formData.append("item_number", this.payload.item_number);
+        formData.append("name", this.payload.name);
         formData.append("description", this.payload.description);
-        formData.append("price", this.payload.price);
-        formData.append(
-          "product_category_id",
-          this.payload.product_category_id
-        );
-
-        // Only append image if it's provided or changed
-        if (this.payload.image instanceof File) {
-          formData.append("image", this.payload.image);
-        }
-        formData.append(
-          "inventory_item_ids",
-          JSON.stringify(this.payload.inventory_item_ids)
-        );
-
-        await this.$axios.post(this.endpoint + "-update", formData);
+        formData.append("qty", 0);
+        formData.append("image", this.payload.image);
+        await this.$axios.post(this.endpoint, formData);
         this.close();
         this.$emit("response", "Record has been inserted");
       } catch (error) {

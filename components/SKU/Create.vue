@@ -27,65 +27,59 @@
                 outlined
                 dense
                 hide-details
-                v-model="payload.price"
-                label="Price"
+                v-model="payload.name"
+                label="Name"
               ></v-text-field>
             </v-col>
             <v-col cols="12">
               <v-autocomplete
-                multiple
-                v-model="payload.inventory_item_ids"
+                v-model="payload.inventory_item_id"
                 :items="inventoryItems"
                 item-text="name"
                 item-value="id"
-                label="Items"
+                label="Inventory Item"
                 outlined
                 dense
                 hide-details
               ></v-autocomplete>
             </v-col>
             <v-col cols="12">
-              <v-autocomplete
-                v-model="payload.product_category_id"
-                :items="product_categories"
-                item-text="name"
-                item-value="id"
-                label="Product Category"
-                outlined
-                dense
-                hide-details
-              ></v-autocomplete>
+              <v-menu
+                v-model="menu"
+                :close-on-content-click="false"
+                transition="scale-transition"
+                offset-y
+                min-width="auto"
+              >
+                <template v-slot:activator="{ on, attrs }">
+                  <v-text-field
+                    v-model="payload.stock_date"
+                    label="Stock Date"
+                    append-icon="mdi-calendar"
+                    readonly
+                    outlined
+                    dense
+                    v-bind="attrs"
+                    v-on="on"
+                    hide-details
+                  ></v-text-field>
+                </template>
+                <v-date-picker
+                  v-model="payload.stock_date"
+                  no-title
+                  scrollable
+                  @input="menu = false"
+                ></v-date-picker>
+              </v-menu>
             </v-col>
             <v-col cols="12">
-              <v-textarea
-                rows="2"
+              <v-text-field
                 outlined
                 dense
                 hide-details
-                v-model="payload.description"
-                label="Description"
-              ></v-textarea>
-            </v-col>
-            <v-col cols="12">
-              <v-file-input
-                v-model="payload.image"
-                label="Upload Product Image"
-                accept="image/*"
-                append-icon="mdi-camera"
-                prepend-icon=""
-                dense
-                outlined
-                show-size
-                @change="previewImage"
-                hide-details
-              ></v-file-input>
-
-              <v-img
-                v-if="imagePreview"
-                :src="imagePreview"
-                max-height="200"
-                class="mt-4"
-              ></v-img>
+                v-model="payload.qty_added"
+                label="Quantity"
+              ></v-text-field>
             </v-col>
 
             <v-col cols="12" v-if="errorResponse">
@@ -120,65 +114,31 @@ export default {
 
   data() {
     return {
+      menu: false,
       payload: {},
       dialog: false,
       loading: false,
       successResponse: null,
       errorResponse: null,
-      product_categories: [],
       inventoryItems: [],
-      imagePreview: null,
     };
   },
   async created() {
-    let { data } = await this.$axios.get(`product-category-list`);
-
-    this.product_categories = data;
-
-    this.inventoryItems = await this.$axios.$get(`inventory-items-list`);
+    let { data } = await this.$axios.get(`inventory-items-list`);
+    this.inventoryItems = data;
   },
   methods: {
-    previewImage(file) {
-      if (file && file instanceof File) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.imagePreview = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        this.imagePreview = null;
-      }
-    },
     close() {
       this.dialog = false;
       this.loading = false;
       this.errorResponse = null;
       this.payload = {};
-      this.imagePreview = null;
     },
     async submit() {
       this.loading = true;
 
       try {
-        const formData = new FormData();
-        formData.append("name", this.payload.description);
-        formData.append("description", this.payload.description);
-        formData.append("price", this.payload.price);
-        formData.append(
-          "product_category_id",
-          this.payload.product_category_id
-        );
-
-        // Only append image if it's provided or changed
-        if (this.payload.image instanceof File) {
-          formData.append("image", this.payload.image);
-        }
-        formData.append(
-          "inventory_item_ids",
-          JSON.stringify(this.payload.inventory_item_ids)
-        );
-
-        await this.$axios.post(this.endpoint, formData);
+        await this.$axios.post(this.endpoint, this.payload);
         this.close();
         this.$emit("response", "Record has been inserted");
       } catch (error) {

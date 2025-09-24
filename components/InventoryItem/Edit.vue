@@ -10,7 +10,7 @@
 
       <v-card>
         <v-alert flat class="grey lighten-3" dense>
-          <span>Update {{ model }}</span>
+          <span>Create {{ model }}</span>
         </v-alert>
 
         <v-card-text v-if="payload && payload.id">
@@ -20,34 +20,18 @@
                 outlined
                 dense
                 hide-details
-                v-model="payload.price"
-                label="Price"
+                v-model="payload.item_number"
+                label="Item Code"
               ></v-text-field>
             </v-col>
             <v-col cols="12">
-              <v-autocomplete
-                multiple
-                v-model="payload.inventory_item_ids"
-                :items="inventoryItems"
-                item-text="name"
-                item-value="id"
-                label="Items"
+              <v-text-field
                 outlined
                 dense
                 hide-details
-              ></v-autocomplete>
-            </v-col>
-            <v-col cols="12">
-              <v-autocomplete
-                v-model="payload.product_category_id"
-                :items="product_categories"
-                item-text="name"
-                item-value="id"
-                label="Product Category"
-                outlined
-                dense
-                hide-details
-              ></v-autocomplete>
+                v-model="payload.name"
+                label="Name"
+              ></v-text-field>
             </v-col>
             <v-col cols="12">
               <v-textarea
@@ -117,20 +101,12 @@ export default {
       loading: false,
       successResponse: null,
       errorResponse: null,
-      product_categories: [],
       imagePreview: null,
-      inventoryItems: [],
     };
   },
   async created() {
-    this.loading = true;
-    this.product_categories = await this.$axios.$get(`product-category-list`);
-    this.payload = {...this.item};
-    this.payload.inventory_item_ids = this.item.mappings.map(e => e.inventory_item_id)
+    this.payload = this.item;
     this.imagePreview = this.item.display_image;
-    this.loading = false;
-
-    this.inventoryItems = await this.$axios.$get(`inventory-items-list`);
   },
   methods: {
     previewImage(file) {
@@ -155,22 +131,14 @@ export default {
       try {
         const formData = new FormData();
         formData.append("id", this.payload.id);
-        formData.append("name", this.payload.description);
+        formData.append("item_number", this.payload.item_number);
+        formData.append("name", this.payload.name);
         formData.append("description", this.payload.description);
-        formData.append("price", this.payload.price);
-        formData.append(
-          "product_category_id",
-          this.payload.product_category_id
-        );
+        formData.append("qty", 0);
 
-        // Only append image if it's provided or changed
         if (this.payload.image instanceof File) {
           formData.append("image", this.payload.image);
         }
-        formData.append(
-          "inventory_item_ids",
-          JSON.stringify(this.payload.inventory_item_ids)
-        );
 
         await this.$axios.post(this.endpoint + "-update", formData);
         this.close();
