@@ -25,6 +25,15 @@
               ></v-text-field>
             </v-col>
             <v-col cols="12">
+              <v-text-field
+                outlined
+                dense
+                hide-details
+                v-model="payload.qty"
+                label="Quantity"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12">
               <v-autocomplete
                 multiple
                 v-model="payload.inventory_item_ids"
@@ -125,8 +134,10 @@ export default {
   async created() {
     this.loading = true;
     this.product_categories = await this.$axios.$get(`product-category-list`);
-    this.payload = {...this.item};
-    this.payload.inventory_item_ids = this.item.mappings.map(e => e.inventory_item_id)
+    this.payload = { ...this.item };
+    this.payload.inventory_item_ids = this.item.mappings.map(
+      (e) => e.inventory_item_id
+    );
     this.imagePreview = this.item.display_image;
     this.loading = false;
 
@@ -158,6 +169,8 @@ export default {
         formData.append("name", this.payload.description);
         formData.append("description", this.payload.description);
         formData.append("price", this.payload.price);
+        formData.append("qty", this.payload.qty);
+
         formData.append(
           "product_category_id",
           this.payload.product_category_id

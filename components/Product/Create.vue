@@ -31,6 +31,17 @@
                 label="Price"
               ></v-text-field>
             </v-col>
+
+            <v-col cols="12">
+              <v-text-field
+                outlined
+                dense
+                hide-details
+                v-model="payload.qty"
+                label="Quantity"
+              ></v-text-field>
+            </v-col>
+
             <v-col cols="12">
               <v-autocomplete
                 multiple
@@ -164,6 +175,7 @@ export default {
         formData.append("name", this.payload.description);
         formData.append("description", this.payload.description);
         formData.append("price", this.payload.price);
+        formData.append("qty", this.payload.qty);
         formData.append(
           "product_category_id",
           this.payload.product_category_id
