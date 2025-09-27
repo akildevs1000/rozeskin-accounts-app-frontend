@@ -23,10 +23,7 @@ div
         <v-col cols="1">
           <v-autocomplete
             v-model="filters.product_id"
-            :items="[
-              { id: null, description: `Select All` },
-              ...products.filter((e) => e.item_number),
-            ]"
+            :items="[{ id: null, description: `Select All` }, ...products]"
             item-text="description"
             item-value="id"
             label="Products"
