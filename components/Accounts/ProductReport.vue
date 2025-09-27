@@ -18,16 +18,16 @@ div
     <template v-slot:top>
       <v-row>
         <v-col cols="1">
-          <div>Product Report</div>
+          <div>{{ Model }}</div>
         </v-col>
         <v-col cols="1">
           <v-autocomplete
             v-model="filters.product_id"
             :items="[
-              { id: null, item_number: `Select All` },
+              { id: null, description: `Select All` },
               ...products.filter((e) => e.item_number),
             ]"
-            item-text="item_number"
+            item-text="description"
             item-value="id"
             label="Products"
             outlined
@@ -71,8 +71,8 @@ export default {
   data: () => ({
     stats: [],
     invoiceCompKey: 1,
-    Model: "Orders",
-    endpoint: "orders",
+    Model: "Product Report",
+    endpoint: "product-report",
     filters: {
       product_id: null,
       from: null,
@@ -95,29 +95,27 @@ export default {
     errors: [],
     customerHeaders: [
       {
-        text: "Product Id",
+        text: "Item Code",
         value: "item_number",
       },
       {
-        text: "Description",
-        value: "description",
-      },
-      {
-        text: "Image",
-        value: "display_image",
-      },
-      {
-        text: "Product Category",
-        value: "product_category.name",
-      },
-      {
-        text: "Orders",
-        value: "orders_count",
+        text: "Item Name",
+        value: "item_name",
       },
 
       {
-        text: "Total Amount",
-        value: "orders_sum_total",
+        text: "Product",
+        value: "product.description",
+      },
+
+      {
+        text: "Image",
+        key:"display_image",
+        value: "product.display_image",
+      },
+      {
+        text: "Quantity",
+        value: "qty",
       },
     ],
     sourceItems: [],
@@ -161,7 +159,7 @@ export default {
         params.sort_desc = sortDesc[0] || false;
       }
       try {
-        let data = await this.$axios.$get(`product-report`, { params });
+        let data = await this.$axios.$get(this.endpoint, { params });
         this.sourceItems = data;
         this.sourceItemsTotal =
           data.total || data.meta?.total || this.sourceItems.length;
