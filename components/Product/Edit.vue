@@ -20,6 +20,15 @@
                 outlined
                 dense
                 hide-details
+                v-model="payload.item_number"
+                label="Item Code"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12">
+              <v-text-field
+                outlined
+                dense
+                hide-details
                 v-model="payload.price"
                 label="Price"
               ></v-text-field>
@@ -166,6 +175,7 @@ export default {
       try {
         const formData = new FormData();
         formData.append("id", this.payload.id);
+        formData.append("item_number", this.payload.item_number);
         formData.append("name", this.payload.description);
         formData.append("description", this.payload.description);
         formData.append("price", this.payload.price);

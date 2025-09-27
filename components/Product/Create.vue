@@ -27,11 +27,19 @@
                 outlined
                 dense
                 hide-details
+                v-model="payload.item_number"
+                label="Item Code"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12">
+              <v-text-field
+                outlined
+                dense
+                hide-details
                 v-model="payload.price"
                 label="Price"
               ></v-text-field>
             </v-col>
-
             <v-col cols="12">
               <v-text-field
                 outlined
@@ -41,7 +49,6 @@
                 label="Quantity"
               ></v-text-field>
             </v-col>
-
             <v-col cols="12">
               <v-autocomplete
                 multiple
@@ -90,7 +97,6 @@
                 @change="previewImage"
                 hide-details
               ></v-file-input>
-
               <v-img
                 v-if="imagePreview"
                 :src="imagePreview"
@@ -98,7 +104,6 @@
                 class="mt-4"
               ></v-img>
             </v-col>
-
             <v-col cols="12" v-if="errorResponse">
               <span class="red--text">{{ errorResponse }}</span>
             </v-col>
@@ -172,6 +177,7 @@ export default {
 
       try {
         const formData = new FormData();
+        formData.append("item_number", this.payload.item_number);
         formData.append("name", this.payload.description);
         formData.append("description", this.payload.description);
         formData.append("price", this.payload.price);
