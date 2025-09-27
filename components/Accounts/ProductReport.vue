@@ -55,9 +55,9 @@ div
         >
       </v-row>
     </template>
-    <template v-slot:item.product.display_image="{ item }">
+    <template v-slot:item.display_image="{ item }">
       <v-avatar class="my-3" tile size="50" style="cursor: pointer">
-        <img :src="item.product.display_image" alt="Image thumbnail" />
+        <img :src="item.display_image" alt="Image thumbnail" />
       </v-avatar>
     </template>
   </v-data-table>
@@ -101,13 +101,8 @@ export default {
       },
 
       {
-        text: "Product",
-        value: "product.description",
-      },
-
-      {
         text: "Image",
-        value: "product.display_image",
+        value: "display_image",
       },
       {
         text: "Quantity",
