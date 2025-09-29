@@ -677,7 +677,7 @@ export default {
       if (!item) return;
       let qty = parseFloat(item?.qty || 0);
       let rate = parseFloat(item?.price || 0);
-      payload.product_id = item.id;
+      payload.product_id = item.item_number;
       payload.quantity = qty;
       payload.rate = rate;
       payload.tax = qty * rate * 0;
