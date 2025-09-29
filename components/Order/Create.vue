@@ -677,6 +677,7 @@ export default {
       if (!item) return;
       let qty = parseFloat(item?.qty || 0);
       let rate = parseFloat(item?.price || 0);
+      payload.product_id = item.id;
       payload.quantity = qty;
       payload.rate = rate;
       payload.tax = qty * rate * 0;
@@ -701,6 +702,7 @@ export default {
     addItem() {
       this.payload.items.push({
         item: "",
+        product_id: 0,
         quantity: 1,
         rate: 1,
         tax: 1,
