@@ -8,7 +8,13 @@
               <v-col cols="1">Orders</v-col>
               <v-col cols="2">
                 <v-autocomplete
-                  :items="[`Mapped`, `Not Mapped`]"
+                  :items="[
+                    { id: null, name: `All` },
+                    { id: `Mapped`, name: `Mapped` },
+                    { id: `Not Mapped`, name: `Not Mapped` },
+                  ]"
+                  item-text="name"
+                  item-value="id"
                   label="Status"
                   dense
                   outlined
@@ -69,10 +75,9 @@
             class="elevation-1 pa-3"
           >
             <template v-slot:item.status="{ item }">
-              <span
-                :class="item?.product?.name ? 'green--text' : 'red--text'"
-                >{{ "Product Id Mapped" || "Product Id Not Mapped" }}</span
-              >
+              <span :class="item?.product ? 'green--text' : 'red--text'">{{
+                item?.product ? "Product Id Mapped" : "Product Id Not Mapped"
+              }}</span>
             </template>
           </v-data-table>
         </v-card>
