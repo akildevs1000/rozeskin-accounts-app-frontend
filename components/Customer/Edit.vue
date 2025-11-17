@@ -323,10 +323,6 @@ export default {
           ? { ...this.payload.shipping_address }
           : { ...this.default_address };
     },
-
-    "payload.customer.phone"(newVal) {
-      this.payload.customer.whatsapp = newVal;
-    },
   },
   created() {
     const customer = this.item || {};
