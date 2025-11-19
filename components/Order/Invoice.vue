@@ -388,7 +388,18 @@
           </v-col>
           <v-col cols="12" class="">
             <v-row>
-              <v-col cols="8"> </v-col>
+              <v-col cols="8">
+                <v-radio-group
+                  dense
+                  hide-details
+                  v-model="payload.box_dimension"
+                  row
+                >
+                  <v-radio label="Small" value="Small"></v-radio>
+                  <v-radio label="Medium" value="Medium"></v-radio>
+                  <v-radio label="Large" value="Large"></v-radio>
+                </v-radio-group>
+              </v-col>
               <v-col cols="4">
                 <div>
                   <div class="d-flex justify-end justify-space-between">
@@ -483,6 +494,7 @@ export default {
   data() {
     return {
       payload: {
+        box_dimension: "Small",
         status: "Unpaid",
         user_id: 1,
         username: "admin_rozeskin",
@@ -582,6 +594,7 @@ export default {
     this.delivery_services = delivery_services;
 
     this.payload = {
+      ...this.payload,
       ...this.item,
       business_source_id: business_sources[0]?.id || 0,
       delivery_service_id: delivery_services[0]?.id || 0,
@@ -644,8 +657,12 @@ export default {
         status: this.payload.status,
 
         discount: this.payload.discount,
-        total : this.payload.total,
+        total: this.payload.total,
+
+        box_dimension: this.payload.box_dimension,
       };
+
+      console.log(payload);
 
       this.loading = true;
       try {
