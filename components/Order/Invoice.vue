@@ -666,9 +666,25 @@ export default {
 
       this.loading = true;
       try {
-        await this.$axios.post(`invoices`, payload);
+        const response = await this.$axios.post(`invoices`, payload, {
+          responseType: "blob", // << IMPORTANT FOR PDF
+        });
+
+        // Create PDF Blob
+        const blob = new Blob([response.data], { type: "application/pdf" });
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "invoice.pdf"; // you can use dynamic name if needed
+        a.click();
+
+        window.URL.revokeObjectURL(url);
+
+        // Close modal
         this.close();
-        this.$emit("response", "Record has been inserted");
+        this.$emit("response", "Invoice downloaded successfully");
       } catch (error) {
         this.errorResponse = error?.response?.data?.message || "Unknown error";
         this.loading = false;
