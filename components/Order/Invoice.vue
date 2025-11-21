@@ -665,24 +665,37 @@ export default {
       console.log(payload);
 
       this.loading = true;
+
       try {
         const response = await this.$axios.post(`invoices`, payload, {
-          responseType: "blob", // << IMPORTANT FOR PDF
+          responseType: "blob",
         });
 
-        // Create PDF Blob
+        // ---- Extract filename from header ----
+        const disposition = response.headers["content-disposition"];
+        let fileName = "invoice.pdf"; // fallback
+
+        if (disposition && disposition.indexOf("filename=") !== -1) {
+          fileName = disposition
+            .split("filename=")[1]
+            .split('"')
+            .join("") // remove quotes
+            .trim();
+        }
+
+        // ---- Create Blob ----
         const blob = new Blob([response.data], { type: "application/pdf" });
 
-        // Create download link
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "invoice.pdf"; // you can use dynamic name if needed
-        a.click();
 
+        // use dynamic filename from backend
+        a.download = fileName;
+
+        a.click();
         window.URL.revokeObjectURL(url);
 
-        // Close modal
         this.close();
         this.$emit("response", "Invoice downloaded successfully");
       } catch (error) {
