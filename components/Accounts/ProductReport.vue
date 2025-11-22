@@ -22,8 +22,23 @@
             <div>
               <v-autocomplete
                 v-model="filters.product_id"
-                :items="[{ id: null, description: `Select All` }, ...productDropDown]"
+                :items="[
+                  { id: null, description: `Select All` },
+                  ...productDropDown,
+                ]"
                 item-text="description"
+                item-value="id"
+                label="Products"
+                outlined
+                dense
+                hide-details
+              ></v-autocomplete>
+            </div>
+            <div>
+              <v-autocomplete
+                v-model="filters.order_status"
+                :items="[{ id: null, name: `Select All` }, ...statusList]"
+                item-text="name"
                 item-value="id"
                 label="Products"
                 outlined
@@ -41,7 +56,7 @@
                 "
               />
             </div>
-            <v-btn color="primary" @click="applyFilters" small>Submit</v-btn>
+            <v-btn color="primary" @click="getData" small>Submit</v-btn>
           </div>
         </v-col>
         <v-col class="text-right">
@@ -137,15 +152,17 @@ export default {
   data() {
     return {
       filters: {
-        product_id:null,
+        product_id: null,
         from: null,
         to: null,
+        order_status:null
       },
       loading: true,
       loading: false,
       productsJson: {}, // response from backend
       productList: [], // dynamic product names
       productDropDown: [], // dynamic product names
+      statusList: [],
       showIcons: true,
     };
   },
@@ -161,6 +178,14 @@ export default {
   async created() {
     try {
       this.productDropDown = await this.$axios.$get("/product-list");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      this.loading = false;
+    }
+
+    try {
+      this.statusList = await this.$axios.$get("/status-list");
     } catch (err) {
       console.error(err);
     } finally {
