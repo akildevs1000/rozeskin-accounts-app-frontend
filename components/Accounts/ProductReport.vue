@@ -40,7 +40,7 @@
                 :items="[{ id: null, name: `Select All` }, ...statusList]"
                 item-text="name"
                 item-value="id"
-                label="Products"
+                label="Status"
                 outlined
                 dense
                 hide-details
@@ -165,15 +165,6 @@ export default {
       statusList: [],
       showIcons: true,
     };
-  },
-  watch: {
-    // Watch for changes in the filters prop
-    filters: {
-      deep: true, // watches nested changes in the object
-      handler() {
-        this.getData();
-      },
-    },
   },
   async created() {
     try {
