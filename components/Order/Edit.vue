@@ -394,6 +394,7 @@ export default {
       if (!item) return;
       let qty = parseFloat(item?.qty || 0);
       let rate = parseFloat(item?.price || 0);
+      payload.product_id = item.id;
       payload.quantity = qty;
       payload.rate = rate;
       payload.tax = 0;
@@ -433,7 +434,7 @@ export default {
     },
     getGrandTotal() {
       let sub_total = this.payload.items.reduce(
-        (cur, acc) => cur + acc.total,
+        (cur, acc) => parseFloat(cur) + parseFloat(acc.total),
         0
       );
 
