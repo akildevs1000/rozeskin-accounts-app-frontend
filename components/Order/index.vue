@@ -34,54 +34,133 @@
             <v-row>
               <v-col cols="1">Orders</v-col>
               <v-col>
-                <v-text-field class="" label="Search..." dense outlined flat v-model="filters.search"
-                  hide-details></v-text-field>
+                <v-text-field
+                  class=""
+                  label="Search..."
+                  dense
+                  outlined
+                  flat
+                  v-model="filters.search"
+                  hide-details
+                ></v-text-field>
               </v-col>
               <v-col>
-                <v-autocomplete v-model="filters.customer_id" :items="customer_list" item-text="customer_with_phone"
-                  item-value="id" label="Customers" outlined dense hide-details></v-autocomplete>
+                <v-autocomplete
+                  v-model="filters.customer_id"
+                  :items="customer_list"
+                  item-text="customer_with_phone"
+                  item-value="id"
+                  label="Customers"
+                  outlined
+                  dense
+                  hide-details
+                ></v-autocomplete>
               </v-col>
               <v-col>
-                <v-autocomplete :items="statusList" item-text="name" item-value="id" label="Status" dense outlined flat
-                  v-model="filters.order_status" hide-details></v-autocomplete>
+                <v-autocomplete
+                  :items="statusList"
+                  item-text="name"
+                  item-value="id"
+                  label="Status"
+                  dense
+                  outlined
+                  flat
+                  v-model="filters.order_status"
+                  hide-details
+                ></v-autocomplete>
               </v-col>
               <v-col>
-                <v-autocomplete v-model="filters.business_source_id" :items="business_sources" item-text="name"
-                  item-value="id" label="Business Source" outlined dense hide-details></v-autocomplete>
+                <v-autocomplete
+                  v-model="filters.business_source_id"
+                  :items="business_sources"
+                  item-text="name"
+                  item-value="id"
+                  label="Business Source"
+                  outlined
+                  dense
+                  hide-details
+                ></v-autocomplete>
               </v-col>
               <v-col>
-                <v-autocomplete v-model="filters.delivery_service_id" :items="delivery_services" item-text="name"
-                  item-value="id" label="Deliver Service" outlined dense hide-details></v-autocomplete>
+                <v-autocomplete
+                  v-model="filters.delivery_service_id"
+                  :items="delivery_services"
+                  item-text="name"
+                  item-value="id"
+                  label="Deliver Service"
+                  outlined
+                  dense
+                  hide-details
+                ></v-autocomplete>
               </v-col>
               <v-col>
-                <v-autocomplete v-model="filters.payment_method" :items="payment_modes" item-text="name" item-value="id"
-                  label="Payment Mode" outlined dense hide-details></v-autocomplete>
+                <v-autocomplete
+                  v-model="filters.payment_method"
+                  :items="payment_modes"
+                  item-text="name"
+                  item-value="id"
+                  label="Payment Mode"
+                  outlined
+                  dense
+                  hide-details
+                ></v-autocomplete>
               </v-col>
               <v-col cols="2">
-                <FiltersDateRange @filter-attr="
+                <FiltersDateRange
+                  @filter-attr="
                     ({ from, to }) => {
                       filters['from'] = from;
                       filters['to'] = to;
                     }
-                  " />
+                  "
+                />
               </v-col>
-              <v-col><v-btn :loading="loading" block small class="primary"
-                  @click="getDataFromApi">Submit</v-btn></v-col>
+              <v-col
+                ><v-btn
+                  :loading="loading"
+                  block
+                  small
+                  class="primary"
+                  @click="getDataFromApi"
+                  >Submit</v-btn
+                ></v-col
+              >
             </v-row>
           </v-container>
         </v-card>
         <v-card class="mt-5">
-          <v-data-table dense :headers="headers" :items="items" :loading="loading" :options.sync="options"
+          <v-data-table
+            dense
+            :headers="headers"
+            :items="items"
+            :loading="loading"
+            :options.sync="options"
             :footer-props="{
               itemsPerPageOptions: [10, 30, 50, 100],
               showFirstLastPage: true,
               itemsPerPageText: 'Rows per page',
               pageText: `{0}-{1} of {2}`,
-            }" :server-items-length="totalItems" class="elevation-1 pa-3">
+            }"
+            :server-items-length="totalItems"
+            class="elevation-1 pa-3"
+          >
             <template v-slot:top>
               <v-toolbar flat dense class="mb-5">
+                <v-btn small class="primary" @click="downloadManifestReport"
+                  ><v-icon size="15">mdi-download</v-icon> Manifest
+                  Report</v-btn
+                >
+                &nbsp;
+                <v-btn small class="primary" @click="downloadAWBPrintReport"
+                  ><v-icon size="15">mdi-download</v-icon> AWB Print</v-btn
+                >
+
                 <v-spacer></v-spacer>
-                <OrderCreate :model="Model" :endpoint="endpoint" @response="getDataFromApi" />
+                <OrderCreate
+                  :model="Model"
+                  :endpoint="endpoint"
+                  @response="getDataFromApi"
+                />
               </v-toolbar>
             </template>
 
@@ -106,20 +185,36 @@
             <template v-slot:item.special_instructions="{ item }">
               <div>
                 {{
-                item?.special_instructions &&
-                item.special_instructions.length > 30
-                ? item.special_instructions.slice(0, 30) + "..."
-                : item?.special_instructions
+                  item?.special_instructions &&
+                  item.special_instructions.length > 30
+                    ? item.special_instructions.slice(0, 30) + "..."
+                    : item?.special_instructions
                 }}
               </div>
             </template>
 
             <template v-slot:item.order_status="{ item }">
-              <v-btn v-if="item?.invoice?.reference_id && item?.order_status === 'processing'" dark text
-                :class="`green lighten-1`" x-small class="ma-1">
+              <v-btn
+                v-if="
+                  item?.invoice?.reference_id &&
+                  item?.order_status === 'processing'
+                "
+                dark
+                text
+                :class="`green lighten-1`"
+                x-small
+                class="ma-1"
+              >
                 Complete
               </v-btn>
-              <v-btn v-else dark text :class="item?.status_class" x-small class="ma-1">
+              <v-btn
+                v-else
+                dark
+                text
+                :class="item?.status_class"
+                x-small
+                class="ma-1"
+              >
                 {{ item?.order_status }}
               </v-btn>
             </template>
@@ -140,34 +235,53 @@
                   </v-list-item> -->
                   <v-list-item>
                     <v-list-item-title>
-                      <OrderEdit :model="Model" :endpoint="endpoint" :item="item" @response="
+                      <OrderEdit
+                        :model="Model"
+                        :endpoint="endpoint"
+                        :item="item"
+                        @response="
                           () => {
                             invoiceCompKey++;
                             getDataFromApi();
                           }
-                        " />
+                        "
+                      />
                     </v-list-item-title>
                   </v-list-item>
 
                   <v-list-item>
                     <v-list-item-title>
-                      <OrderInvoice :key="invoiceCompKey" :model="Model" :endpoint="endpoint" :item="item"
-                        @response="getDataFromApi" />
+                      <OrderInvoice
+                        :key="invoiceCompKey"
+                        :model="Model"
+                        :endpoint="endpoint"
+                        :item="item"
+                        @response="getDataFromApi"
+                      />
                     </v-list-item-title>
                   </v-list-item>
                   <v-list-item>
                     <v-list-item-title>
-                      <OrderCancel :model="Model" :endpoint="endpoint" :order_id="item.order_id" @response="
+                      <OrderCancel
+                        :model="Model"
+                        :endpoint="endpoint"
+                        :order_id="item.order_id"
+                        @response="
                           () => {
                             invoiceCompKey++;
                             getDataFromApi();
                           }
-                        " />
+                        "
+                      />
                     </v-list-item-title>
                   </v-list-item>
                   <v-list-item>
                     <v-list-item-title>
-                      <OrderDelete :id="item.id" :endpoint="endpoint" @response="getDataFromApi" />
+                      <OrderDelete
+                        :id="item.id"
+                        :endpoint="endpoint"
+                        @response="getDataFromApi"
+                      />
                     </v-list-item-title>
                   </v-list-item>
                 </v-list>
@@ -275,7 +389,7 @@ export default {
     payment_modes: [],
     business_sources: [],
     delivery_services: [],
-    totalItems:0
+    totalItems: 0,
   }),
 
   async created() {
@@ -322,6 +436,106 @@ export default {
     },
   },
   methods: {
+    async downloadManifestReport() {
+      this.loading = true;
+
+      let backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8001/api/";
+
+      const baseUrl = `${backendUrl}manifest-report`;
+
+      console.log(baseUrl);
+
+      // 1. Start with all filters
+      let rawParams = {
+        ...this.filters,
+      };
+
+      // 2. IMPORTANT: Create a new object to hold only valid, non-null parameters
+      let validParams = {};
+
+      for (const key in rawParams) {
+        const value = rawParams[key];
+
+        // Check if the value is not null and not an empty string
+        if (value !== null && value !== undefined && value !== "") {
+          validParams[key] = value;
+        }
+      }
+
+      // 3. Convert the clean parameters object into a URL query string
+      // If validParams is empty, queryString will be an empty string.
+      const queryString = new URLSearchParams(validParams).toString();
+
+      // 4. Construct the final URL (only append '?' if there are parameters)
+      const finalUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+
+      // 5. Programmatically trigger the download (as in the simple method)
+      try {
+        const link = document.createElement("a");
+        link.href = finalUrl;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error("Error triggering download:", error);
+      } finally {
+        // Wait briefly for the browser to start processing the download request
+        setTimeout(() => {
+          this.loading = false;
+        }, 500);
+      }
+    },
+    async downloadAWBPrintReport() {
+      this.loading = true;
+
+      let backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8001/api/";
+
+      const baseUrl = `${backendUrl}awb-print-report`;
+
+      console.log(baseUrl);
+      
+      // 1. Start with all filters
+      let rawParams = {
+        ...this.filters,
+      };
+
+      // 2. IMPORTANT: Create a new object to hold only valid, non-null parameters
+      let validParams = {};
+
+      for (const key in rawParams) {
+        const value = rawParams[key];
+
+        // Check if the value is not null and not an empty string
+        if (value !== null && value !== undefined && value !== "") {
+          validParams[key] = value;
+        }
+      }
+
+      // 3. Convert the clean parameters object into a URL query string
+      // If validParams is empty, queryString will be an empty string.
+      const queryString = new URLSearchParams(validParams).toString();
+
+      // 4. Construct the final URL (only append '?' if there are parameters)
+      const finalUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+
+      // 5. Programmatically trigger the download (as in the simple method)
+      try {
+        const link = document.createElement("a");
+        link.href = finalUrl;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error("Error triggering download:", error);
+      } finally {
+        // Wait briefly for the browser to start processing the download request
+        setTimeout(() => {
+          this.loading = false;
+        }, 500);
+      }
+    },
     async getDataFromApi() {
       this.loading = true;
       try {
