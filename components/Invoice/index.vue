@@ -1,7 +1,7 @@
 <template>
   <span>
     <v-row>
-      <v-col cols="4" v-for="(stat, index) in stats" :key="index">
+      <v-col cols="3" v-for="(stat, index) in stats" :key="index">
         <v-card outlined>
           <v-card-text>
             <div class="d-flex justify-space-between">
