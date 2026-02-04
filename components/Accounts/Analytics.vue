@@ -1,6 +1,71 @@
 <template>
   <v-container fluid>
     <v-row>
+      <v-col cols="6">
+        <v-card outlined>
+          <v-card-text>
+            <div class="d-flex justify-space-between">
+              <div>
+                <div class="text-subtitle-1 font-weight-medium mb-2">
+                  Total Orders
+                </div>
+                <div
+                  class="font-weight"
+                  :class="`primary--text`"
+                  style="font-size: 18px"
+                >
+                  <b>{{ grandQtyTotal }}</b>
+                </div>
+              </div>
+              <div>
+                <v-btn fab :class="`primary`" text small
+                  ><v-icon color="white">mdi-cart-outline</v-icon></v-btn
+                >
+              </div>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+      <v-col cols="6">
+        <v-card outlined>
+          <v-card-text>
+            <div class="d-flex justify-space-between">
+              <div>
+                <div class="text-subtitle-1 font-weight-medium mb-2">
+                  Total Orders
+                </div>
+                <div
+                  class="d-flex align-center font-weight teal--text"
+                  style="font-size: 18px"
+                >
+                  <svg
+                    viewBox="0 0 345 300"
+                    style="
+                      width: 15px;
+                      height: auto;
+                      margin-right: 4px;
+                      fill: currentColor;
+                    "
+                  >
+                    <path
+                      d="M342 141l3 2v-8c0-17-12-31-27-31h-23C278 37 223 0 140 0H30s15 13 15 52v53H17c-5 0-10-2-14-6l-3-3v8c0 17 12 31 27 31h18v30H17c-5 0-10-2-14-6l-3-3v8c0 17 12 31 27 31h18v55s-15 11-15 50h110c86 0 140-37 155-105h33c5 0 10 2 14 6l3 3v-8c0-17-12-31-27-31h-19l1-15-1-15h28c5 0 10 2 14 6zm-252-126h46c62 0 97 27 108 90l-154 0V15zm46 270H90v-90l154 0c-10 57-42 88-108 90zm111-135H90v-30l157 0c0 10 0 20 0 30z"
+                    />
+                  </svg>
+                  <b>{{ parseFloat(grandEarningTotal).toFixed(2) }}</b>
+                </div>
+              </div>
+              <div>
+                <v-btn fab :class="`teal`" text small
+                  ><v-icon color="white">mdi-cash</v-icon></v-btn
+                >
+              </div>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <v-row>
       <v-col cols="12">
         <v-row>
           <v-col cols="1">Orders</v-col>
@@ -145,6 +210,8 @@ export default {
     ordersSumByDate: [],
     customerItemsTotal: 0,
     totalItems: 0,
+    grandQtyTotal: 0,
+    grandEarningTotal: 0,
   }),
 
   async created() {
@@ -259,7 +326,12 @@ export default {
             to_date: this.filters.to,
           },
         });
-        this.ordersByDate = Array.isArray(res) ? res : []; // ✅ safety
+        this.ordersByDate = Array.isArray(res) ? res : [];
+
+        this.grandQtyTotal = this.ordersByDate.reduce(
+          (acc, cu) => acc + cu.total,
+          0
+        );
       } catch (err) {
         console.error("Failed to fetch orders:", err);
         this.ordersByDate = [];
@@ -272,7 +344,14 @@ export default {
             to_date: this.filters.to,
           },
         });
-        this.ordersSumByDate = Array.isArray(res) ? res : []; // ✅ safety
+        this.ordersSumByDate = Array.isArray(res) ? res : [];
+
+        console.log(this.ordersSumByDate);
+
+        this.grandEarningTotal = this.ordersSumByDate.reduce(
+          (acc, cu) => acc + parseFloat(cu.total),
+          0
+        );
       } catch (err) {
         console.error("Failed to fetch orders:", err);
       }

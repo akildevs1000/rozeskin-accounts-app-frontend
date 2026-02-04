@@ -8,7 +8,7 @@
         <v-tab> Repeated Report </v-tab>
         <v-tab> City Report </v-tab>
 
-        <v-tab> Reports New </v-tab>
+        <!-- <v-tab> Reports New </v-tab> -->
         <v-tab> Analytics </v-tab>
         <v-tab-item>
           <v-container fluid>
@@ -35,11 +35,11 @@
             <AccountsCityReport />
           </v-container>
         </v-tab-item>
-        <v-tab-item>
+        <!-- <v-tab-item>
           <v-container fluid>
             <AccountsReportNew />
           </v-container>
-        </v-tab-item>
+        </v-tab-item> -->
          <v-tab-item>
           <v-container fluid>
             <AccountsAnalytics />
