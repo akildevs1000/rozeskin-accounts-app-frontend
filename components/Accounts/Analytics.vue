@@ -7,7 +7,7 @@
             <div class="d-flex justify-space-between">
               <div>
                 <div class="text-subtitle-1 font-weight-medium mb-2">
-                  Total Orders
+                  Total Orders Quantity
                 </div>
                 <div
                   class="font-weight"
@@ -32,7 +32,7 @@
             <div class="d-flex justify-space-between">
               <div>
                 <div class="text-subtitle-1 font-weight-medium mb-2">
-                  Total Orders
+                  Total Orders Sales
                 </div>
                 <div
                   class="d-flex align-center font-weight teal--text"
