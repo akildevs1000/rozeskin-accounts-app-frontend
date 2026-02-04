@@ -32,7 +32,7 @@
             <div class="d-flex justify-space-between">
               <div>
                 <div class="text-subtitle-1 font-weight-medium mb-2">
-                  Total Orders Sales
+                  Total Sales Value
                 </div>
                 <div
                   class="d-flex align-center font-weight teal--text"
