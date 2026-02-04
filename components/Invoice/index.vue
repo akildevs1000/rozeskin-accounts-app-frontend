@@ -606,6 +606,19 @@
                 class="pa-3"
                 @click:row="onRowClick"
               >
+                <template v-slot:top>
+                  <v-toolbar flat dense class="mb-5">
+                    <v-btn small class="primary" @click="downloadManifestReport"
+                      ><v-icon size="15">mdi-download</v-icon> Manifest
+                      Report</v-btn
+                    >
+                    &nbsp;
+                    <v-btn small class="primary" @click="downloadAWBPrintReport"
+                      ><v-icon size="15">mdi-download</v-icon> AWB Print</v-btn
+                    >
+                  </v-toolbar>
+                </template>
+
                 <template v-slot:item.customer="{ item }">
                   <small>
                     {{ item?.customer?.full_name }}
@@ -787,7 +800,7 @@ export default {
       //   text: "Paid Amount",
       //   value: "total_paid_amount",
       // },
-        {
+      {
         text: "Payment Mode",
         value: "order.payment_method",
       },
@@ -838,6 +851,106 @@ export default {
     },
   },
   methods: {
+    async downloadManifestReport() {
+      this.loading = true;
+
+      let backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8001/api/";
+
+      const baseUrl = `${backendUrl}manifest-report`;
+
+      console.log(baseUrl);
+
+      // 1. Start with all filters
+      let rawParams = {
+        ...this.filters,
+      };
+
+      // 2. IMPORTANT: Create a new object to hold only valid, non-null parameters
+      let validParams = {};
+
+      for (const key in rawParams) {
+        const value = rawParams[key];
+
+        // Check if the value is not null and not an empty string
+        if (value !== null && value !== undefined && value !== "") {
+          validParams[key] = value;
+        }
+      }
+
+      // 3. Convert the clean parameters object into a URL query string
+      // If validParams is empty, queryString will be an empty string.
+      const queryString = new URLSearchParams(validParams).toString();
+
+      // 4. Construct the final URL (only append '?' if there are parameters)
+      const finalUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+
+      // 5. Programmatically trigger the download (as in the simple method)
+      try {
+        const link = document.createElement("a");
+        link.href = finalUrl;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error("Error triggering download:", error);
+      } finally {
+        // Wait briefly for the browser to start processing the download request
+        setTimeout(() => {
+          this.loading = false;
+        }, 500);
+      }
+    },
+    async downloadAWBPrintReport() {
+      this.loading = true;
+
+      let backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8001/api/";
+
+      const baseUrl = `${backendUrl}awb-print-report`;
+
+      console.log(baseUrl);
+
+      // 1. Start with all filters
+      let rawParams = {
+        ...this.filters,
+      };
+
+      // 2. IMPORTANT: Create a new object to hold only valid, non-null parameters
+      let validParams = {};
+
+      for (const key in rawParams) {
+        const value = rawParams[key];
+
+        // Check if the value is not null and not an empty string
+        if (value !== null && value !== undefined && value !== "") {
+          validParams[key] = value;
+        }
+      }
+
+      // 3. Convert the clean parameters object into a URL query string
+      // If validParams is empty, queryString will be an empty string.
+      const queryString = new URLSearchParams(validParams).toString();
+
+      // 4. Construct the final URL (only append '?' if there are parameters)
+      const finalUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+
+      // 5. Programmatically trigger the download (as in the simple method)
+      try {
+        const link = document.createElement("a");
+        link.href = finalUrl;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (error) {
+        console.error("Error triggering download:", error);
+      } finally {
+        // Wait briefly for the browser to start processing the download request
+        setTimeout(() => {
+          this.loading = false;
+        }, 500);
+      }
+    },
     statusColor(status) {
       switch (status) {
         case "Processing":
