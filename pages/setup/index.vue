@@ -5,7 +5,7 @@
     <v-tab> Product Category </v-tab>
     <v-tab> Delivery Service </v-tab>
     <v-tab> Password </v-tab>
-    <v-tab> Whatsapp </v-tab>
+    <v-tab> Email Templates </v-tab>
     <v-tab-item>
       <BusinessSource />
     </v-tab-item>
@@ -71,9 +71,9 @@
       </v-card>
     </v-tab-item>
     <v-tab-item>
-      <Whatsapp />
+      <!-- <Whatsapp /> -->
+      <EmailTemplate />
     </v-tab-item>
-   
   </v-tabs>
 </template>
 
