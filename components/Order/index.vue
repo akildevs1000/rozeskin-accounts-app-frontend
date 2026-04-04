@@ -186,27 +186,13 @@
 
             <template v-slot:item.order_status="{ item }">
               <v-btn
-                v-if="
-                  item?.invoice?.reference_id &&
-                  item?.order_status === 'processing'
-                "
                 dark
                 text
-                :class="`green lighten-1`"
+                :class="getStatusClass(item)"
                 x-small
                 class="ma-1"
               >
-                Complete
-              </v-btn>
-              <v-btn
-                v-else
-                dark
-                text
-                :class="item?.status_class"
-                x-small
-                class="ma-1"
-              >
-                {{ item?.order_status }}
+                {{ getStatusText(item) }}
               </v-btn>
             </template>
 
@@ -463,6 +449,30 @@ export default {
       } catch (error) {
         this.items = [];
       }
+    },
+    getStatusText(item) {
+      // Show "Complete" for processing orders with invoice reference
+      if (item?.invoice?.reference_id && item?.order_status === "processing") {
+        return "Complete";
+      }
+      return item?.order_status;
+    },
+
+    getStatusClass(item) {
+      // If processing with invoice, show green
+      if (item?.invoice?.reference_id && item?.order_status === "processing") {
+        return "green lighten-1";
+      }
+
+      // Fallback color mapping for each status
+      const statusColors = {
+        completed: "green lighten-1",
+        processing: "blue lighten-1",
+        pending: "red lighten-1",
+        cancelled: "grey lighten-1",
+      };
+
+      return statusColors[item?.order_status] || "grey lighten-1";
     },
   },
 };
