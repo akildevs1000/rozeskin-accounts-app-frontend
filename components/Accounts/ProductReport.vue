@@ -94,6 +94,7 @@
               <th class="text-center" style="width: 150px">Date</th>
               <th class="text-center">Price</th>
               <th class="text-center">Qty</th>
+              <th class="text-center">Base Price (unit × qty)</th>
               <!-- optional: per-day total -->
               <!-- <th class="text-center">Total (Price × Qty)</th> -->
             </tr>
@@ -111,8 +112,11 @@
                 :key="product + '-' + date"
               >
                 <td class="text-center">{{ date }}</td>
-                <td class="text-center">{{ products[product].price }}</td>
-                <td class="text-center">{{ products[product].quantity }}</td>
+                <td class="text-center">{{ products[product]?.price }}</td>
+                <td class="text-center">{{ products[product]?.quantity }}</td>
+                <td class="text-center">
+                  {{ formatBasePrices(products[product]?.base_prices) }}
+                </td>
                 <!-- if you want daily total, uncomment:
             <td class="text-center">
               {{ (parseFloat(products[product].price || 0) *
@@ -133,6 +137,15 @@
               </td>
               <td class="text-center font-weight-bold">
                 {{ getTotalQty(product) }}
+              </td>
+              <td class="text-center font-weight-bold">
+                <span
+                  v-for="bp in getBasePriceSummary(product)"
+                  :key="product + '-bp-' + bp.rate"
+                  class="mr-3 d-inline-block"
+                >
+                  {{ bp.rate }} → {{ bp.qty }} units
+                </span>
               </td>
               <!-- if you add daily total column, you can also add grand total here -->
             </tr>
@@ -227,6 +240,32 @@ export default {
         if (item) total += item.quantity;
       });
       return total;
+    },
+    // Per-row: render the day's unit-rate breakdown, e.g. "75.00 × 5, 99.00 × 1"
+    formatBasePrices(basePrices) {
+      const entries = Object.entries(basePrices || {});
+      if (!entries.length) return "-";
+      return entries
+        .sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))
+        .map(([rate, qty]) => `${rate} × ${qty}`)
+        .join(", ");
+    },
+    // Per-product: total units grouped by unit base price across the whole range
+    getBasePriceSummary(productName) {
+      const agg = {};
+      Object.values(this.productsJson).forEach((productsObj) => {
+        const item = Object.values(productsObj).find(
+          (p) => p.product === productName
+        );
+        if (item && item.base_prices) {
+          Object.entries(item.base_prices).forEach(([rate, qty]) => {
+            agg[rate] = (agg[rate] || 0) + Number(qty);
+          });
+        }
+      });
+      return Object.entries(agg)
+        .map(([rate, qty]) => ({ rate, qty }))
+        .sort((a, b) => parseFloat(a.rate) - parseFloat(b.rate));
     },
     getRowTotalPrice(productsObj) {
       let total = 0;
