@@ -526,7 +526,6 @@ export default {
         items: [
           {
             product_id: 49542,
-            sku: "",
             name: "Rice Moisturizing Facial Cleanser",
             quantity: 1,
             subtotal: "10",
@@ -571,7 +570,6 @@ export default {
     addItem() {
       this.payload.items.push({
         product_id: 49542,
-        sku: "",
         name: "Rice Moisturizing Facial Cleanser",
         quantity: 1,
         subtotal: "10",

@@ -226,15 +226,6 @@
                             label="Product Id"
                           ></v-text-field>
                         </v-col>
-                        <v-col cols="4">
-                          <v-text-field
-                            outlined
-                            dense
-                            hide-details
-                            v-model="item.sku"
-                            label="SKU"
-                          ></v-text-field>
-                        </v-col>
 
                         <v-col cols="4">
                           <v-text-field
@@ -451,7 +442,6 @@ export default {
         items: [
           {
             product_id: 49542,
-            sku: "",
             name: "Rice Moisturizing Facial Cleanser",
             quantity: 1,
             subtotal: "10",
@@ -486,7 +476,6 @@ export default {
     addItem() {
       this.payload.items.push({
         product_id: 49542,
-        sku: "",
         name: "Rice Moisturizing Facial Cleanser",
         quantity: 1,
         subtotal: "10",
