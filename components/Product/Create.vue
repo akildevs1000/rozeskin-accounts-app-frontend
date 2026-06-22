@@ -51,19 +51,6 @@
             </v-col>
             <v-col cols="12">
               <v-autocomplete
-                multiple
-                v-model="payload.inventory_item_ids"
-                :items="inventoryItems"
-                item-text="name"
-                item-value="id"
-                label="Items"
-                outlined
-                dense
-                hide-details
-              ></v-autocomplete>
-            </v-col>
-            <v-col cols="12">
-              <v-autocomplete
                 v-model="payload.product_category_id"
                 :items="product_categories"
                 item-text="name"
@@ -142,7 +129,6 @@ export default {
       successResponse: null,
       errorResponse: null,
       product_categories: [],
-      inventoryItems: [],
       imagePreview: null,
     };
   },
@@ -150,8 +136,6 @@ export default {
     let { data } = await this.$axios.get(`product-category-list`);
 
     this.product_categories = data;
-
-    this.inventoryItems = await this.$axios.$get(`inventory-items-list`);
   },
   methods: {
     previewImage(file) {
@@ -191,10 +175,6 @@ export default {
         if (this.payload.image instanceof File) {
           formData.append("image", this.payload.image);
         }
-        formData.append(
-          "inventory_item_ids",
-          JSON.stringify(this.payload.inventory_item_ids)
-        );
 
         await this.$axios.post(this.endpoint, formData);
         this.close();
