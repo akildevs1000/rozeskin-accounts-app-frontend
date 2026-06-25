@@ -1,0 +1,147 @@
+/* ============================================================
+   Inventory module — shared visual polish
+   Uses the app theme primary (#4390FC). Scoped to .inv-* classes
+   so it never touches the rest of the app.
+   ============================================================ */
+
+/* ---------- Dialog shell ---------- */
+.inv-dialog.v-dialog {
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(20, 40, 80, 0.28);
+}
+.inv-dialog > .v-card {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Gradient header used in place of the old grey alert */
+.inv-dialog__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 22px;
+  background: linear-gradient(90deg, #4390fc 0%, #5ea0fd 100%);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+.inv-dialog__header .v-icon {
+  color: #fff !important;
+}
+.inv-dialog__hint {
+  font-weight: 400;
+  font-size: 12px;
+  opacity: 0.85;
+}
+.inv-dialog .v-card__text {
+  padding: 22px !important;
+}
+
+/* ---------- Line-item editor table ---------- */
+.inv-lines {
+  border: 1px solid #e6edf6;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.inv-lines table {
+  border-collapse: separate !important;
+}
+.inv-lines thead th {
+  background: #f4f8ff !important;
+  color: #3b7fe0 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  height: 42px !important;
+  border-bottom: 1px solid #e6edf6 !important;
+}
+.inv-lines tbody td {
+  border-bottom: 1px solid #f0f4f9 !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+.inv-lines tbody tr:last-child td {
+  border-bottom: none !important;
+}
+.inv-lines tbody tr:hover {
+  background: #fafcff !important;
+}
+/* Tidy the dense inputs inside line rows */
+.inv-lines .v-input__slot {
+  min-height: 36px !important;
+}
+
+/* ---------- List data tables ---------- */
+.inv-table {
+  border-radius: 14px !important;
+  overflow: hidden;
+  box-shadow: 0 6px 24px rgba(20, 40, 80, 0.06) !important;
+}
+.inv-table .v-data-table__wrapper > table > thead > tr > th {
+  background: #f7f9fc !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #6b7a90 !important;
+  white-space: nowrap;
+}
+.inv-table .v-data-table__wrapper > table > tbody > tr > td {
+  height: 48px;
+  border-bottom: 1px solid #f1f4f8 !important;
+}
+.inv-table .v-data-table__wrapper > table > tbody > tr:hover {
+  background: #f3f8ff !important;
+}
+
+/* Toolbars / filter rows inside the cards breathe a little more */
+.inv-table .v-toolbar__content {
+  padding-left: 8px;
+}
+
+/* ---------- Toolbar / filter row ---------- */
+.inv-toolbar {
+  padding: 10px 12px 14px;
+  row-gap: 8px;
+}
+.inv-toolbar .inv-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #2a2f37;
+  white-space: nowrap;
+}
+
+/* Compact, rounded buttons — sized to match the dense filter fields */
+.inv-toolbar .v-btn {
+  height: 32px !important;
+  min-width: 88px !important;
+  width: auto !important;
+  border-radius: 8px !important;
+  text-transform: none;
+  letter-spacing: 0.2px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  box-shadow: 0 2px 6px rgba(67, 144, 252, 0.2);
+}
+.inv-toolbar .v-btn.v-btn--outlined {
+  box-shadow: none;
+}
+
+/* Rounded, lighter inputs in the toolbar */
+.inv-toolbar .v-text-field--outlined .v-input__slot,
+.inv-toolbar .v-select--outlined .v-input__slot {
+  border-radius: 10px !important;
+  background: #fbfcfe;
+}
+.inv-clickable .v-data-table__wrapper > table > tbody > tr {
+  cursor: pointer;
+}
+.inv-search {
+  flex: 0 0 280px !important;
+  max-width: 280px !important;
+}
+.inv-filter {
+  flex: 0 0 200px !important;
+  max-width: 200px !important;
+}

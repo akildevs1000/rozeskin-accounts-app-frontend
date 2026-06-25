@@ -1,0 +1,3 @@
+<template>
+  <InventoryItems />
+</template>

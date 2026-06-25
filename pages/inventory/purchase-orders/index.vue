@@ -1,0 +1,3 @@
+<template>
+  <InventoryPurchaseOrders />
+</template>
