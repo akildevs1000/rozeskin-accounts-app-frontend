@@ -192,7 +192,7 @@
 
                 <!-- Summary cards -->
                 <v-row dense>
-                  <v-col v-for="c in summaryCards" :key="c.label" cols="6" sm="3">
+                  <v-col v-for="c in summaryCards" :key="c.label" cols="6" sm="4">
                     <v-card outlined>
                       <v-card-text class="py-2 text-center">
                         <div class="text-caption grey--text">{{ c.label }}</div>
@@ -204,7 +204,7 @@
 
                 <!-- Last purchase -->
                 <v-row dense class="mt-1">
-                  <v-col cols="6" sm="3">
+                  <v-col cols="6" sm="4">
                     <v-card outlined>
                       <v-card-text class="py-2 text-center">
                         <div class="text-caption grey--text">Last PO Number</div>
@@ -214,7 +214,7 @@
                       </v-card-text>
                     </v-card>
                   </v-col>
-                  <v-col cols="6" sm="3">
+                  <v-col cols="6" sm="4">
                     <v-card outlined>
                       <v-card-text class="py-2 text-center">
                         <div class="text-caption grey--text">Date Received</div>
@@ -224,7 +224,7 @@
                       </v-card-text>
                     </v-card>
                   </v-col>
-                  <v-col cols="6" sm="3">
+                  <v-col cols="6" sm="4">
                     <v-card outlined>
                       <v-card-text class="py-2 text-center">
                         <div class="text-caption grey--text">Received Qty</div>
@@ -328,7 +328,7 @@ export default {
       const s = this.history.summary || {};
       return [
         { label: "Available", value: s.available || 0, color: "green" },
-        { label: "Received", value: s.received || 0, color: "primary" },
+        // { label: "Received", value: s.received || 0, color: "primary" },
         { label: "Sold", value: s.sold || 0, color: "blue" },
         { label: "Returned", value: s.returned || 0, color: "deep-purple" },
       ];
