@@ -130,6 +130,19 @@
                         </template>
                       </v-checkbox></v-col
                     >
+                    <v-col cols="12" v-if="shippingAddressItems.length">
+                      <v-autocomplete
+                        outlined
+                        dense
+                        hide-details
+                        clearable
+                        :items="shippingAddressItems"
+                        item-text="label"
+                        return-object
+                        label="Use a saved address"
+                        @change="applyShippingAddress"
+                      ></v-autocomplete>
+                    </v-col>
                     <v-col cols="12">
                       <v-text-field
                         outlined
@@ -197,6 +210,19 @@
                 <v-container>
                   <v-row>
                     <v-col cols="12">Billing Address</v-col>
+                    <v-col cols="12" v-if="billingAddressItems.length">
+                      <v-autocomplete
+                        outlined
+                        dense
+                        hide-details
+                        clearable
+                        :items="billingAddressItems"
+                        item-text="label"
+                        return-object
+                        label="Use a saved address"
+                        @change="applyBillingAddress"
+                      ></v-autocomplete>
+                    </v-col>
                     <v-col cols="12">
                       <v-text-field
                         outlined
@@ -628,6 +654,8 @@ export default {
       business_sources: [],
       delivery_services: [],
       products: [],
+      shippingAddressOptions: [],
+      billingAddressOptions: [],
       useAsBillingAddress: false,
       default_address: {
         address_1: null,
@@ -639,6 +667,14 @@ export default {
       },
       cities: require(`../../json/cities.json`),
     };
+  },
+  computed: {
+    shippingAddressItems() {
+      return this.labelAddresses(this.shippingAddressOptions);
+    },
+    billingAddressItems() {
+      return this.labelAddresses(this.billingAddressOptions);
+    },
   },
   watch: {
     useAsBillingAddress(val) {
@@ -728,18 +764,62 @@ export default {
         parseFloat(this.payload.discount || 0);
     },
     getCustomerInfo(payload) {
-      if (payload) {
-        this.payload = {
-          ...this.payload,
-          ...payload,
-        };
-        console.log(payload);
+      if (!payload) return;
+      // Pull the saved-address lists out into the picker options; merge the rest.
+      const {
+        shipping_addresses = [],
+        billing_addresses = [],
+        ...rest
+      } = payload;
+      this.shippingAddressOptions = shipping_addresses || [];
+      this.billingAddressOptions = billing_addresses || [];
+      this.payload = {
+        ...this.payload,
+        ...rest,
+      };
+    },
+    // Build the complete address (incl. address 2) for each saved row and
+    // collapse exact duplicates so the same address isn't listed twice.
+    labelAddresses(list) {
+      const seen = new Set();
+      const out = [];
+      for (const a of list || []) {
+        const label = this.formatFullAddress(a);
+        if (!label || seen.has(label)) continue;
+        seen.add(label);
+        out.push({ ...a, label });
       }
+      return out;
+    },
+    formatFullAddress(a) {
+      return [a.address_1, a.address_2, a.city, a.state, a.postcode, a.country]
+        .filter((p) => p != null && String(p).trim() !== "")
+        .join(", ");
+    },
+    applyShippingAddress(addr) {
+      if (!addr) return;
+      this.payload.shipping_address = this.pickAddressFields(addr);
+    },
+    applyBillingAddress(addr) {
+      if (!addr) return;
+      this.payload.billing_address = this.pickAddressFields(addr);
+    },
+    pickAddressFields(addr) {
+      return {
+        address_1: addr.address_1 ?? null,
+        address_2: addr.address_2 ?? null,
+        city: addr.city ?? null,
+        state: addr.state ?? null,
+        postcode: addr.postcode ?? null,
+        country: addr.country ?? null,
+      };
     },
     close() {
       this.dialog = false;
       this.loading = false;
       this.errorResponse = null;
+      this.shippingAddressOptions = [];
+      this.billingAddressOptions = [];
 
       this.payload = {
         user_id: 1,

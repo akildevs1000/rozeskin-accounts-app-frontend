@@ -382,8 +382,11 @@ export default {
 
     this.payload = {
       ...this.item,
-      shipping_address: this.item.customer.shipping_address,
-      billing_address: this.item.customer.billing_address,
+      // Prefer this order's own frozen address; fall back to the customer's current one.
+      shipping_address:
+        this.item.shipping_address || this.item.customer.shipping_address,
+      billing_address:
+        this.item.billing_address || this.item.customer.billing_address,
     };
   },
   methods: {

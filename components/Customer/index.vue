@@ -4,6 +4,53 @@
       <AssetsIconClose left="1290" @click="myDialog = false" />
       <CustomerOrders :key="customer_id" :customer_id="customer_id" />
     </v-dialog>
+
+    <v-dialog persistent v-model="addressDialog" width="900">
+      <AssetsIconClose left="890" @click="addressDialog = false" />
+      <v-card>
+        <v-alert flat class="grey lighten-3" dense>
+          <span>Addresses — {{ selectedCustomer.full_name }}</span>
+        </v-alert>
+        <v-card-text>
+          <v-row>
+            <v-col cols="6">
+              <div class="mb-2 font-weight-medium">Shipping Addresses</div>
+              <v-card
+                v-for="addr in shippingAddressList"
+                :key="'s' + addr.id"
+                outlined
+                class="mb-2 pa-2"
+              >
+                <div>{{ formatFullAddress(addr) }}</div>
+                <small class="grey--text">{{
+                  addr.order_id ? "Order #" + addr.order_id : "Current address"
+                }}</small>
+              </v-card>
+              <div v-if="!shippingAddressList.length" class="grey--text">
+                No shipping addresses.
+              </div>
+            </v-col>
+            <v-col cols="6">
+              <div class="mb-2 font-weight-medium">Billing Addresses</div>
+              <v-card
+                v-for="addr in billingAddressList"
+                :key="'b' + addr.id"
+                outlined
+                class="mb-2 pa-2"
+              >
+                <div>{{ formatFullAddress(addr) }}</div>
+                <small class="grey--text">{{
+                  addr.order_id ? "Order #" + addr.order_id : "Current address"
+                }}</small>
+              </v-card>
+              <div v-if="!billingAddressList.length" class="grey--text">
+                No billing addresses.
+              </div>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
     <v-card>
       <v-container fluid>
         <v-row>
@@ -174,6 +221,21 @@
                   </div>
                 </v-list-item-title>
               </v-list-item>
+              <v-list-item
+                @click="
+                  () => {
+                    selectedCustomer = item;
+                    addressDialog = true;
+                  }
+                "
+              >
+                <v-list-item-title>
+                  <div>
+                    <v-icon color="primary" small> mdi-map-marker </v-icon>
+                    Addresses
+                  </div>
+                </v-list-item-title>
+              </v-list-item>
               <v-list-item>
                 <v-list-item-title>
                   <CustomerEdit
@@ -206,6 +268,8 @@ export default {
   data: () => ({
     customer_id: 0,
     myDialog: false,
+    addressDialog: false,
+    selectedCustomer: {},
     Model: "Customer",
     endpoint: "customers",
     filters: {},
@@ -305,7 +369,36 @@ export default {
       deep: true,
     },
   },
+  computed: {
+    shippingAddressList() {
+      return this.dedupeAddresses(this.selectedCustomer.shipping_addresses);
+    },
+    billingAddressList() {
+      return this.dedupeAddresses(this.selectedCustomer.billing_addresses);
+    },
+  },
   methods: {
+    // Build the complete address (incl. address 2 and state) from the fields,
+    // so shipping and billing display the same way.
+    formatFullAddress(a) {
+      if (!a) return "";
+      return [a.address_1, a.address_2, a.city, a.state, a.postcode, a.country]
+        .filter((p) => p != null && String(p).trim() !== "")
+        .join(", ");
+    },
+    // Collapse identical addresses to one entry, preferring the
+    // "current address" row (order_id null) as the one shown.
+    dedupeAddresses(list) {
+      const map = new Map();
+      for (const addr of list || []) {
+        const key = this.formatFullAddress(addr).trim();
+        if (!key) continue;
+        if (!map.has(key) || !addr.order_id) {
+          map.set(key, addr);
+        }
+      }
+      return [...map.values()];
+    },
     async getDataFromApi() {
       this.loading = true;
       // Use options for pagination

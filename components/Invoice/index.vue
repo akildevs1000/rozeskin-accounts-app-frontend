@@ -499,7 +499,9 @@
                       <div class="caption">
                         <b>Shipping Address:</b>
                         {{
-                          selectedItem?.customer.shipping_address?.full_address
+                          (selectedItem?.order?.shipping_address ||
+                            selectedItem?.customer?.shipping_address)
+                            ?.full_address
                         }}
                       </div>
                     </v-col>

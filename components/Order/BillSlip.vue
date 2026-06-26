@@ -418,7 +418,7 @@
                               white-space: normal;
                             "
                           >
-                            {{ item?.customer?.shipping_address?.address_1 }}
+                            {{ (item?.shipping_address || item?.customer?.shipping_address)?.address_1 }}
                           </td>
                         </tr>
                       </tbody>
@@ -471,7 +471,7 @@
                       <tr>
                         <td>CITY:</td>
                         <td style="border-bottom: 1px solid">
-                          {{ item?.customer?.shipping_address?.city }}
+                          {{ (item?.shipping_address || item?.customer?.shipping_address)?.city }}
                         </td>
                       </tr>
                     </tbody>
@@ -494,11 +494,11 @@
                       <tr>
                         <td>COUNTRY:</td>
                         <td style="border-bottom: 1px solid">
-                          {{ item?.customer?.shipping_address?.country }}
+                          {{ (item?.shipping_address || item?.customer?.shipping_address)?.country }}
                         </td>
                         <td>ZIP CODE:</td>
                         <td style="border-bottom: 1px solid">
-                          {{ item?.customer?.shipping_address?.postcode }}
+                          {{ (item?.shipping_address || item?.customer?.shipping_address)?.postcode }}
                         </td>
                       </tr>
                     </tbody>

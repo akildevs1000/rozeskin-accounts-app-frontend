@@ -598,8 +598,11 @@ export default {
       ...this.item,
       business_source_id: business_sources[0]?.id || 0,
       delivery_service_id: delivery_services[0]?.id || 0,
-      shipping_address: this.item.customer.shipping_address,
-      billing_address: this.item.customer.billing_address,
+      // Prefer this order's own frozen address; fall back to the customer's current one.
+      shipping_address:
+        this.item.shipping_address || this.item.customer.shipping_address,
+      billing_address:
+        this.item.billing_address || this.item.customer.billing_address,
     };
 
     const method = this.payload.payment_method?.toLowerCase();
