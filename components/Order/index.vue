@@ -239,6 +239,22 @@
                   </v-list-item>
                   <v-list-item>
                     <v-list-item-title>
+                      <OrderReturn
+                        :key="invoiceCompKey"
+                        :model="Model"
+                        :endpoint="endpoint"
+                        :item="item"
+                        @response="
+                          () => {
+                            invoiceCompKey++;
+                            getDataFromApi();
+                          }
+                        "
+                      />
+                    </v-list-item-title>
+                  </v-list-item>
+                  <v-list-item>
+                    <v-list-item-title>
                       <OrderCancel
                         :model="Model"
                         :endpoint="endpoint"

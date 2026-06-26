@@ -12,7 +12,7 @@
 
     <!-- Stat cards -->
     <v-row class="px-2">
-      <v-col v-for="card in cards" :key="card.label" cols="12" sm="6" md="3">
+      <v-col v-for="card in cards" :key="card.label" cols="12" sm="6" md="4">
         <v-card outlined :loading="loading">
           <v-card-text>
             <div class="d-flex justify-space-between align-center">
@@ -95,7 +95,7 @@ export default {
       { text: "Product", value: "name" },
       { text: "Item #", value: "item_number" },
       { text: "Available", value: "sellable_qty", align: "center" },
-      { text: "Reorder At", value: "reorder_level", align: "center" },
+      { text: "Low Stock Alert", value: "reorder_level", align: "center" },
     ],
     moveHeaders: [
       { text: "Product", value: "product.name" },
@@ -118,7 +118,6 @@ export default {
         { label: "Purchase Pending", value: s.purchase_pending || 0, icon: "mdi-clipboard-clock-outline", color: "indigo" },
         { label: "Received Stock", value: s.received_stock || 0, icon: "mdi-truck-check-outline", color: "green" },
         { label: "Returned Stock", value: s.returned_stock || 0, icon: "mdi-keyboard-return", color: "deep-purple" },
-        { label: "Damaged / Expired", value: s.damaged_stock || 0, icon: "mdi-package-variant-closed-remove", color: "red" },
       ];
     },
   },

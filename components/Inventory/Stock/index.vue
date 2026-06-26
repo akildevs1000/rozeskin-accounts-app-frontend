@@ -171,7 +171,7 @@
                     <div class="vd-quickgrid mt-4">
                       <div class="vd-q"><span class="vd-k">Unit Cost</span><span>{{ money(selected.unit_cost) }}</span></div>
                       <div class="vd-q"><span class="vd-k">Stock Value</span><span>{{ money(selected.stock_value) }}</span></div>
-                      <div class="vd-q"><span class="vd-k">Reorder At</span><span>{{ selected.reorder_level || "—" }}</span></div>
+                      <div class="vd-q"><span class="vd-k">Low Stock Alert</span><span>{{ selected.reorder_level || "—" }}</span></div>
                     </div>
                   </div>
 
@@ -312,10 +312,10 @@ export default {
       { text: "SKU", value: "sku" },
       { text: "Item", value: "name" },
       { text: "Available", value: "sellable_qty", align: "center" },
-      { text: "Total", value: "total_qty", align: "center" },
+      { text: "Balance", value: "total_qty", align: "center" },
       { text: "Cost", value: "unit_cost", align: "right" },
       { text: "Stock Value", value: "stock_value", align: "right" },
-      { text: "Reorder At", value: "reorder_level", align: "center", sortable: false },
+      { text: "Low Stock Alert", value: "reorder_level", align: "center", sortable: false },
     ],
   }),
 

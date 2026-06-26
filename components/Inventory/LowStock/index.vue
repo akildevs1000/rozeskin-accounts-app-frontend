@@ -37,7 +37,7 @@ export default {
       { text: "SKU", value: "sku" },
       { text: "Item", value: "name" },
       { text: "Available", value: "sellable_qty", align: "center" },
-      { text: "Reorder At", value: "reorder_level", align: "center" },
+      { text: "Low Stock Alert", value: "reorder_level", align: "center" },
       { text: "Shortfall", value: "shortfall", align: "center", sortable: false },
       { text: "", value: "action", align: "right", sortable: false },
     ],
