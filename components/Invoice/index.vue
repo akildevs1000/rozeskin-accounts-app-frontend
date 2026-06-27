@@ -256,7 +256,17 @@
               </div>
             </v-col>
 
-            <v-col v-if="isShortView" cols="9">
+            <v-col
+              v-if="isShortView && !selectedItem"
+              cols="9"
+              class="d-flex flex-column align-center justify-center"
+              style="min-height: 400px"
+            >
+              <v-progress-circular indeterminate color="primary" size="40" />
+              <div class="mt-3 grey--text">Loading invoice…</div>
+            </v-col>
+
+            <v-col v-if="isShortView && selectedItem" cols="9">
               <style scoped>
                 .hover-bold:hover {
                   font-weight: bold;
@@ -824,6 +834,17 @@ export default {
   }),
 
   async created() {
+    // Deep-link support: /invoice?invoice_id=123 opens that invoice in the
+    // short view (used by the inventory history drill-down). Setting the search
+    // filter up front makes the backend look it up regardless of date.
+    const deepLinkInvoiceId = this.$route.query.invoice_id;
+    if (deepLinkInvoiceId) {
+      // Switch to the short view up front so the full list never flashes while
+      // the invoice loads; a spinner shows until selectedItem is ready.
+      this.isShortView = true;
+      this.loading = true;
+    }
+
     await this.getStats();
 
     let { data: payment_modes } = await this.$axios.get(`payment-mode-list`);
@@ -843,6 +864,34 @@ export default {
       { id: null, name: "Select All" },
       ...delivery_services,
     ];
+
+    if (deepLinkInvoiceId) {
+      // Load the normal (date-filtered) list for the left panel, then highlight
+      // the deep-linked invoice. If it falls outside the default date window,
+      // fetch it on its own and pin it to the top so it can still be selected.
+      await this.getDataFromApi();
+
+      let match = this.items.find(
+        (i) => String(i.id) === String(deepLinkInvoiceId)
+      );
+
+      if (!match) {
+        try {
+          const { data } = await this.$axios.get(this.endpoint, {
+            params: { search: String(deepLinkInvoiceId), per_page: 100 },
+          });
+          match = (data?.data || []).find(
+            (i) => String(i.id) === String(deepLinkInvoiceId)
+          );
+          if (match) this.items = [match, ...this.items];
+        } catch (e) {
+          console.error("Deep-link invoice fetch failed:", e);
+        }
+      }
+
+      if (match) this.selectedItem = match;
+      this.loading = false;
+    }
   },
   watch: {
     options: {

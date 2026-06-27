@@ -192,7 +192,7 @@
 
                 <!-- Summary cards -->
                 <v-row dense>
-                  <v-col v-for="c in summaryCards" :key="c.label" cols="6" sm="4">
+                  <v-col v-for="c in summaryCards" :key="c.label" cols="6" sm="3">
                     <v-card outlined>
                       <v-card-text class="py-2 text-center">
                         <div class="text-caption grey--text">{{ c.label }}</div>
@@ -250,15 +250,30 @@
                 <v-data-table
                   dense
                   :headers="historyHeaders"
-                  :items="salesHistory"
+                  :items="filteredLedger"
                   :loading="historyLoading"
                   :items-per-page="10"
                   class="elevation-0 inv-table"
                 >
-                  <template v-slot:item.reference="{ item }">{{ item.reference || "—" }}</template>
+                  <template v-slot:item.reference="{ item }">
+                    <a
+                      v-if="item.source_id"
+                      class="primary--text"
+                      style="cursor: pointer; text-decoration: none"
+                      @click="goToInvoice(item)"
+                    >{{ item.reference || "—" }}</a>
+                    <span v-else>{{ item.reference || "—" }}</span>
+                  </template>
                   <template v-slot:item.created_at="{ item }">{{ fmt(item.created_at) }}</template>
+                  <template v-slot:item.movement_label="{ item }">
+                    <v-chip x-small outlined>{{ item.movement_label }}</v-chip>
+                  </template>
                   <template v-slot:item.customer_name="{ item }">{{ item.customer_name || "—" }}</template>
-                  <template v-slot:item.quantity="{ item }">{{ Math.abs(item.quantity) }}</template>
+                  <template v-slot:item.quantity="{ item }">
+                    <span :class="item.quantity >= 0 ? 'green--text' : 'red--text'">
+                      {{ item.quantity >= 0 ? "+" : "" }}{{ item.quantity }}
+                    </span>
+                  </template>
                 </v-data-table>
               </div>
             </v-card-text>
@@ -304,8 +319,9 @@ export default {
     historyHeaders: [
       { text: "Invoice #", value: "reference" },
       { text: "Date", value: "created_at" },
+      { text: "Type", value: "movement_label" },
       { text: "Customer", value: "customer_name" },
-      { text: "Qty Sold", value: "quantity", align: "center" },
+      { text: "Qty", value: "quantity", align: "center" },
       { text: "Balance", value: "balance_after", align: "center" },
     ],
     headers: [
@@ -326,11 +342,15 @@ export default {
   computed: {
     summaryCards() {
       const s = this.history.summary || {};
+      // Net sold = units that actually stayed sold (returns and cancellations add
+      // stock back, so they don't count as a real sale).
+      const netSold = Math.max(0, (s.sold || 0) - (s.returned || 0) - (s.cancelled || 0));
       return [
         { label: "Available", value: s.available || 0, color: "green" },
         // { label: "Received", value: s.received || 0, color: "primary" },
-        { label: "Sold", value: s.sold || 0, color: "blue" },
+        { label: "Sold", value: netSold, color: "blue" },
         { label: "Returned", value: s.returned || 0, color: "deep-purple" },
+        { label: "Cancelled", value: s.cancelled || 0, color: "red" },
       ];
     },
     filteredLedger() {
@@ -342,10 +362,6 @@ export default {
         if (this.historyTo && d > this.historyTo) return false;
         return true;
       });
-    },
-    // Sales-only rows for the History table (Invoice # / Customer / Qty Sold).
-    salesHistory() {
-      return (this.filteredLedger || []).filter((r) => r.movement_type === "sale");
     },
     // Day-wise sold quantity, derived from the (date-filtered) ledger.
     soldByDay() {
@@ -465,6 +481,11 @@ export default {
     onRangeChange(val) {
       this.historyFrom = val && val[0] ? val[0] : null;
       this.historyTo = val && val[1] ? val[1] : null;
+    },
+    // Open the source invoice of a history row in the Invoices short view.
+    goToInvoice(row) {
+      if (!row.source_id) return;
+      this.$router.push({ path: "/invoice", query: { invoice_id: row.source_id } });
     },
 
     // ---------- list view ----------
