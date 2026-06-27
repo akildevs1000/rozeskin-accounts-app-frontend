@@ -328,7 +328,7 @@ export default {
       { text: "SKU", value: "sku" },
       { text: "Item", value: "name" },
       { text: "Available", value: "sellable_qty", align: "center" },
-      { text: "Balance", value: "total_qty", align: "center" },
+      // { text: "Balance", value: "total_qty", align: "center" },
       { text: "Cost", value: "unit_cost", align: "right" },
       { text: "Stock Value", value: "stock_value", align: "right" },
       { text: "Low Stock Alert", value: "reorder_level", align: "center", sortable: false },
