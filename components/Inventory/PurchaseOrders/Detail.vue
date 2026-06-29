@@ -41,12 +41,16 @@
         <span class="font-weight-medium">{{ po.reference_id }}</span>
         <v-spacer></v-spacer>
 
-        <span v-if="canEdit" class="po-act" @click="$router.push(`/inventory/purchase-orders/${id}/edit`)">
+        <span v-if="canEdit" class="po-act" @click="goEdit">
           Edit <v-icon small>mdi-pencil</v-icon>
         </span>
 
         <span v-if="canReceive" class="po-act ml-5" @click="openReceive">
           Receive <v-icon small>mdi-truck-check-outline</v-icon>
+        </span>
+
+        <span class="po-act ml-5" :class="{ 'po-act--busy': deleting }" @click="confirmDelete">
+          Delete <v-icon small>mdi-delete-outline</v-icon>
         </span>
 
         <v-menu bottom left offset-y>
@@ -198,6 +202,7 @@ export default {
   data: () => ({
     loading: false,
     printing: false,
+    deleting: false,
     po: {},
     receiveDialog: false,
     receiveError: null,
@@ -215,8 +220,9 @@ export default {
   }),
 
   computed: {
-    canEdit() { return !["received", "cancelled"].includes(this.po.status); },
+    canEdit() { return this.po.status !== "cancelled"; },
     canReceive() { return ["pending", "partially_received"].includes(this.po.status); },
+    hasReceipts() { return (Number(this.po.received_qty) || 0) > 0; },
     deliveryEntity() {
       return this.po.delivery_type === "customer" ? this.po.customer : this.po.warehouse;
     },
@@ -298,6 +304,52 @@ export default {
         const { data } = await this.$axios.get(`purchase-orders/${this.id}`);
         this.po = data;
       } finally { this.loading = false; }
+    },
+    async goEdit() {
+      // Editing a (partially) received PO reverses the received stock first.
+      if (this.hasReceipts && this.$swal) {
+        const { isConfirmed } = await this.$swal.fire({
+          icon: "warning",
+          title: "Edit received PO?",
+          html: "This PO already has received goods. Editing it will <b>reverse that stock</b> and reset the PO to pending. Continue?",
+          showCancelButton: true,
+          confirmButtonText: "Edit anyway",
+          confirmButtonColor: "#1976d2",
+        });
+        if (!isConfirmed) return;
+      }
+      this.$router.push(`/inventory/purchase-orders/${this.id}/edit`);
+    },
+    async confirmDelete() {
+      if (this.deleting) return;
+      const warn = this.hasReceipts
+        ? "This PO has received goods. Deleting it will <b>reverse that stock</b> and remove its goods receipts. "
+        : "";
+      if (this.$swal) {
+        const { isConfirmed } = await this.$swal.fire({
+          icon: "warning",
+          title: "Delete this purchase order?",
+          html: warn + "This action cannot be undone.",
+          showCancelButton: true,
+          confirmButtonText: "Delete",
+          confirmButtonColor: "#d32f2f",
+        });
+        if (!isConfirmed) return;
+      } else if (!confirm("Delete this purchase order?")) {
+        return;
+      }
+      await this.deletePo();
+    },
+    async deletePo() {
+      this.deleting = true;
+      try {
+        await this.$axios.delete(`purchase-orders/${this.id}`);
+        this.$swal && this.$swal.fire({ toast: true, position: "top-end", timer: 2000, showConfirmButton: false, icon: "success", title: "Purchase order deleted" });
+        this.$router.push("/inventory/purchase-orders");
+      } catch (e) {
+        const msg = e?.response?.data?.message || "Failed to delete";
+        this.$swal ? this.$swal.fire({ icon: "error", title: "Delete failed", text: msg }) : alert(msg);
+      } finally { this.deleting = false; }
     },
     openReceive() {
       this.receiveLines = (this.po.items || [])
