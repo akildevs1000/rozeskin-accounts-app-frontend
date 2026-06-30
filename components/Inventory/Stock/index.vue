@@ -363,19 +363,21 @@ export default {
         return true;
       });
     },
-    // Day-wise sold quantity, derived from the (date-filtered) ledger.
+    // Day-wise NET sold quantity = sales minus returns/cancellations on that day,
+    // so the daily chart reconciles with the "Sold" (net) summary card.
     soldByDay() {
+      const BACK = ["customer_return", "rto", "sales_invoice_cancel", "shipment_cancel"];
       const map = {};
-      (this.filteredLedger || [])
-        .filter((r) => r.movement_type === "sale")
-        .forEach((r) => {
-          const d = (r.created_at || "").slice(0, 10); // YYYY-MM-DD
-          if (!d) return;
-          map[d] = (map[d] || 0) + Math.abs(Number(r.quantity) || 0);
-        });
+      (this.filteredLedger || []).forEach((r) => {
+        const d = (r.created_at || "").slice(0, 10); // YYYY-MM-DD
+        if (!d) return;
+        const q = Math.abs(Number(r.quantity) || 0);
+        if (r.movement_type === "sale") map[d] = (map[d] || 0) + q;
+        else if (BACK.includes(r.movement_type)) map[d] = (map[d] || 0) - q;
+      });
       return Object.keys(map)
         .sort()
-        .map((d) => ({ date: d, qty: map[d] }));
+        .map((d) => ({ date: d, qty: Math.max(0, map[d]) }));
     },
     hasSoldData() {
       return this.soldByDay.length > 0;
