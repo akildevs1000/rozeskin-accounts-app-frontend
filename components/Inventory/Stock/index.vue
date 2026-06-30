@@ -53,6 +53,9 @@
             <v-switch v-model="filters.low_stock" label="Low stock only" hide-details class="mt-0 mr-3" />
             <v-btn small depressed color="primary" :loading="loading" @click="getDataFromApi">Submit</v-btn>
             <v-spacer></v-spacer>
+            <v-btn small depressed color="success" class="mr-3" :loading="exporting" @click="exportItemsCsv">
+              <v-icon left small>mdi-download</v-icon>Export CSV
+            </v-btn>
             <span class="text-caption grey--text">Double-click a row to open details</span>
           </div>
         </template>
@@ -219,7 +222,7 @@
                       <v-card-text class="py-2 text-center">
                         <div class="text-caption grey--text">Date Received</div>
                         <div class="text-h6 font-weight-bold">
-                          {{ history.last_purchase ? fmt(history.last_purchase.received_date) : "—" }}
+                          {{ history.last_purchase ? fmtDate(history.last_purchase.received_date) : "—" }}
                         </div>
                       </v-card-text>
                     </v-card>
@@ -246,7 +249,13 @@
                 </v-card>
 
                 <!-- Movement history -->
-                <div class="text-subtitle-2 mt-16 mb-2">History</div>
+                <div class="d-flex align-center mt-16 mb-2">
+                  <span class="text-subtitle-2">History</span>
+                  <v-spacer></v-spacer>
+                  <v-btn small depressed color="success" :disabled="!filteredLedger.length" @click="exportHistoryCsv">
+                    <v-icon left small>mdi-download</v-icon>Export CSV
+                  </v-btn>
+                </div>
                 <v-data-table
                   dense
                   :headers="historyHeaders"
@@ -296,6 +305,7 @@ export default {
 
     // ----- list view -----
     loading: false,
+    exporting: false,
     items: [],
     totalItems: 0,
     options: {},
@@ -470,6 +480,66 @@ export default {
       return this.$utils ? this.$utils.currency_format(v || 0, "AED", false) : v;
     },
     fmt(d) { return this.$dateFormat ? this.$dateFormat.dmyhm(d) : d; },
+    // Date only (no time) — avoids the timezone-shifted "04:00" a datetime
+    // formatter produces for a date-only value like the GRN received_date.
+    fmtDate(d) {
+      if (!d) return "—";
+      const [y, m, day] = String(d).slice(0, 10).split("-");
+      if (!y || !m || !day) return d;
+      const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+      return `${day} ${months[Number(m) - 1] || ""} ${y}`;
+    },
+    // Build a CSV and trigger a download (BOM so Excel reads UTF-8 correctly).
+    downloadCsv(filename, columns, rows) {
+      const esc = (v) => {
+        const s = v === null || v === undefined ? "" : String(v);
+        return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const lines = [columns.map(esc).join(",")];
+      rows.forEach((r) => lines.push(r.map(esc).join(",")));
+      const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    },
+    // Export the full inventory list (all rows, not just the current page).
+    async exportItemsCsv() {
+      this.exporting = true;
+      try {
+        const { data } = await this.$axios.get(this.endpoint, { params: { per_page: 100000, ...this.filters } });
+        const rows = (data.data || []).map((it) => [
+          it.sku,
+          it.name,
+          it.sellable_qty,
+          Number(it.unit_cost || 0).toFixed(2),
+          Number(it.stock_value || 0).toFixed(2),
+          it.reorder_level || "",
+        ]);
+        this.downloadCsv("inventory-list.csv", ["SKU", "Item", "Available", "Cost", "Stock Value", "Low Stock Alert"], rows);
+      } catch (e) {
+        this.$swal && this.$swal.fire({ icon: "error", title: "Export failed", text: e?.response?.data?.message || "Error" });
+      } finally {
+        this.exporting = false;
+      }
+    },
+    // Export the currently shown movement history (respects the date filter).
+    exportHistoryCsv() {
+      const rows = (this.filteredLedger || []).map((r) => [
+        r.reference || "",
+        this.fmt(r.created_at),
+        r.movement_label || r.movement_type,
+        r.customer_name || "",
+        r.quantity,
+        r.balance_after,
+      ]);
+      const sku = (this.selected && this.selected.sku) || "item";
+      this.downloadCsv(`${sku}-history.csv`, ["Invoice #", "Date", "Type", "Customer", "Qty", "Balance"], rows);
+    },
     shortDate(d) {
       // "2026-06-03" -> "03 Jun"
       if (!d) return d;
