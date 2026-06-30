@@ -308,7 +308,7 @@ export default {
     async goEdit() {
       // Editing a (partially) received PO reverses the received stock first.
       if (this.hasReceipts && this.$swal) {
-        const { isConfirmed } = await this.$swal.fire({
+        const r = await this.$swal.fire({
           icon: "warning",
           title: "Edit received PO?",
           html: "This PO already has received goods. Editing it will <b>reverse that stock</b> and reset the PO to pending. Continue?",
@@ -316,7 +316,8 @@ export default {
           confirmButtonText: "Edit anyway",
           confirmButtonColor: "#1976d2",
         });
-        if (!isConfirmed) return;
+        // SweetAlert2 v7 returns { value }, v9+ returns { isConfirmed }.
+        if (!r || (!r.value && !r.isConfirmed)) return;
       }
       this.$router.push(`/inventory/purchase-orders/${this.id}/edit`);
     },
@@ -326,7 +327,7 @@ export default {
         ? "This PO has received goods. Deleting it will <b>reverse that stock</b> and remove its goods receipts. "
         : "";
       if (this.$swal) {
-        const { isConfirmed } = await this.$swal.fire({
+        const r = await this.$swal.fire({
           icon: "warning",
           title: "Delete this purchase order?",
           html: warn + "This action cannot be undone.",
@@ -334,7 +335,8 @@ export default {
           confirmButtonText: "Delete",
           confirmButtonColor: "#d32f2f",
         });
-        if (!isConfirmed) return;
+        // SweetAlert2 v7 returns { value }, v9+ returns { isConfirmed }.
+        if (!r || (!r.value && !r.isConfirmed)) return;
       } else if (!confirm("Delete this purchase order?")) {
         return;
       }
