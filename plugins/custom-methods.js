@@ -160,8 +160,10 @@ export default ({ app }, inject) => {
       return `${hours}:${minutes}`;
     },
 
-    dmyhm() {
-      const date = new Date(); // Current date and time
+    dmyhm(value) {
+      // Format the passed-in date; fall back to now only when nothing is given.
+      const date = value ? new Date(value) : new Date();
+      if (isNaN(date.getTime())) return value || "";
       const day = String(date.getDate()).padStart(2, "0");
 
       // Get month abbreviation
