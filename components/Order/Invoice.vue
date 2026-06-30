@@ -663,6 +663,10 @@ export default {
         total: this.payload.total,
 
         box_dimension: this.payload.box_dimension,
+
+        // Persist any address edits made in this dialog onto the order.
+        shipping_address: this.payload.shipping_address,
+        billing_address: this.payload.billing_address,
       };
 
       console.log(payload);
