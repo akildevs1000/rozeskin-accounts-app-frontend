@@ -351,9 +351,10 @@ export default {
 
   computed: {
     summaryCards() {
+      // summary is scoped to the selected date range by the backend (available is
+      // always the live snapshot). Net sold = units that actually stayed sold
+      // (returns and cancellations add stock back, so they don't count as a real sale).
       const s = this.history.summary || {};
-      // Net sold = units that actually stayed sold (returns and cancellations add
-      // stock back, so they don't count as a real sale).
       const netSold = Math.max(0, (s.sold || 0) - (s.returned || 0) - (s.cancelled || 0));
       return [
         { label: "Available", value: s.available || 0, color: "green" },
@@ -553,6 +554,7 @@ export default {
     onRangeChange(val) {
       this.historyFrom = val && val[0] ? val[0] : null;
       this.historyTo = val && val[1] ? val[1] : null;
+      this.loadHistory();
     },
     // Open the source invoice of a history row in the Invoices short view.
     goToInvoice(row) {
@@ -617,9 +619,18 @@ export default {
       this.historyFrom = null;
       this.historyTo = null;
       this.history = { item: null, summary: {}, ledger: [], last_purchase: null };
+      await this.loadHistory();
+    },
+    // Fetch summary + ledger for the selected item, scoped to the picked date
+    // range (from/to) when one is set. Re-runs whenever the range changes.
+    async loadHistory() {
+      if (!this.selectedId) return;
       this.historyLoading = true;
       try {
-        const { data } = await this.$axios.get(`inventory-items/${item.id}/history`);
+        const params = {};
+        if (this.historyFrom) params.from = this.historyFrom;
+        if (this.historyTo) params.to = this.historyTo;
+        const { data } = await this.$axios.get(`inventory-items/${this.selectedId}/history`, { params });
         this.history = data;
       } catch (e) {
         console.error("history load failed", e);
