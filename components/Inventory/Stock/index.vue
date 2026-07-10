@@ -864,8 +864,12 @@ export default {
 .vd-history >>> .v-data-footer__select { margin-left: 0; }
 .vd-history >>> .v-data-footer__pagination { margin-left: auto; }
 
-.vd-chart-wrap { position: relative; height: 220px; width: 100%; }
-.vd-chart-wrap canvas { display: block; position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
+/* vue-chartjs renders <div><canvas/></div>. Only that inner div gets this
+   component's scope attribute, so the canvas needs a deep selector. Pin the
+   div to the wrapper's box to give chart.js an unambiguous height to measure. */
+.vd-chart-wrap { position: relative; height: 220px; width: 100%; overflow: hidden; }
+.vd-chart-wrap > div { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.vd-chart-wrap >>> canvas { display: block; width: 100% !important; height: 100% !important; }
 .vd-quickgrid { display: grid; grid-template-columns: repeat(3, max-content); gap: 8px 40px; }
 .vd-q { display: flex; flex-direction: column; font-size: 14px; }
 .vd-k { font-size: 11px; color: #8a96a6; letter-spacing: 0.5px; font-weight: 700; }
