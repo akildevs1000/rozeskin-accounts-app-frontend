@@ -262,8 +262,11 @@
                 <div class="d-flex align-center mt-16 mb-2">
                   <span class="text-subtitle-2">History</span>
                   <v-spacer></v-spacer>
-                  <v-btn small depressed color="success" :disabled="!filteredLedger.length" @click="exportHistoryCsv">
+                  <v-btn small depressed color="success" class="mr-2" :disabled="!filteredLedger.length" @click="exportHistoryCsv">
                     <v-icon left small>mdi-download</v-icon>Export CSV
+                  </v-btn>
+                  <v-btn small depressed color="error" :disabled="!filteredLedger.length" @click="exportHistoryPdf">
+                    <v-icon left small>mdi-file-pdf-box</v-icon>Export PDF
                   </v-btn>
                 </div>
                 <v-data-table
@@ -292,6 +295,23 @@
                     <span :class="item.quantity >= 0 ? 'green--text' : 'red--text'">
                       {{ item.quantity >= 0 ? "+" : "" }}{{ item.quantity }}
                     </span>
+                  </template>
+                  <!-- Totals for the filtered rows, pinned to the end of the table -->
+                  <template v-slot:body.append>
+                    <tr v-if="historyTotals.rows" class="vd-total-row">
+                      <td colspan="3">
+                        <span class="font-weight-bold">TOTAL</span>
+                        <span class="grey--text text-caption ml-2">{{ historyTotals.rows }} movements</span>
+                      </td>
+                      <td class="text-caption grey--text">
+                        Sold {{ historyTotals.sold }} &middot; Returned {{ historyTotals.returned }} &middot;
+                        Cancelled {{ historyTotals.cancelled }} &middot; Received {{ historyTotals.received }}
+                      </td>
+                      <td class="text-center font-weight-bold" :class="historyTotals.net >= 0 ? 'green--text' : 'red--text'">
+                        {{ historyTotals.net > 0 ? "+" : "" }}{{ historyTotals.net }}
+                      </td>
+                      <td class="text-center font-weight-bold">{{ historyTotals.closing }}</td>
+                    </tr>
                   </template>
                 </v-data-table>
               </div>
@@ -403,6 +423,26 @@ export default {
     },
     hasSoldData() {
       return this.soldByDay.length > 0;
+    },
+    // Totals for the rows currently shown (respects the date-range filter).
+    historyTotals() {
+      const rows = this.filteredLedger || [];
+      const sumOf = (types) =>
+        rows
+          .filter((r) => types.includes(r.movement_type))
+          .reduce((s, r) => s + Math.abs(Number(r.quantity) || 0), 0);
+
+      return {
+        rows: rows.length,
+        sold: sumOf(["sale"]),
+        returned: sumOf(["customer_return", "rto"]),
+        cancelled: sumOf(["sales_invoice_cancel", "shipment_cancel"]),
+        received: sumOf(["grn_receive"]),
+        // Net stock movement across the filtered rows.
+        net: rows.reduce((s, r) => s + (Number(r.quantity) || 0), 0),
+        // Ledger arrives newest-first, so row 0 carries the closing balance.
+        closing: rows.length ? rows[0].balance_after : "—",
+      };
     },
     soldChartData() {
       const labels = this.soldByDay.map((x) => this.shortDate(x.date));
@@ -572,6 +612,89 @@ export default {
       const sku = (this.selected && this.selected.sku) || "item";
       this.downloadCsv(`${sku}-history.csv`, ["Invoice #", "Date", "Type", "Customer", "Qty", "Balance"], rows);
     },
+    // Export the currently shown movement history as a PDF (all filtered rows,
+    // not just the visible page), with a totals row matching the table.
+    async exportHistoryPdf() {
+      const mod = await import("jspdf");
+      const JsPdf = mod.default || mod.jsPDF;
+      const doc = new JsPdf({ orientation: "p", unit: "mm", format: "a4" });
+
+      const sku = (this.selected && this.selected.sku) || "item";
+      const name = (this.selected && this.selected.name) || "Item";
+      const t = this.historyTotals;
+
+      // column x-offsets and widths (A4 = 210mm, 12mm margins => 186mm usable)
+      const cols = [
+        { title: "Invoice #", w: 30, align: "left" },
+        { title: "Date", w: 34, align: "left" },
+        { title: "Type", w: 30, align: "left" },
+        { title: "Customer", w: 52, align: "left" },
+        { title: "Qty", w: 18, align: "right" },
+        { title: "Balance", w: 22, align: "right" },
+      ];
+      const left = 12;
+      const xs = [];
+      cols.reduce((x, c) => { xs.push(x); return x + c.w; }, left);
+      const right = left + cols.reduce((s, c) => s + c.w, 0);
+
+      const range = this.historyFrom || this.historyTo
+        ? `${this.historyFrom || "…"} to ${this.historyTo || "…"}`
+        : "All dates";
+
+      const cell = (text, i, y) => {
+        const c = cols[i];
+        const s = String(text === null || text === undefined ? "" : text);
+        const clipped = doc.splitTextToSize(s, c.w - 2)[0] || "";
+        if (c.align === "right") doc.text(clipped, xs[i] + c.w - 2, y, { align: "right" });
+        else doc.text(clipped, xs[i] + 1, y);
+      };
+
+      let y = 0;
+      const header = () => {
+        doc.setFontSize(13).setFont("helvetica", "bold");
+        doc.text(`${name}  (${sku})`, left, 16);
+        doc.setFontSize(9).setFont("helvetica", "normal").setTextColor(110);
+        doc.text(`Stock movement history  |  ${range}`, left, 21.5);
+        doc.setTextColor(0);
+
+        y = 30;
+        doc.setFillColor(244, 246, 249).rect(left, y - 5, right - left, 7, "F");
+        doc.setFontSize(8).setFont("helvetica", "bold");
+        cols.forEach((c, i) => cell(c.title.toUpperCase(), i, y));
+        doc.setFont("helvetica", "normal");
+        y += 6;
+      };
+
+      header();
+      doc.setFontSize(8);
+
+      (this.filteredLedger || []).forEach((r) => {
+        if (y > 275) { doc.addPage(); header(); doc.setFontSize(8); }
+        cell(r.reference || "—", 0, y);
+        cell(this.fmt(r.created_at), 1, y);
+        cell(r.movement_label || r.movement_type, 2, y);
+        cell(r.customer_name || "—", 3, y);
+        cell((r.quantity >= 0 ? "+" : "") + r.quantity, 4, y);
+        cell(r.balance_after, 5, y);
+        doc.setDrawColor(238).line(left, y + 1.6, right, y + 1.6);
+        y += 6;
+      });
+
+      // Totals row
+      if (y > 268) { doc.addPage(); header(); doc.setFontSize(8); }
+      y += 1;
+      doc.setFillColor(247, 249, 252).rect(left, y - 4.2, right - left, 7, "F");
+      doc.setDrawColor(200).line(left, y - 4.2, right, y - 4.2);
+      doc.setFont("helvetica", "bold");
+      doc.text(`TOTAL  (${t.rows} movements)`, left + 1, y);
+      doc.setFont("helvetica", "normal").setFontSize(7).setTextColor(110);
+      doc.text(`Sold ${t.sold}  ·  Returned ${t.returned}  ·  Cancelled ${t.cancelled}  ·  Received ${t.received}`, xs[3] + 1, y);
+      doc.setTextColor(0).setFontSize(8).setFont("helvetica", "bold");
+      cell((t.net > 0 ? "+" : "") + t.net, 4, y);
+      cell(t.closing, 5, y);
+
+      doc.save(`${sku}-history.pdf`);
+    },
     shortDate(d) {
       // "2026-06-03" -> "03 Jun"
       if (!d) return d;
@@ -728,6 +851,14 @@ export default {
 .vd-act:hover { text-decoration: underline; }
 .vd-doc { width: 100%; max-width: none; }
 .vd-image { border: 1px solid #eef1f5; border-radius: 12px; background: #fafbfc; }
+/* Totals row pinned to the end of the History table. */
+.vd-total-row td {
+  background: #f7f9fc;
+  border-top: 2px solid #dfe5ec !important;
+  height: 40px;
+}
+.vd-total-row:hover td { background: #f7f9fc !important; }
+
 /* History footer: "Rows per page" on the left, pagination stays on the right. */
 .vd-history >>> .v-data-footer { justify-content: flex-start; }
 .vd-history >>> .v-data-footer__select { margin-left: 0; }
