@@ -240,10 +240,20 @@
                 </v-row>
 
                 <!-- Sold quantity by day -->
-                <div class="text-subtitle-2 mt-6 mb-2">Sold quantity by day</div>
-                <v-card outlined class="px-3 pt-3 pb-8">
+                <div class="d-flex align-center mt-6 mb-2">
+                  <span class="text-subtitle-2">Sold quantity by day</span>
+                  <v-spacer></v-spacer>
+                  <v-btn icon small title="Area chart" :color="chartType === 'area' ? 'primary' : 'grey lighten-1'" @click="chartType = 'area'">
+                    <v-icon small>mdi-chart-areaspline</v-icon>
+                  </v-btn>
+                  <v-btn icon small title="Bar chart" :color="chartType === 'bar' ? 'primary' : 'grey lighten-1'" @click="chartType = 'bar'">
+                    <v-icon small>mdi-chart-bar</v-icon>
+                  </v-btn>
+                </div>
+                <v-card outlined class="px-3 pt-3 pb-6">
                   <div v-if="hasSoldData" class="vd-chart-wrap">
-                    <ChartsLine :chart-data="soldChartData" :options="soldChartOptions" />
+                    <ChartsBar v-if="chartType === 'bar'" :chart-data="soldChartData" :options="soldChartOptions" />
+                    <ChartsLine v-else :chart-data="soldChartData" :options="soldChartOptions" />
                   </div>
                   <div v-else class="text-center grey--text py-8">No sales in the selected period</div>
                 </v-card>
@@ -322,6 +332,7 @@ export default {
     reorderDialog: false,
     reorderLevel: 0,
     historyLoading: false,
+    chartType: "area", // "area" | "bar"
     history: { item: null, summary: {}, ledger: [], last_purchase: null },
     dateRange: null,
     historyFrom: null,
@@ -394,12 +405,32 @@ export default {
       return this.soldByDay.length > 0;
     },
     soldChartData() {
+      const labels = this.soldByDay.map((x) => this.shortDate(x.date));
+      const data = this.soldByDay.map((x) => x.qty);
+
+      if (this.chartType === "bar") {
+        return {
+          labels,
+          datasets: [
+            {
+              label: "Sold Qty",
+              data,
+              backgroundColor: "rgba(25,118,210,0.75)",
+              hoverBackgroundColor: "#1976D2",
+              borderWidth: 0,
+              barPercentage: 0.7,
+              categoryPercentage: 0.8,
+            },
+          ],
+        };
+      }
+
       return {
-        labels: this.soldByDay.map((x) => this.shortDate(x.date)),
+        labels,
         datasets: [
           {
             label: "Sold Qty",
-            data: this.soldByDay.map((x) => x.qty),
+            data,
             borderColor: "#1976D2",
             borderWidth: 2,
             pointRadius: 3,
@@ -697,7 +728,7 @@ export default {
 .vd-act:hover { text-decoration: underline; }
 .vd-doc { width: 100%; max-width: none; }
 .vd-image { border: 1px solid #eef1f5; border-radius: 12px; background: #fafbfc; }
-.vd-chart-wrap { position: relative; height: 340px; width: 100%; }
+.vd-chart-wrap { position: relative; height: 220px; width: 100%; }
 .vd-chart-wrap canvas { display: block; position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
 .vd-quickgrid { display: grid; grid-template-columns: repeat(3, max-content); gap: 8px 40px; }
 .vd-q { display: flex; flex-direction: column; font-size: 14px; }
