@@ -272,7 +272,7 @@
                   :items="filteredLedger"
                   :loading="historyLoading"
                   :items-per-page="10"
-                  class="elevation-0 inv-table"
+                  class="elevation-0 inv-table vd-history"
                 >
                   <template v-slot:item.reference="{ item }">
                     <a
@@ -728,6 +728,11 @@ export default {
 .vd-act:hover { text-decoration: underline; }
 .vd-doc { width: 100%; max-width: none; }
 .vd-image { border: 1px solid #eef1f5; border-radius: 12px; background: #fafbfc; }
+/* History footer: "Rows per page" on the left, pagination stays on the right. */
+.vd-history >>> .v-data-footer { justify-content: flex-start; }
+.vd-history >>> .v-data-footer__select { margin-left: 0; }
+.vd-history >>> .v-data-footer__pagination { margin-left: auto; }
+
 .vd-chart-wrap { position: relative; height: 220px; width: 100%; }
 .vd-chart-wrap canvas { display: block; position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
 .vd-quickgrid { display: grid; grid-template-columns: repeat(3, max-content); gap: 8px 40px; }
