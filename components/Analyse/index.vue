@@ -21,20 +21,19 @@
       Showing {{ data.range.from }} to {{ data.range.to }} &middot; {{ data.summary.order_count }} completed invoices (Cancelled &amp; Returned excluded)
     </div>
 
-    <!-- Stat cards -->
-    <v-row class="px-2">
-      <v-col v-for="card in statCards" :key="card.label" cols="12" sm="6" md="4" lg="2">
-        <v-card outlined :loading="loading">
-          <v-card-text>
-            <div class="d-flex justify-space-between align-center">
-              <div>
-                <div class="text-caption grey--text text--darken-1">{{ card.label }}</div>
-                <div class="text-h6 font-weight-bold" :class="card.color + '--text'">{{ card.value }}</div>
-                <div v-if="card.sub" class="text-caption grey--text">{{ card.sub }}</div>
-              </div>
-              <v-btn fab text small :class="card.color">
-                <v-icon color="white">{{ card.icon }}</v-icon>
-              </v-btn>
+    <!-- Stat cards: uniform 4-up grid, icon badge + reserved sub-line so every
+         card in a row lands at the same height regardless of content length. -->
+    <v-row class="px-2" dense>
+      <v-col v-for="card in statCards" :key="card.label" cols="6" sm="6" md="3">
+        <v-card outlined class="an-stat-card" :loading="loading">
+          <v-card-text class="d-flex align-start pa-4">
+            <div class="an-stat-icon" :class="card.color">
+              <v-icon color="white" size="20">{{ card.icon }}</v-icon>
+            </div>
+            <div class="an-stat-body">
+              <div class="an-stat-label">{{ card.label }}</div>
+              <div class="an-stat-value" :title="card.value">{{ card.value }}</div>
+              <div class="an-stat-sub" :class="card.subClass || 'grey--text'">{{ card.sub || " " }}</div>
             </div>
           </v-card-text>
         </v-card>
@@ -44,13 +43,25 @@
     <!-- Revenue trend -->
     <v-row class="px-2 mt-2">
       <v-col cols="12">
-        <v-card outlined>
-          <v-card-title class="text-subtitle-1">
-            <v-icon left color="primary">mdi-chart-timeline-variant</v-icon> Daily Revenue Trend
-          </v-card-title>
+        <v-card outlined class="an-panel">
+          <div class="d-flex align-center px-4 pt-4">
+            <v-icon left color="primary">mdi-chart-timeline-variant</v-icon>
+            <span class="text-subtitle-1 font-weight-medium">Daily Revenue Trend</span>
+            <v-spacer></v-spacer>
+            <v-btn icon small :color="chartType === 'line' ? 'primary' : 'grey lighten-1'" title="Trend line" @click="chartType = 'line'">
+              <v-icon small>mdi-chart-line</v-icon>
+            </v-btn>
+            <v-btn icon small :color="chartType === 'area' ? 'primary' : 'grey lighten-1'" title="Area chart" @click="chartType = 'area'">
+              <v-icon small>mdi-chart-areaspline</v-icon>
+            </v-btn>
+            <v-btn icon small :color="chartType === 'bar' ? 'primary' : 'grey lighten-1'" title="Bar chart" @click="chartType = 'bar'">
+              <v-icon small>mdi-chart-bar</v-icon>
+            </v-btn>
+          </div>
           <v-card-text>
             <div class="an-chart-wrap">
-              <ChartsLine v-if="trendChartData" :chart-data="trendChartData" :options="trendChartOptions" />
+              <ChartsBar v-if="chartType === 'bar' && trendChartData" :chart-data="trendChartData" :options="trendChartOptions" />
+              <ChartsLine v-else-if="trendChartData" :chart-data="trendChartData" :options="trendChartOptions" />
             </div>
             <div v-if="peakDay" class="an-callout mt-3">
               <strong>{{ peakDay.label }}</strong> shows the largest single-day revenue ({{ money(peakDay.revenue) }}, {{ peakDay.orders }} orders) —
@@ -62,9 +73,9 @@
     </v-row>
 
     <!-- Top sellers -->
-    <v-row class="px-2 mt-2">
+    <v-row class="px-2 mt-2" align="stretch">
       <v-col cols="12" md="6">
-        <v-card outlined>
+        <v-card outlined class="an-panel">
           <v-card-title class="text-subtitle-1">
             <v-icon left color="green">mdi-trending-up</v-icon> Top 10 Best-Selling — by Units
           </v-card-title>
@@ -74,7 +85,7 @@
         </v-card>
       </v-col>
       <v-col cols="12" md="6">
-        <v-card outlined>
+        <v-card outlined class="an-panel">
           <v-card-title class="text-subtitle-1">
             <v-icon left color="orange">mdi-cash-multiple</v-icon> Top 10 Best-Selling — by Revenue
           </v-card-title>
@@ -88,7 +99,7 @@
     <!-- Product tables -->
     <v-row class="px-2 mt-2">
       <v-col cols="12">
-        <v-card outlined>
+        <v-card outlined class="an-panel">
           <v-card-title class="text-subtitle-1">
             <v-icon left color="primary">mdi-format-list-numbered</v-icon> Product Performance
           </v-card-title>
@@ -125,9 +136,9 @@
     </v-row>
 
     <!-- Channel mix -->
-    <v-row class="px-2 mt-2">
+    <v-row class="px-2 mt-2" align="stretch">
       <v-col cols="12" md="4">
-        <v-card outlined>
+        <v-card outlined class="an-panel">
           <v-card-title class="text-subtitle-1"><v-icon left color="primary">mdi-truck-outline</v-icon> Delivery Service</v-card-title>
           <v-card-text>
             <HBarRow v-for="(c, i) in data.channels.delivery_service" :key="'d' + i" :label="c.label" :value="c.count" :max="maxChannel(data.channels.delivery_service)" :color="catColor(i)" :fmt="(n) => n + ' &middot; ' + pct(n, data.summary.order_count)" />
@@ -135,7 +146,7 @@
         </v-card>
       </v-col>
       <v-col cols="12" md="4">
-        <v-card outlined>
+        <v-card outlined class="an-panel">
           <v-card-title class="text-subtitle-1"><v-icon left color="primary">mdi-source-branch</v-icon> Order Source</v-card-title>
           <v-card-text>
             <HBarRow v-for="(c, i) in data.channels.business_source" :key="'s' + i" :label="c.label" :value="c.count" :max="maxChannel(data.channels.business_source)" :color="catColor(i)" :fmt="(n) => n + ' &middot; ' + pct(n, data.summary.order_count)" />
@@ -143,7 +154,7 @@
         </v-card>
       </v-col>
       <v-col cols="12" md="4">
-        <v-card outlined>
+        <v-card outlined class="an-panel">
           <v-card-title class="text-subtitle-1"><v-icon left color="primary">mdi-credit-card-outline</v-icon> Payment Method</v-card-title>
           <v-card-text>
             <HBarRow v-for="(c, i) in data.channels.payment_mode" :key="'p' + i" :label="c.label" :value="c.count" :max="maxChannel(data.channels.payment_mode)" :color="catColor(i)" :fmt="(n) => n + ' &middot; ' + pct(n, data.summary.order_count)" />
@@ -155,7 +166,7 @@
     <!-- Payment status -->
     <v-row class="px-2 mt-2 mb-4">
       <v-col cols="6" md="3" v-for="s in statusCards" :key="s.label">
-        <v-card outlined :style="{ borderLeft: '4px solid ' + s.color }">
+        <v-card outlined class="an-panel" :style="{ borderLeft: '4px solid ' + s.color }">
           <v-card-text>
             <div class="text-caption grey--text">{{ s.label }}</div>
             <div class="text-h6 font-weight-bold">{{ s.value }}</div>
@@ -189,6 +200,7 @@ export default {
   data: () => ({
     loading: false,
     tab: 0,
+    chartType: "area", // "line" | "area" | "bar"
     range: { from: null, to: null },
     data: { range: null, summary: {}, daily: [], top_by_qty: [], top_by_revenue: [], bottom_by_qty: [], channels: { delivery_service: [], business_source: [], payment_mode: [] }, status_count: {} },
     productHeaders: [
@@ -209,13 +221,30 @@ export default {
   computed: {
     statCards() {
       const s = this.data.summary || {};
+      const rows = this.data.daily || [];
+      const half = Math.ceil(rows.length / 2);
+      const sum = (arr, key) => arr.reduce((t, r) => t + (Number(r[key]) || 0), 0);
+      const m1rev = sum(rows.slice(0, half), "revenue");
+      const m2rev = sum(rows.slice(half), "revenue");
+      const m1ord = sum(rows.slice(0, half), "orders");
+      const m2ord = sum(rows.slice(half), "orders");
+      const revDelta = m1rev > 0 ? ((m2rev - m1rev) / m1rev) * 100 : 0;
+      const ordDelta = m1ord > 0 ? ((m2ord - m1ord) / m1ord) * 100 : 0;
+      const deltaSub = (d) => (rows.length < 2 ? "" : (d >= 0 ? "▲ " : "▼ ") + Math.abs(d).toFixed(1) + "% vs first half");
+      const deltaClass = (d) => (rows.length < 2 ? "grey--text" : d >= 0 ? "green--text" : "red--text");
+
+      const bestQty = this.data.top_by_qty[0];
+      const bestRev = this.data.top_by_revenue[0];
+
       return [
-        { label: "Total Revenue", value: this.money(s.total_revenue || 0), icon: "mdi-cash-multiple", color: "primary" },
-        { label: "Total Orders", value: s.order_count || 0, icon: "mdi-cart-outline", color: "indigo" },
-        { label: "Items Sold", value: s.total_items_sold || 0, sub: (s.unique_products || 0) + " products", icon: "mdi-package-variant", color: "teal" },
-        { label: "Avg Order Value", value: this.money(s.avg_order_value || 0), icon: "mdi-receipt-text-outline", color: "deep-purple" },
-        { label: "Unique Customers", value: s.unique_customers || 0, sub: (s.repeat_customers || 0) + " regular (" + this.pct(s.repeat_customers, s.unique_customers) + ")", icon: "mdi-account-group-outline", color: "green" },
-        { label: "Best Seller", value: s.order_count ? this.short((this.data.top_by_qty[0] || {}).name || "—", 22) : "—", sub: this.data.top_by_qty[0] ? this.data.top_by_qty[0].qty + " units" : "", icon: "mdi-star-outline", color: "orange" },
+        { label: "Total Revenue", value: this.money(s.total_revenue || 0), sub: deltaSub(revDelta), subClass: deltaClass(revDelta), icon: "mdi-cash-multiple", color: "primary" },
+        { label: "Total Orders", value: this.fmtNum(s.order_count), sub: deltaSub(ordDelta), subClass: deltaClass(ordDelta), icon: "mdi-cart-outline", color: "indigo" },
+        { label: "Avg Order Value", value: this.money(s.avg_order_value || 0), sub: "per invoice", icon: "mdi-receipt-text-outline", color: "deep-purple" },
+        { label: "Items Sold", value: this.fmtNum(s.total_items_sold), sub: "across " + (s.unique_products || 0) + " products", icon: "mdi-package-variant", color: "teal" },
+        { label: "Unique Customers", value: this.fmtNum(s.unique_customers), sub: s.unique_customers ? (s.order_count / s.unique_customers).toFixed(2) + " orders / customer" : "", icon: "mdi-account-group-outline", color: "green" },
+        { label: "Regular Customers", value: this.fmtNum(s.repeat_customers), sub: this.pct(s.repeat_customers, s.unique_customers) + " of customers", icon: "mdi-account-heart-outline", color: "deep-orange" },
+        { label: "Best Seller (units)", value: bestQty ? this.short(bestQty.name, 20) : "—", sub: bestQty ? this.fmtNum(bestQty.qty) + " units sold" : "", icon: "mdi-trophy-outline", color: "pink" },
+        { label: "Top Revenue Product", value: bestRev ? this.short(bestRev.name, 20) : "—", sub: bestRev ? this.money(bestRev.revenue) : "", icon: "mdi-crown-outline", color: "blue-grey" },
       ];
     },
     statusCards() {
@@ -238,17 +267,39 @@ export default {
     trendChartData() {
       const rows = this.data.daily || [];
       if (!rows.length) return null;
+      const labels = rows.map((r) => r.date.slice(5));
+      const values = rows.map((r) => r.revenue);
+
+      if (this.chartType === "bar") {
+        return {
+          labels,
+          datasets: [
+            {
+              label: "Revenue",
+              data: values,
+              backgroundColor: "rgba(42,120,214,0.75)",
+              hoverBackgroundColor: "#1976D2",
+              borderWidth: 0,
+              barPercentage: 0.7,
+              categoryPercentage: 0.85,
+            },
+          ],
+        };
+      }
+
+      const isArea = this.chartType === "area";
       return {
-        labels: rows.map((r) => r.date.slice(5)),
+        labels,
         datasets: [
           {
             label: "Revenue",
-            data: rows.map((r) => r.revenue),
+            data: values,
             borderColor: "#2a78d6",
-            backgroundColor: "rgba(42,120,214,0.12)",
+            backgroundColor: isArea ? "rgba(42,120,214,0.14)" : "transparent",
             borderWidth: 2,
             pointRadius: 2,
-            fill: true,
+            pointHoverRadius: 4,
+            fill: isArea,
             lineTension: 0.3,
           },
         ],
@@ -300,6 +351,9 @@ export default {
     },
     money(v) {
       return this.$utils ? this.$utils.currency_format(v || 0, "AED", false) : "AED " + Number(v || 0).toFixed(0);
+    },
+    fmtNum(v) {
+      return Number(v || 0).toLocaleString("en-US");
     },
     pct(n, d) {
       return d ? ((n / d) * 100).toFixed(1) + "%" : "0%";
@@ -376,6 +430,54 @@ export default {
 </script>
 
 <style scoped>
+/* Panels: consistent rounding + full row height so side-by-side cards with
+   different content lengths (channel lists, top-seller lists) line up. */
+.an-panel { border-radius: 10px; height: 100%; }
+
+/* Stat cards: icon badge + reserved sub-line (always rendered, even blank)
+   so every card in a row lands at the same height regardless of content. */
+.an-stat-card { border-radius: 10px; height: 100%; transition: box-shadow 0.15s ease; }
+.an-stat-card:hover { box-shadow: 0 3px 12px rgba(11, 11, 11, 0.08) !important; }
+.an-stat-icon {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 14px;
+}
+.an-stat-body { min-width: 0; flex: 1 1 auto; }
+.an-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8a96a6;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.an-stat-value {
+  font-size: 19px;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.3;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.an-stat-sub {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* vue-chartjs renders <div><canvas/></div> — only that inner div gets this
    component's scope attribute, so the canvas needs a deep selector. Pin the
    div to the wrapper's box to give chart.js an unambiguous height to measure. */
