@@ -7,6 +7,7 @@
       <v-col cols="3">
         <InventoryDateRange @range="onRange" />
       </v-col>
+      <v-btn small depressed color="primary" class="mr-2" :loading="loading" @click="load">Submit</v-btn>
       <v-btn small depressed color="success" class="mr-2" :disabled="loading" @click="exportCsv">
         <v-icon left small>mdi-download</v-icon>Export CSV
       </v-btn>
@@ -326,8 +327,9 @@ export default {
       return d > 0 ? `<span class="green--text">▲ +${d.toFixed(0)}%</span>` : `<span class="red--text">▼ ${d.toFixed(0)}%</span>`;
     },
     onRange({ from, to }) {
+      // Store the picked range; wait for Submit rather than loading on every
+      // keystroke/field change (matches Orders/Inventory List elsewhere).
       this.range = { from, to };
-      this.load();
     },
     async load() {
       this.loading = true;
