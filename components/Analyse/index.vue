@@ -48,7 +48,7 @@
             <v-icon left color="primary">mdi-chart-timeline-variant</v-icon> Daily Revenue Trend
           </v-card-title>
           <v-card-text>
-            <div style="height: 260px">
+            <div class="an-chart-wrap">
               <ChartsLine v-if="trendChartData" :chart-data="trendChartData" :options="trendChartOptions" />
             </div>
             <div v-if="peakDay" class="an-callout mt-3">
@@ -374,6 +374,13 @@ export default {
 </script>
 
 <style scoped>
+/* vue-chartjs renders <div><canvas/></div> — only that inner div gets this
+   component's scope attribute, so the canvas needs a deep selector. Pin the
+   div to the wrapper's box to give chart.js an unambiguous height to measure. */
+.an-chart-wrap { position: relative; height: 260px; width: 100%; overflow: hidden; }
+.an-chart-wrap > div { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.an-chart-wrap >>> canvas { display: block; width: 100% !important; height: 100% !important; }
+
 .an-callout {
   background: #fff7ef;
   border: 1px solid #f3d9c2;
