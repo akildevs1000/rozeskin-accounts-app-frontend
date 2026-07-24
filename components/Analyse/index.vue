@@ -17,8 +17,13 @@
       <v-icon color="primary" class="ml-1" @click="load">mdi-reload</v-icon>
     </v-toolbar>
 
-    <div class="text-caption grey--text mb-3 px-1" v-if="data.range">
+    <div class="text-caption grey--text mb-1 px-1" v-if="data.range">
       Showing {{ data.range.from }} to {{ data.range.to }} &middot; {{ data.summary.order_count }} completed invoices (Cancelled &amp; Returned excluded)
+    </div>
+    <div class="text-caption grey--text mb-3 px-1 an-source-note">
+      <v-icon x-small color="grey">mdi-information-outline</v-icon>
+      This page is <strong>invoice-based</strong>: counted by invoice date and invoice status (Paid + Unpaid; Cancelled/Returned excluded).
+      Accounts &rarr; Analytics is <strong>order-based</strong> (order date, status completed/processing only) — the two can legitimately show different totals for the same date range.
     </div>
 
     <!-- Stat cards: uniform 4-up grid, icon badge + reserved sub-line so every
@@ -433,6 +438,8 @@ export default {
 /* Panels: consistent rounding + full row height so side-by-side cards with
    different content lengths (channel lists, top-seller lists) line up. */
 .an-panel { border-radius: 10px; height: 100%; }
+.an-source-note { line-height: 1.5; }
+.an-source-note .v-icon { margin-right: 2px; vertical-align: text-top; }
 
 /* Stat cards: icon badge + reserved sub-line (always rendered, even blank)
    so every card in a row lands at the same height regardless of content. */
