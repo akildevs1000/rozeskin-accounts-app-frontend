@@ -214,7 +214,7 @@ export default {
         { label: "Total Orders", value: s.order_count || 0, icon: "mdi-cart-outline", color: "indigo" },
         { label: "Items Sold", value: s.total_items_sold || 0, sub: (s.unique_products || 0) + " products", icon: "mdi-package-variant", color: "teal" },
         { label: "Avg Order Value", value: this.money(s.avg_order_value || 0), icon: "mdi-receipt-text-outline", color: "deep-purple" },
-        { label: "Unique Customers", value: s.unique_customers || 0, icon: "mdi-account-group-outline", color: "green" },
+        { label: "Unique Customers", value: s.unique_customers || 0, sub: (s.repeat_customers || 0) + " regular (" + this.pct(s.repeat_customers, s.unique_customers) + ")", icon: "mdi-account-group-outline", color: "green" },
         { label: "Best Seller", value: s.order_count ? this.short((this.data.top_by_qty[0] || {}).name || "—", 22) : "—", sub: this.data.top_by_qty[0] ? this.data.top_by_qty[0].qty + " units" : "", icon: "mdi-star-outline", color: "orange" },
       ];
     },
