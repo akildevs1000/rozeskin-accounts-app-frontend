@@ -139,7 +139,14 @@
 
               <tr cols="12" v-for="(item, index) in payload.items" :key="index">
                 <td>
-                  <v-autocomplete
+                  <!-- v-combobox, not v-autocomplete: real orders carry product names
+                       from the full website catalog, which is larger than this app's
+                       local products list. v-autocomplete only ever displays a value
+                       it can find in :items, so any name outside the local list rendered
+                       blank even though item.item held the correct value. v-combobox
+                       always shows the current v-model text and still offers the local
+                       list as suggestions/autofill via @change. -->
+                  <v-combobox
                     flat
                     append-icon=""
                     v-model="item.item"
@@ -150,7 +157,7 @@
                     hide-details
                     placeholder="Product"
                     @change="getProductDetails(item)"
-                  ></v-autocomplete>
+                  ></v-combobox>
                 </td>
                 <td>
                   <v-text-field
