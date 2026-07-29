@@ -67,6 +67,9 @@
           class="my-1 mx-auto"
         ></v-text-field>
       </template>
+      <template v-slot:item.opening_date="{ item }">
+        <span :class="item.opening_date ? '' : 'grey--text'">{{ fmtOpeningDate(item.opening_date) }}</span>
+      </template>
       <template v-slot:no-data>
         <span class="grey--text">No inventory items found.</span>
       </template>
@@ -87,6 +90,7 @@ export default {
       { text: "SKU", value: "sku" },
       { text: "Item", value: "name" },
       { text: "Opening Qty", value: "opening", align: "center", sortable: false },
+      { text: "Date", value: "opening_date", align: "center", sortable: false },
     ],
   }),
   computed: {
@@ -168,6 +172,10 @@ export default {
       } finally {
         this.saving = false;
       }
+    },
+    fmtOpeningDate(d) {
+      if (!d) return "—";
+      return this.$dateFormat ? this.$dateFormat.dmyhm(d) : d;
     },
     notify(icon, title) {
       if (this.$swal) {
