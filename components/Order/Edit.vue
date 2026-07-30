@@ -145,14 +145,22 @@
                        it can find in :items, so any name outside the local list rendered
                        blank even though item.item held the correct value. v-combobox
                        always shows the current v-model text and still offers the local
-                       list as suggestions/autofill via @change. -->
+                       list as suggestions/autofill via @change.
+
+                       :items is a plain array of strings (productNames), not the raw
+                       product objects: Vuetify 2's v-combobox does not reliably honour
+                       item-value when items are objects — picking a suggestion from the
+                       list set v-model to the whole raw object instead of its name string,
+                       which then showed as "[object Object]" everywhere this line's name
+                       was displayed, and broke the price-lookup match in
+                       getProductDetails() (a string can never equal an object). Plain
+                       strings sidestep that entirely: typed or picked, v-model is always
+                       the text itself. -->
                   <v-combobox
                     flat
                     append-icon=""
                     v-model="item.item"
-                    :items="products"
-                    item-text="product_with_item_name"
-                    item-value="product_with_item_name"
+                    :items="productNames"
                     dense
                     hide-details
                     placeholder="Product"
@@ -368,6 +376,12 @@ export default {
         val == true
           ? { ...this.payload.shipping_address }
           : { ...this.default_address };
+    },
+  },
+  computed: {
+    // Plain strings for v-combobox — see the note on the Product field above.
+    productNames() {
+      return this.products.map((p) => p.product_with_item_name);
     },
   },
   async created() {
