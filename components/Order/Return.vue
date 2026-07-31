@@ -584,8 +584,11 @@ export default {
     this.payload = {
       ...this.payload,
       ...this.item,
-      business_source_id: business_sources[0]?.id || 0,
-      delivery_service_id: delivery_services[0]?.id || 0,
+      // Keep the order's own business source / delivery service if it already has
+      // one — only default to the first option in the list when it genuinely has
+      // none. See Order/Invoice.vue for the full explanation of this bug.
+      business_source_id: this.item.business_source_id || business_sources[0]?.id || 0,
+      delivery_service_id: this.item.delivery_service_id || delivery_services[0]?.id || 0,
       shipping_address: this.item.customer.shipping_address,
       billing_address: this.item.customer.billing_address,
     };

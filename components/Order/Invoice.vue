@@ -596,8 +596,14 @@ export default {
     this.payload = {
       ...this.payload,
       ...this.item,
-      business_source_id: business_sources[0]?.id || 0,
-      delivery_service_id: delivery_services[0]?.id || 0,
+      // Keep the order's own business source / delivery service if it already has
+      // one — only default to the first option in the list when it genuinely has
+      // none. This was unconditionally overwriting a correct value (e.g. an order
+      // placed via Whatsapp) with whatever happened to be first in the freshly
+      // loaded list, so converting to invoice could silently record the wrong
+      // source for every order.
+      business_source_id: this.item.business_source_id || business_sources[0]?.id || 0,
+      delivery_service_id: this.item.delivery_service_id || delivery_services[0]?.id || 0,
       // Prefer this order's own frozen address; fall back to the customer's current one.
       shipping_address:
         this.item.shipping_address || this.item.customer.shipping_address,
