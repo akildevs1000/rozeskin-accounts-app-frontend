@@ -1026,62 +1026,57 @@ export default {
       this.selectedItem = item;
       this.isShortView = true;
     },
-    captureAndDownloadPDF() {
-      this.invoiceLoader = true;
-      // Select the element to capture
+    // Shared by captureAndDownloadPDF/captureAndViewPDF so both "PDF" and
+    // "Print" get identical, correct A4 output. The old code stretched the
+    // captured image to exactly 210mm wide with NO cap on height and no
+    // margins — any invoice taller than one A4 page (297mm) simply got cut
+    // off, and edge-to-edge placement clipped further on real printers that
+    // can't print to the paper's edge. This properly fits the page width
+    // with margins and slices across multiple pages when content is tall.
+    async buildInvoicePdf() {
       const captureElement = document.getElementById("capture");
-
-      // Use html2canvas to take a screenshot of the element
-      html2canvas(captureElement, {
-        scale: 2, // Increase the scale for better resolution
-        useCORS: true, // If you have images or fonts from different origins, allow cross-origin requests
-        logging: false, // Disable logging for cleaner console output
-      }).then((canvas) => {
-        // Convert the screenshot canvas into an image
-        const imgData = canvas.toDataURL("image/png");
-
-        // Create a new PDF instance with portrait orientation
-        const pdf = new jsPDF("p", "mm", "a4"); // 'p' for portrait, 'mm' for millimeters, 'a4' for A4 size
-
-        // A4 page dimensions in mm (portrait)
-        const imgWidth = 210; // Width of A4 paper in mm (portrait)
-        const imgHeight = (canvas.height * imgWidth) / canvas.width; // Maintain aspect ratio
-
-        // Add the captured image to the PDF
-        pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
-
-        // Save the generated PDF
-        pdf.save("invoice.pdf"); // Save the PDF
-
-        this.invoiceLoader = false;
-      });
-    },
-    captureAndViewPDF() {
-      this.invoiceLoader = true;
-
-      const captureElement = document.getElementById("capture");
-
-      html2canvas(captureElement, {
+      const canvas = await html2canvas(captureElement, {
         scale: 2,
         useCORS: true,
         logging: false,
-      }).then((canvas) => {
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("p", "mm", "a4");
+      });
+      const imgData = canvas.toDataURL("image/png");
 
-        const imgWidth = 210;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pdf = new jsPDF("p", "mm", "a4");
+      const margin = 8; // mm — keeps content off the paper edge
+      const pageHeight = 297;
+      const imgWidth = 210 - margin * 2;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const usableHeight = pageHeight - margin * 2;
 
-        pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+      const totalPages = Math.max(1, Math.min(20, Math.ceil(imgHeight / usableHeight)));
+      for (let i = 0; i < totalPages; i++) {
+        if (i > 0) pdf.addPage();
+        const y = margin - i * usableHeight;
+        pdf.addImage(imgData, "PNG", margin, y, imgWidth, imgHeight);
+      }
 
-        // Open the PDF in a new tab instead of downloading
+      return pdf;
+    },
+    async captureAndDownloadPDF() {
+      this.invoiceLoader = true;
+      try {
+        const pdf = await this.buildInvoicePdf();
+        pdf.save("invoice.pdf");
+      } finally {
+        this.invoiceLoader = false;
+      }
+    },
+    async captureAndViewPDF() {
+      this.invoiceLoader = true;
+      try {
+        const pdf = await this.buildInvoicePdf();
         const pdfBlob = pdf.output("blob");
         const pdfUrl = URL.createObjectURL(pdfBlob);
-
-        this.invoiceLoader = false;
-
         window.open(pdfUrl, "_blank");
-      });
+      } finally {
+        this.invoiceLoader = false;
+      }
     },
     captureAndSendPDF() {
       // Select the element to capture
