@@ -1031,29 +1031,52 @@ export default {
     // captured image to exactly 210mm wide with NO cap on height and no
     // margins — any invoice taller than one A4 page (297mm) simply got cut
     // off, and edge-to-edge placement clipped further on real printers that
-    // can't print to the paper's edge. This properly fits the page width
-    // with margins and slices across multiple pages when content is tall.
+    // can't print to the paper's edge.
+    //
+    // A first attempt at pagination redrew the SAME full image on every page
+    // at a decreasing negative y-offset, relying on the page boundary to
+    // "clip" it. In practice that left a dark seam and duplicated content at
+    // every page break. Fixed properly here: cut the ONE captured canvas
+    // into genuinely separate per-page canvases (each its own PNG), so every
+    // page gets an independently cropped image with no overlap.
     async buildInvoicePdf() {
       const captureElement = document.getElementById("capture");
       const canvas = await html2canvas(captureElement, {
         scale: 2,
         useCORS: true,
         logging: false,
+        backgroundColor: "#ffffff", // avoid transparent-background artifacts at seams
       });
-      const imgData = canvas.toDataURL("image/png");
 
       const pdf = new jsPDF("p", "mm", "a4");
       const margin = 8; // mm — keeps content off the paper edge
       const pageHeight = 297;
-      const imgWidth = 210 - margin * 2;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const usableHeight = pageHeight - margin * 2;
+      const imgWidthMm = 210 - margin * 2;
+      const usableHeightMm = pageHeight - margin * 2;
 
-      const totalPages = Math.max(1, Math.min(20, Math.ceil(imgHeight / usableHeight)));
+      // usable-page-height in source-canvas pixels, so each slice is cut on
+      // exact pixel boundaries.
+      const pxPerMm = canvas.width / imgWidthMm;
+      const pageHeightPx = Math.max(1, Math.floor(usableHeightMm * pxPerMm));
+      const totalPages = Math.max(1, Math.min(20, Math.ceil(canvas.height / pageHeightPx)));
+
       for (let i = 0; i < totalPages; i++) {
+        const sy = i * pageHeightPx;
+        const sh = Math.min(pageHeightPx, canvas.height - sy);
+
+        const pageCanvas = document.createElement("canvas");
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = sh;
+        const ctx = pageCanvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(canvas, 0, sy, canvas.width, sh, 0, 0, canvas.width, sh);
+
+        const sliceHeightMm = sh / pxPerMm;
+        const imgData = pageCanvas.toDataURL("image/png");
+
         if (i > 0) pdf.addPage();
-        const y = margin - i * usableHeight;
-        pdf.addImage(imgData, "PNG", margin, y, imgWidth, imgHeight);
+        pdf.addImage(imgData, "PNG", margin, margin, imgWidthMm, sliceHeightMm);
       }
 
       return pdf;
