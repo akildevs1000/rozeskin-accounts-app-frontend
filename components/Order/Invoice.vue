@@ -593,6 +593,12 @@ export default {
     );
     this.delivery_services = delivery_services;
 
+    // Default new deliveries to EMX rather than whatever happens to be first
+    // in the list.
+    const defaultDeliveryService = delivery_services.find(
+      (d) => d.name === "EMX"
+    );
+
     this.payload = {
       ...this.payload,
       ...this.item,
@@ -603,7 +609,11 @@ export default {
       // loaded list, so converting to invoice could silently record the wrong
       // source for every order.
       business_source_id: this.item.business_source_id || business_sources[0]?.id || 0,
-      delivery_service_id: this.item.delivery_service_id || delivery_services[0]?.id || 0,
+      delivery_service_id:
+        this.item.delivery_service_id ||
+        defaultDeliveryService?.id ||
+        delivery_services[0]?.id ||
+        0,
       // Prefer this order's own frozen address; fall back to the customer's current one.
       shipping_address:
         this.item.shipping_address || this.item.customer.shipping_address,
