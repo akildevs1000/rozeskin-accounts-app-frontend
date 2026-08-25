@@ -56,6 +56,17 @@
             <input type="month" class="an-month-input" v-model="compare.monthA" @change="loadComparison" />
             <span class="mx-2 grey--text text-caption">vs</span>
             <input type="month" class="an-month-input" v-model="compare.monthB" @change="loadComparison" />
+            <v-btn
+              icon
+              small
+              color="success"
+              class="ml-2"
+              title="Download Excel"
+              :disabled="!compare.a || !compare.b"
+              @click="downloadComparisonExcel"
+            >
+              <v-icon small>mdi-file-excel-outline</v-icon>
+            </v-btn>
           </div>
           <v-card-text>
             <v-progress-linear v-if="compare.loading" indeterminate color="primary" class="mb-3"></v-progress-linear>
@@ -221,6 +232,8 @@
 </template>
 
 <script>
+import * as XLSX from "xlsx";
+
 const CAT_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"];
 
 // "YYYY-MM" for the month `offset` months from now (0 = current month).
@@ -391,7 +404,7 @@ export default {
         { key: "unique_customers", label: "Unique Customers", fmt: this.fmtNum },
         { key: "repeat_customers", label: "Regular Customers", fmt: this.fmtNum },
       ];
-      return metrics.map((m) => {
+      const rows = metrics.map((m) => {
         const av = Number(sa[m.key] || 0);
         const bv = Number(sb[m.key] || 0);
         const delta = av > 0 ? ((bv - av) / av) * 100 : bv > 0 ? 100 : 0;
@@ -403,6 +416,21 @@ export default {
           deltaClass: delta >= 0 ? "green--text" : "red--text",
         };
       });
+
+      const topA = (this.compare.a.top_by_revenue || [])[0];
+      const topB = (this.compare.b.top_by_revenue || [])[0];
+      const revA = Number((topA && topA.revenue) || 0);
+      const revB = Number((topB && topB.revenue) || 0);
+      const revDelta = revA > 0 ? ((revB - revA) / revA) * 100 : revB > 0 ? 100 : 0;
+      rows.push({
+        label: "Top Revenue Product",
+        aFmt: topA ? `${this.short(topA.name, 26)} — ${this.money(revA)}` : "—",
+        bFmt: topB ? `${this.short(topB.name, 26)} — ${this.money(revB)}` : "—",
+        deltaLabel: topA || topB ? (revDelta >= 0 ? "▲ " : "▼ ") + Math.abs(revDelta).toFixed(1) + "%" : "—",
+        deltaClass: revDelta >= 0 ? "green--text" : "red--text",
+      });
+
+      return rows;
     },
   },
 
@@ -435,6 +463,23 @@ export default {
       } finally {
         this.compare.loading = false;
       }
+    },
+    downloadComparisonExcel() {
+      if (!this.compare.a || !this.compare.b) return;
+      const labelA = this.monthLabel(this.compare.monthA);
+      const labelB = this.monthLabel(this.compare.monthB);
+
+      const rows = [
+        ["Metric", labelA, labelB, "Change"],
+        ...this.comparisonRows.map((r) => [r.label, r.aFmt, r.bFmt, r.deltaLabel]),
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws["!cols"] = [{ wch: 24 }, { wch: 30 }, { wch: 30 }, { wch: 12 }];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Comparison");
+      XLSX.writeFile(wb, `month-comparison-${this.compare.monthA}_vs_${this.compare.monthB}.xlsx`);
     },
     downloadPdf() {
       const backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8001/api/";
