@@ -45,6 +45,43 @@
       </v-col>
     </v-row>
 
+    <!-- Month-on-month comparison -->
+    <v-row class="px-2 mt-2">
+      <v-col cols="12">
+        <v-card outlined class="an-panel">
+          <div class="d-flex align-center px-4 pt-4 flex-wrap">
+            <v-icon left color="primary">mdi-calendar-sync-outline</v-icon>
+            <span class="text-subtitle-1 font-weight-medium">Month-on-Month Comparison</span>
+            <v-spacer></v-spacer>
+            <input type="month" class="an-month-input" v-model="compare.monthA" @change="loadComparison" />
+            <span class="mx-2 grey--text text-caption">vs</span>
+            <input type="month" class="an-month-input" v-model="compare.monthB" @change="loadComparison" />
+          </div>
+          <v-card-text>
+            <v-progress-linear v-if="compare.loading" indeterminate color="primary" class="mb-3"></v-progress-linear>
+            <table class="an-compare-table" v-if="compare.a && compare.b">
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th class="text-right">{{ monthLabel(compare.monthA) }}</th>
+                  <th class="text-right">{{ monthLabel(compare.monthB) }}</th>
+                  <th class="text-right">Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in comparisonRows" :key="row.label">
+                  <td>{{ row.label }}</td>
+                  <td class="text-right">{{ row.aFmt }}</td>
+                  <td class="text-right">{{ row.bFmt }}</td>
+                  <td class="text-right font-weight-medium" :class="row.deltaClass">{{ row.deltaLabel }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+
     <!-- Revenue trend -->
     <v-row class="px-2 mt-2">
       <v-col cols="12">
@@ -186,6 +223,13 @@
 <script>
 const CAT_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"];
 
+// "YYYY-MM" for the month `offset` months from now (0 = current month).
+function ymOffset(offset) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + offset);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 export default {
   components: {
     HBarRow: {
@@ -207,6 +251,7 @@ export default {
     tab: 0,
     chartType: "area", // "line" | "area" | "bar"
     range: { from: null, to: null },
+    compare: { monthA: ymOffset(-1), monthB: ymOffset(0), loading: false, a: null, b: null },
     data: { range: null, summary: {}, daily: [], top_by_qty: [], top_by_revenue: [], bottom_by_qty: [], channels: { delivery_service: [], business_source: [], payment_mode: [] }, status_count: {} },
     productHeaders: [
       { text: "Product", value: "name" },
@@ -334,13 +379,63 @@ export default {
       const avg = rows.reduce((s, r) => s + r.revenue, 0) / rows.length;
       return avg > 0 ? Math.round(this.peakDay.revenue / avg) : 0;
     },
+    comparisonRows() {
+      if (!this.compare.a || !this.compare.b) return [];
+      const sa = this.compare.a.summary || {};
+      const sb = this.compare.b.summary || {};
+      const metrics = [
+        { key: "total_revenue", label: "Total Revenue", fmt: this.money },
+        { key: "order_count", label: "Total Orders", fmt: this.fmtNum },
+        { key: "avg_order_value", label: "Avg Order Value", fmt: this.money },
+        { key: "total_items_sold", label: "Items Sold", fmt: this.fmtNum },
+        { key: "unique_customers", label: "Unique Customers", fmt: this.fmtNum },
+        { key: "repeat_customers", label: "Regular Customers", fmt: this.fmtNum },
+      ];
+      return metrics.map((m) => {
+        const av = Number(sa[m.key] || 0);
+        const bv = Number(sb[m.key] || 0);
+        const delta = av > 0 ? ((bv - av) / av) * 100 : bv > 0 ? 100 : 0;
+        return {
+          label: m.label,
+          aFmt: m.fmt(av),
+          bFmt: m.fmt(bv),
+          deltaLabel: (delta >= 0 ? "▲ " : "▼ ") + Math.abs(delta).toFixed(1) + "%",
+          deltaClass: delta >= 0 ? "green--text" : "red--text",
+        };
+      });
+    },
   },
 
   created() {
     this.load();
+    this.loadComparison();
   },
 
   methods: {
+    monthRange(ym) {
+      const [y, m] = ym.split("-").map(Number);
+      const lastDay = new Date(y, m, 0).getDate();
+      return { from: `${ym}-01`, to: `${ym}-${String(lastDay).padStart(2, "0")}` };
+    },
+    monthLabel(ym) {
+      const [y, m] = ym.split("-").map(Number);
+      return new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    },
+    async loadComparison() {
+      this.compare.loading = true;
+      try {
+        const [ra, rb] = await Promise.all([
+          this.$axios.get("sales-analysis", { params: this.monthRange(this.compare.monthA) }),
+          this.$axios.get("sales-analysis", { params: this.monthRange(this.compare.monthB) }),
+        ]);
+        this.compare.a = ra.data;
+        this.compare.b = rb.data;
+      } catch (e) {
+        console.error("Month comparison load failed", e);
+      } finally {
+        this.compare.loading = false;
+      }
+    },
     downloadPdf() {
       const backendUrl = process.env.BACKEND_URL || "http://127.0.0.1:8001/api/";
       const params = {};
@@ -506,4 +601,17 @@ export default {
 .an-hbar-track { flex: 1 1 auto; height: 14px; background: #eef1f5; border-radius: 4px; overflow: hidden; }
 .an-hbar-fill { height: 100%; border-radius: 4px; }
 .an-hbar-value { flex: 0 0 auto; font-size: 11.5px; font-weight: 600; color: #52514e; min-width: 70px; text-align: right; }
+
+.an-month-input {
+  border: 1px solid #dde2e8;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-size: 13px;
+  color: #333;
+  background: #fff;
+}
+.an-compare-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.an-compare-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: #8a96a6; padding: 8px 10px; border-bottom: 2px solid #eef1f5; }
+.an-compare-table td { padding: 9px 10px; border-bottom: 1px solid #eef1f5; }
+.an-compare-table tr:last-child td { border-bottom: none; }
 </style>
