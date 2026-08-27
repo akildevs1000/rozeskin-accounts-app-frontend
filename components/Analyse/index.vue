@@ -5,6 +5,19 @@
       <span class="text-h6">Sales Analysis</span>
       <v-spacer></v-spacer>
       <v-col cols="3">
+        <v-autocomplete
+          v-model="productFilter"
+          :items="products"
+          item-text="product_with_item_name"
+          item-value="id"
+          label="Product (optional)"
+          clearable
+          dense
+          outlined
+          hide-details
+        ></v-autocomplete>
+      </v-col>
+      <v-col cols="3">
         <InventoryDateRange @range="onRange" />
       </v-col>
       <v-btn small depressed color="primary" class="mr-2" :loading="loading" @click="load">Submit</v-btn>
@@ -25,6 +38,40 @@
       This page is <strong>invoice-based</strong>: counted by invoice date and invoice status (Paid + Unpaid; Cancelled/Returned excluded).
       Accounts &rarr; Analytics is <strong>order-based</strong> (order date, status completed/processing only) — the two can legitimately show different totals for the same date range.
     </div>
+
+    <!-- Product filter results: only shown once a product is selected + submitted. -->
+    <v-row class="px-2 mb-2" v-if="data.product_filter">
+      <v-col cols="12">
+        <v-card outlined class="an-panel" style="border-left: 4px solid #2a78d6">
+          <v-card-text class="d-flex align-center flex-wrap py-3">
+            <div class="mr-6 mb-2">
+              <v-icon left color="primary">mdi-package-variant-closed</v-icon>
+              <strong>{{ data.product_filter.name }}</strong>
+            </div>
+            <div class="an-pf-stat mr-6 mb-2">
+              <div class="an-pf-label">Unique Customers</div>
+              <div class="an-pf-value">{{ fmtNum(data.product_filter.unique_customers) }}</div>
+            </div>
+            <div class="an-pf-stat mr-6 mb-2">
+              <div class="an-pf-label">Regular Customers</div>
+              <div class="an-pf-value">{{ fmtNum(data.product_filter.repeat_customers) }}</div>
+            </div>
+            <div class="an-pf-stat mr-6 mb-2">
+              <div class="an-pf-label">Orders</div>
+              <div class="an-pf-value">{{ fmtNum(data.product_filter.orders) }}</div>
+            </div>
+            <div class="an-pf-stat mr-6 mb-2">
+              <div class="an-pf-label">Qty Sold</div>
+              <div class="an-pf-value">{{ fmtNum(data.product_filter.qty) }}</div>
+            </div>
+            <div class="an-pf-stat mb-2">
+              <div class="an-pf-label">Revenue</div>
+              <div class="an-pf-value">{{ money(data.product_filter.revenue) }}</div>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
 
     <!-- Stat cards: uniform 4-up grid, icon badge + reserved sub-line so every
          card in a row lands at the same height regardless of content length. -->
@@ -264,8 +311,10 @@ export default {
     tab: 0,
     chartType: "area", // "line" | "area" | "bar"
     range: { from: null, to: null },
+    products: [],
+    productFilter: null,
     compare: { monthA: ymOffset(-1), monthB: ymOffset(0), loading: false, a: null, b: null },
-    data: { range: null, summary: {}, daily: [], top_by_qty: [], top_by_revenue: [], bottom_by_qty: [], channels: { delivery_service: [], business_source: [], payment_mode: [] }, status_count: {} },
+    data: { range: null, summary: {}, daily: [], top_by_qty: [], top_by_revenue: [], bottom_by_qty: [], channels: { delivery_service: [], business_source: [], payment_mode: [] }, status_count: {}, product_filter: null },
     productHeaders: [
       { text: "Product", value: "name" },
       { text: "Qty Sold", value: "qty", align: "end" },
@@ -434,9 +483,10 @@ export default {
     },
   },
 
-  created() {
+  async created() {
     this.load();
     this.loadComparison();
+    this.products = await this.$axios.$get("product-list");
   },
 
   methods: {
@@ -536,6 +586,7 @@ export default {
         const params = {};
         if (this.range.from) params.from = this.range.from;
         if (this.range.to) params.to = this.range.to;
+        if (this.productFilter) params.product_id = this.productFilter;
         const { data } = await this.$axios.get("sales-analysis", { params });
         this.data = data;
       } catch (e) {
@@ -659,4 +710,8 @@ export default {
 .an-compare-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: #8a96a6; padding: 8px 10px; border-bottom: 2px solid #eef1f5; }
 .an-compare-table td { padding: 9px 10px; border-bottom: 1px solid #eef1f5; }
 .an-compare-table tr:last-child td { border-bottom: none; }
+
+.an-pf-stat { min-width: 90px; }
+.an-pf-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; color: #8a96a6; }
+.an-pf-value { font-size: 17px; font-weight: 700; color: #1a1a1a; }
 </style>
