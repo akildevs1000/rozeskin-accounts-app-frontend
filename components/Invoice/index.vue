@@ -150,8 +150,7 @@
                         <a href="mailto:rozeskincaredubai@gmail.com"
                           >rozeskincaredubai@gmail.com </a
                         ><br />
-                        Sharjah P.O.Box : 66636<br />
-                        Dubai P.O.Box : 117397
+                        Sharjah P.O.Box : 66636
                       </div>
                     </v-col>
                   </v-row>
@@ -474,8 +473,7 @@
                         <a href="mailto:rozeskincaredubai@gmail.com"
                           >rozeskincaredubai@gmail.com</a
                         ><br />
-                        Sharjah P.O.Box : 66636<br />
-                        Dubai P.O.Box : 117397
+                        Sharjah P.O.Box : 66636
                       </div>
                     </v-col>
                     <v-col class="text-right pt-10">
