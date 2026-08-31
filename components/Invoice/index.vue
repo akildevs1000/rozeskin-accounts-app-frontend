@@ -594,13 +594,6 @@
                         sold.
                       </div>
                     </v-col>
-                    <v-col
-                      cols="12"
-                      class="text-center mt-2 pt2 caption text-grey"
-                      style="border-top: 1px solid #ddd"
-                    >
-                      System-generated invoice. No signature required.
-                    </v-col>
                   </v-row>
                 </v-card>
               </v-container>
