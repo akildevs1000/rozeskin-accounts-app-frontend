@@ -143,14 +143,15 @@
                       </v-avatar>
                     </v-col>
                     <v-col cols="6" class="text-left">
-                      <div class="caption">Roze Skincare LLC</div>
+                      <div class="caption">ROZE</div>
                       <div class="caption">
-                        P.O.Box : 83481, Dubai, United Arab Emirates<br />
-                        +971 4 3939 562 / +971 55 330 3991<br />
+                        127-Block C VL11 Sharjah Research Technology and
+                        Innovation Park, University City - Sharjah, UAE<br />
                         <a href="mailto:rozeskincaredubai@gmail.com"
                           >rozeskincaredubai@gmail.com </a
                         ><br />
-                        TRN : 100391417100003
+                        Sharjah P.O.Box : 66636<br />
+                        Dubai P.O.Box : 117397
                       </div>
                     </v-col>
                   </v-row>
@@ -466,14 +467,15 @@
                         />
                       </v-avatar>
                       <br />
-                      <div class="caption">Roze Skincare LLC</div>
+                      <div class="caption">ROZE</div>
                       <div class="caption">
-                        P.O.Box : 83481, Dubai, United Arab Emirates<br />
-                        +971 4 3939 562 / +971 55 330 3991<br />
+                        127-Block C VL11 Sharjah Research Technology and
+                        Innovation Park, University City - Sharjah, UAE<br />
                         <a href="mailto:rozeskincaredubai@gmail.com"
                           >rozeskincaredubai@gmail.com</a
                         ><br />
-                        TRN : 100391417100003
+                        Sharjah P.O.Box : 66636<br />
+                        Dubai P.O.Box : 117397
                       </div>
                     </v-col>
                     <v-col class="text-right pt-10">
