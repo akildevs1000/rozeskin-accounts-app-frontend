@@ -587,11 +587,11 @@
                     <v-col cols="6">
                       <div class="my-2">Terms & Conditions</div>
                       <div style="font-size: 10px !important; line-height: 1.5">
-                        One Year Warranty for all products except Accessories
-                        and power adaptor Above goods received and in the
-                        absence of an L.P.O from us. The mentioned goods
-                        received in good condition and as per specification
-                        Rozeskin L.L.C
+                        All ROZE skincare products are 100% genuine and
+                        dispatched in good condition with a minimum shelf life
+                        of two years. For hygiene and safety reasons, all
+                        products are non-returnable and non-exchangeable once
+                        sold.
                       </div>
                     </v-col>
                     <v-col
