@@ -772,7 +772,7 @@ const COMPANY_PROFILES = [
     id: "2",
     label: "ROZE (FZE) — Al Muteena, Dubai",
     name: "ROZE (FZE)",
-    html: "M2 Floor, Office B4, Burj Nahar Mall, Al Muteena, Dubai - UAE<br />Mob: +971 55 125 6576",
+    html: "M2 Floor, Office B4, Burj Nahar Mall, Al Muteena,<br />Dubai - UAE<br />Mob: +971 55 125 6576",
   },
   {
     id: "3",
