@@ -445,7 +445,20 @@
                       "
                     />
                   </v-col>
-                  <v-col>
+                  <v-col cols="4">
+                    <v-autocomplete
+                      :value="companyProfile"
+                      @change="setCompanyProfile"
+                      :items="companyProfiles"
+                      item-text="label"
+                      item-value="id"
+                      label="Company Address"
+                      dense
+                      hide-details
+                      dark
+                    ></v-autocomplete>
+                  </v-col>
+                  <v-col cols="1">
                     <div class="text-right">
                       <v-icon small @click="isShortView = false"
                         >mdi-close</v-icon
@@ -466,15 +479,8 @@
                         />
                       </v-avatar>
                       <br />
-                      <div class="caption">ROZE</div>
-                      <div class="caption">
-                        127-Block C VL11 Sharjah Research Technology and
-                        Innovation Park, University City - Sharjah, UAE<br />
-                        <a href="mailto:rozeskincaredubai@gmail.com"
-                          >rozeskincaredubai@gmail.com</a
-                        ><br />
-                        Sharjah P.O.Box : 66636
-                      </div>
+                      <div class="caption">{{ currentCompanyProfile.name }}</div>
+                      <div class="caption" v-html="currentCompanyProfile.html"></div>
                     </v-col>
                     <v-col class="text-right pt-10">
                       <div class="text-h4 text-grey-darken-4">INVOICE</div>
@@ -746,12 +752,39 @@
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
+// The three registered business addresses/letterheads a printed invoice can
+// carry. "3" is the pre-existing default — kept as-is for invoices with no
+// company_profile saved yet.
+const COMPANY_PROFILES = [
+  {
+    id: "1",
+    label: "Roze Skincare (Xtreme Vision) — Al Fahidi, Dubai",
+    name: "Roze skincare ( Xtreme vision)",
+    html: "27 Al Nahdha St - Al Souq Al Kabeer - Al Fahidi - Dubai<br />04 3939562 / 0553303991",
+  },
+  {
+    id: "2",
+    label: "ROZE (FZE) — Al Muteena, Dubai",
+    name: "ROZE (FZE)",
+    html: "M2 Floor, Office B4, Burj Nahar Mall, Al Muteena, Dubai - UAE<br />Mob: +971 55 125 6576",
+  },
+  {
+    id: "3",
+    label: "ROZE — Sharjah Research Technology Park",
+    name: "ROZE",
+    html:
+      '127-Block C VL11 Sharjah Research Technology and Innovation Park, University City - Sharjah, UAE<br /><a href="mailto:rozeskincaredubai@gmail.com">rozeskincaredubai@gmail.com</a><br />Sharjah P.O.Box : 66636',
+  },
+];
+
 export default {
   data: () => ({
     stats: [],
     paymentDialog: false,
     paymentItem: null,
     selectedItem: null,
+    companyProfiles: COMPANY_PROFILES,
+    companyProfile: "3",
     InvoicePayComponentKey: 1,
     Model: "Invoices",
     endpoint: "invoices",
@@ -893,8 +926,32 @@ export default {
       },
       deep: true,
     },
+    selectedItem(item) {
+      this.companyProfile = (item && item.company_profile) || "3";
+    },
+  },
+  computed: {
+    currentCompanyProfile() {
+      return (
+        this.companyProfiles.find((p) => p.id === this.companyProfile) ||
+        this.companyProfiles[2]
+      );
+    },
   },
   methods: {
+    async setCompanyProfile(id) {
+      this.companyProfile = id;
+      if (!this.selectedItem) return;
+      try {
+        await this.$axios.patch(
+          `invoices/${this.selectedItem.id}/company-profile`,
+          { company_profile: id }
+        );
+        this.selectedItem.company_profile = id;
+      } catch (e) {
+        console.error("Failed to save company profile", e);
+      }
+    },
     async downloadManifestReport() {
       this.loading = true;
 
