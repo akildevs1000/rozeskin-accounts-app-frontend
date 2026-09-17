@@ -416,6 +416,22 @@
                 .right-align-input .v-text-field__slot > input {
                   text-align: right !important;
                 }
+                .rzbundle-row td {
+                  background: #fafafa;
+                  border-top: none !important;
+                }
+                .rzbundle__label {
+                  display: block;
+                  font-size: 11px;
+                  font-weight: 600;
+                  color: #6b6b6b;
+                  margin-bottom: 4px;
+                }
+                .rzbundle__warn {
+                  font-size: 11px;
+                  color: #c0392b;
+                  margin-top: 4px;
+                }
               </style>
               <table class="order-table">
                 <tr class="grey lighten-3">
@@ -426,10 +442,10 @@
                   <td class="text-right">Total</td>
                 </tr>
 
+                <template v-for="(item, index) in payload.items">
                 <tr
                   cols="12"
-                  v-for="(item, index) in payload.items"
-                  :key="index"
+                  :key="'row-' + index"
                 >
                   <td>
                     <v-autocomplete
@@ -487,6 +503,54 @@
                     ></v-text-field>
                   </td>
                 </tr>
+                <!--
+                  Any 3 / Any 4 are pick-your-own bundles: one priced line, but
+                  the invoice never showed WHICH products the customer chose.
+                  Staff have been working around this by adding 3-4 separate
+                  0-rate lines by hand. This keeps it to the single priced line
+                  the bundle actually is, and records the choice as a note
+                  under it instead.
+                -->
+                <tr
+                  v-if="isBundleItem(item.item)"
+                  :key="'bundle-' + index"
+                  class="rzbundle-row"
+                >
+                  <td colspan="5">
+                    <div class="rzbundle">
+                      <span class="rzbundle__label"
+                        >Choose {{ bundleConfig(item.item).pick }} products
+                        <template v-if="(item.bundle_choices || []).length"
+                          >({{ (item.bundle_choices || []).length }} of
+                          {{ bundleConfig(item.item).pick }} selected)</template
+                        ></span
+                      >
+                      <v-autocomplete
+                        v-model="item.bundle_choices"
+                        :items="bundleConfig(item.item).options"
+                        multiple
+                        small-chips
+                        deletable-chips
+                        dense
+                        hide-details
+                        placeholder="Select the products the customer chose"
+                        @change="applyBundleChoices(item)"
+                      ></v-autocomplete>
+                      <div
+                        v-if="
+                          (item.bundle_choices || []).length &&
+                          (item.bundle_choices || []).length !==
+                            bundleConfig(item.item).pick
+                        "
+                        class="rzbundle__warn"
+                      >
+                        This bundle needs exactly
+                        {{ bundleConfig(item.item).pick }} products selected.
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                </template>
               </table>
             </v-col>
 
@@ -643,6 +707,7 @@ export default {
             rate: 1,
             tax: 1,
             total: 1,
+            bundle_choices: [],
           },
         ],
       },
@@ -654,6 +719,39 @@ export default {
       business_sources: [],
       delivery_services: [],
       products: [],
+      // The two pick-your-own bundles, keyed on the exact catalog name so a
+      // row's own product selection tells us whether to show the picker.
+      // Options are the real catalog names (products table), not invented.
+      bundleCatalog: {
+        "Any 3 for 99 AED Bundle": {
+          pick: 3,
+          options: [
+            "Rice Facial Cleanser with Gojiberries | Aloevera for Deep Cleanse | Radiant Glow - Single",
+            "Roze Coconut Milk Keratin Shampoo | Anti-hairfall | Anti - Dandruff | Anti - Frizz",
+            "Rice Moisturizing Cream with Retinol & SPF 50 | Centella for 10X glow | No Dark Spots",
+            "Roze Acne Control cleanser | For Oily or Acne prone skin | Pore Minimizer.",
+            "Roze Velvet Glow Moisturizing Body Lotion | Brightening | SPF 50 | All Skin types",
+            "Roze Black Gold Luxury Body Wash | Men & Women | Normal to Dry skin",
+            "Roze Moisturizing Sunscreen | Lightweight Formula  | Suitable for All Skin Types | No White Cast",
+            "All Natural | Blooming Rose lip balm | Soft, Bright Lips for All Ages",
+          ],
+        },
+        "Any 4 Roze Skincare Products for 120 AED": {
+          pick: 4,
+          options: [
+            "Rice Facial Cleanser with Gojiberries | Aloevera for Deep Cleanse | Radiant Glow - Single",
+            "Roze Coconut Milk Keratin Shampoo | Anti-hairfall | Anti - Dandruff | Anti - Frizz",
+            "Rice Moisturizing Cream with Retinol & SPF 50 | Centella for 10X glow | No Dark Spots",
+            "Roze Acne Control cleanser | For Oily or Acne prone skin | Pore Minimizer.",
+            "Roze Velvet Glow Moisturizing Body Lotion | Brightening | SPF 50 | All Skin types",
+            "Roze Black Gold Luxury Body Wash | Men & Women | Normal to Dry skin",
+            "Roze Moisturizing Sunscreen | Lightweight Formula  | Suitable for All Skin Types | No White Cast",
+            "All Natural | Blooming Rose lip balm | Soft, Bright Lips for All Ages",
+            "Roze 7 Day Glow Serum | Plumper, Bouncier Radiant skin Powered by Plant Extracts",
+            "Roze Botanical Hair Growth Serum | Stops Hair Fall | Promotes Hair growth | Increases Volume",
+          ],
+        },
+      },
       shippingAddressOptions: [],
       billingAddressOptions: [],
       useAsBillingAddress: false,
@@ -718,7 +816,29 @@ export default {
       payload.rate = rate;
       payload.tax = qty * rate * 0;
       payload.total = qty * rate + payload.tax;
+      // Switching the product away from a bundle (or to a different one)
+      // clears any earlier bundle selection so a stale choice from the
+      // previous product never lingers.
+      payload.bundle_choices = [];
       this.getGrandTotal();
+    },
+    // Any 3 / Any 4 pick-your-own bundles: the extra picker row only shows
+    // for these two exact catalog names.
+    isBundleItem(itemName) {
+      return !!this.bundleCatalog[itemName];
+    },
+    bundleConfig(itemName) {
+      return this.bundleCatalog[itemName] || { pick: 0, options: [] };
+    },
+    applyBundleChoices(item) {
+      // Deliberately does not touch item.item: that field still has to match
+      // a real catalog name for getProductDetails()'s rate/product lookup.
+      // The choice is carried as its own field and only turned into text
+      // when the order is actually submitted (see submit()).
+      let max = this.bundleConfig(item.item).pick;
+      if ((item.bundle_choices || []).length > max) {
+        item.bundle_choices = item.bundle_choices.slice(0, max);
+      }
     },
     doCalculate(item) {
       if (!item.item) return;
@@ -743,6 +863,7 @@ export default {
         rate: 1,
         tax: 1,
         total: 1,
+        bundle_choices: [],
       });
 
       this.getGrandTotal();
@@ -872,13 +993,55 @@ export default {
         ],
       };
     },
+    // Short, printable form of a catalog name, for the note under a bundle
+    // line - "Rice Facial Cleanser" rather than the full pipe-separated
+    // marketing title. Falls back to the full name if nothing shorter is set.
+    shortBundleLabel(fullName) {
+      const map = {
+        "Rice Facial Cleanser with Gojiberries | Aloevera for Deep Cleanse | Radiant Glow - Single":
+          "Rice Facial Cleanser",
+        "Roze Coconut Milk Keratin Shampoo | Anti-hairfall | Anti - Dandruff | Anti - Frizz":
+          "Coconut Milk Keratin Shampoo",
+        "Rice Moisturizing Cream with Retinol & SPF 50 | Centella for 10X glow | No Dark Spots":
+          "Rice Moisturizing Cream",
+        "Roze Acne Control cleanser | For Oily or Acne prone skin | Pore Minimizer.":
+          "Acne Control Cleanser",
+        "Roze Velvet Glow Moisturizing Body Lotion | Brightening | SPF 50 | All Skin types":
+          "Velvet Glow Body Lotion",
+        "Roze Black Gold Luxury Body Wash | Men & Women | Normal to Dry skin":
+          "Black Gold Body Wash",
+        "Roze Moisturizing Sunscreen | Lightweight Formula  | Suitable for All Skin Types | No White Cast":
+          "Moisturizing Sunscreen",
+        "All Natural | Blooming Rose lip balm | Soft, Bright Lips for All Ages":
+          "Blooming Rose Lip Balm",
+        "Roze 7 Day Glow Serum | Plumper, Bouncier Radiant skin Powered by Plant Extracts":
+          "7 Day Glow Serum",
+        "Roze Botanical Hair Growth Serum | Stops Hair Fall | Promotes Hair growth | Increases Volume":
+          "Botanical Hair Growth Serum",
+      };
+      return map[fullName] || fullName;
+    },
     async submit() {
       this.loading = true;
       let payload = this.payload;
       let ts = new Date().toTimeString().split(" ")[0];
+      // The bundle choice only needs to travel as far as the printed note -
+      // item.item stays the exact catalog name so it still matches on future
+      // edits. Composed here, at submit time, rather than earlier, so the
+      // note always reflects whatever is currently picked.
+      let items = (payload.items || []).map((item) => {
+        let choices = item.bundle_choices || [];
+        return {
+          ...item,
+          bundle_note: choices.length
+            ? choices.map((c) => this.shortBundleLabel(c)).join(", ")
+            : null,
+        };
+      });
       try {
         await this.$axios.post(this.endpoint, {
           ...payload,
+          items,
           order_date: payload.order_date + " " + ts
         });
         this.close();

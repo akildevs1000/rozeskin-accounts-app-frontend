@@ -554,6 +554,12 @@
                         >
                           <td>
                             {{ item?.item }}
+                            <div
+                              v-if="item?.bundle_note"
+                              class="caption grey--text"
+                            >
+                              {{ item.bundle_note }}
+                            </div>
                           </td>
                           <td class="text-right">
                             {{ item?.quantity }}
