@@ -694,6 +694,24 @@ export default {
           responseType: "blob",
         });
 
+        // The invoice always saves, but a shipping label only comes back for
+        // EMX orders — otherwise the backend answers with JSON. Blindly saving
+        // that as invoice.pdf produced a file no reader could open, so only
+        // treat a real PDF as a download.
+        const contentType = response.headers["content-type"] || "";
+        if (!contentType.includes("application/pdf")) {
+          let message = "Invoice created successfully";
+          try {
+            const body = JSON.parse(await response.data.text());
+            if (body?.message) message = body.message;
+          } catch (e) {
+            // Non-JSON body: keep the generic success message.
+          }
+          this.close();
+          this.$emit("response", message);
+          return;
+        }
+
         // ---- Extract filename from header ----
         const disposition = response.headers["content-disposition"];
         let fileName = "invoice.pdf"; // fallback
@@ -716,13 +734,27 @@ export default {
         // use dynamic filename from backend
         a.download = fileName;
 
+        document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
+        a.remove();
+        // Revoking in the same tick can cut the download short in some browsers.
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
 
         this.close();
         this.$emit("response", "Invoice downloaded successfully");
       } catch (error) {
-        this.errorResponse = error?.response?.data?.message || "Unknown error";
+        // responseType "blob" means an error body arrives as a Blob too, so
+        // reading .message off it always gave "Unknown error".
+        let message = error?.response?.data?.message;
+        const data = error?.response?.data;
+        if (!message && data instanceof Blob) {
+          try {
+            message = JSON.parse(await data.text())?.message;
+          } catch (e) {
+            // Leave message unset and fall through to the generic text.
+          }
+        }
+        this.errorResponse = message || error?.message || "Unknown error";
         this.loading = false;
       }
     },
