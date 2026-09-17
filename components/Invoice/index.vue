@@ -489,15 +489,17 @@
                       </div>
                       <div class=""># {{ selectedItem?.reference_id }}</div>
                       <br />
-                      <div class="caption">Balance Due</div>
-                      <div class="caption">
-                        {{
-                          $utils.currency_format(
-                            parseFloat(selectedItem?.order?.total) -
-                              parseFloat(selectedItem?.order?.total_paid_amount)
-                          )
-                        }}
-                      </div>
+                      <template v-if="!['1', '2'].includes(companyProfile)">
+                        <div class="caption">Balance Due</div>
+                        <div class="caption">
+                          {{
+                            $utils.currency_format(
+                              parseFloat(selectedItem?.order?.total) -
+                                parseFloat(selectedItem?.order?.total_paid_amount)
+                            )
+                          }}
+                        </div>
+                      </template>
                       <div class="caption">
                         {{ $dateFormat.dmy(selectedItem?.created_at) }}
                       </div>
