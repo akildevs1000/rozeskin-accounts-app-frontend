@@ -253,12 +253,29 @@
                       />
                     </v-list-item-title>
                   </v-list-item>
+                  <v-list-item v-if="item.order_status === 'completed'">
+                    <v-list-item-title>
+                      <OrderRevertToProcessing
+                        :key="invoiceCompKey"
+                        :model="Model"
+                        :endpoint="endpoint"
+                        :item="item"
+                        @response="
+                          () => {
+                            invoiceCompKey++;
+                            getDataFromApi();
+                          }
+                        "
+                      />
+                    </v-list-item-title>
+                  </v-list-item>
                   <v-list-item>
                     <v-list-item-title>
                       <OrderCancel
                         :model="Model"
                         :endpoint="endpoint"
                         :order_id="item.order_id"
+                        :invoice_id="item?.invoice?.id || null"
                         @response="
                           () => {
                             invoiceCompKey++;
