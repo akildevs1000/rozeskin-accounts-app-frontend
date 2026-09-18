@@ -341,6 +341,9 @@
                     hide-details
                     placeholder="Product"
                   ></v-text-field>
+                  <div v-if="item.bundle_note" class="caption grey--text">
+                    {{ item.bundle_note }}
+                  </div>
                 </td>
                 <td>
                   <v-text-field
