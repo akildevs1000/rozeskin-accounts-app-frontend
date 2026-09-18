@@ -560,7 +560,7 @@
                               v-if="item?.bundle_note"
                               class="caption grey--text"
                             >
-                              {{ item.bundle_note }}
+                              {{ formatBundleNote(item.bundle_note) }}
                             </div>
                           </td>
                           <td class="text-right">
@@ -947,6 +947,18 @@ export default {
     },
   },
   methods: {
+    // bundle_note is a JSON [{name, qty}, ...] string (full catalog names,
+    // duplicate picks collapsed into a quantity). Older orders may still
+    // carry the flat short-label comma text from before that format existed,
+    // so fall back to showing it as-is when it isn't valid JSON.
+    formatBundleNote(note) {
+      try {
+        const grouped = JSON.parse(note);
+        return grouped.map((g) => `${g.name} x${g.qty}`).join(", ");
+      } catch (e) {
+        return note;
+      }
+    },
     async setCompanyProfile(id) {
       this.companyProfile = id;
       if (!this.selectedItem) return;

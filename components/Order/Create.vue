@@ -1021,6 +1021,23 @@ export default {
       };
       return map[fullName] || fullName;
     },
+    // Bundle picks are stored as a JSON string of {name, qty} pairs (full
+    // catalog names, duplicate picks collapsed into a quantity) so the AWB
+    // PDF/invoice can print each chosen product as its own line item rather
+    // than one flat comma list. Stays a plain string field either way, so
+    // the existing "bundle_note is nullable|string" validation still holds.
+    groupBundleChoices(choices) {
+      if (!choices || !choices.length) return null;
+      let counts = {};
+      choices.forEach((name) => {
+        counts[name] = (counts[name] || 0) + 1;
+      });
+      let grouped = Object.keys(counts).map((name) => ({
+        name,
+        qty: counts[name],
+      }));
+      return JSON.stringify(grouped);
+    },
     async submit() {
       this.loading = true;
       let payload = this.payload;
@@ -1030,12 +1047,9 @@ export default {
       // edits. Composed here, at submit time, rather than earlier, so the
       // note always reflects whatever is currently picked.
       let items = (payload.items || []).map((item) => {
-        let choices = item.bundle_choices || [];
         return {
           ...item,
-          bundle_note: choices.length
-            ? choices.map((c) => this.shortBundleLabel(c)).join(", ")
-            : null,
+          bundle_note: this.groupBundleChoices(item.bundle_choices),
         };
       });
       try {

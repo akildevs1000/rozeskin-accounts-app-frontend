@@ -509,16 +509,25 @@ export default {
         this.item.billing_address || this.item.customer.billing_address,
     };
 
-    // A bundle line saved earlier only carries bundle_note (the short,
-    // printed text) - bundle_choices (the full catalog names the multi-select
-    // needs) is rebuilt from it here so reopening an order for edit shows the
-    // same selection rather than an empty picker.
+    // A bundle line saved earlier only carries bundle_note - bundle_choices
+    // (the full catalog names the multi-select needs) is rebuilt from it here
+    // so reopening an order for edit shows the same selection rather than an
+    // empty picker. Current format is a JSON [{name, qty}, ...] string (full
+    // catalog names); older orders may still have the flat short-label comma
+    // list from before that change, so fall back to reversing that too.
     (this.payload.items || []).forEach((it) => {
       if (it.bundle_note && !it.bundle_choices) {
-        const shortNames = it.bundle_note.split(",").map((s) => s.trim());
-        it.bundle_choices = shortNames
-          .map((s) => this.fullBundleLabel(s))
-          .filter(Boolean);
+        try {
+          const grouped = JSON.parse(it.bundle_note);
+          it.bundle_choices = grouped.flatMap((g) =>
+            Array(g.qty).fill(g.name)
+          );
+        } catch (e) {
+          const shortNames = it.bundle_note.split(",").map((s) => s.trim());
+          it.bundle_choices = shortNames
+            .map((s) => this.fullBundleLabel(s))
+            .filter(Boolean);
+        }
       }
     });
   },
@@ -645,6 +654,23 @@ export default {
       this.loading = false;
       this.errorResponse = null;
     },
+    // Bundle picks are stored as a JSON string of {name, qty} pairs (full
+    // catalog names, duplicate picks collapsed into a quantity) so the AWB
+    // PDF/invoice can print each chosen product as its own line item rather
+    // than one flat comma list. Stays a plain string field either way, so
+    // the existing "bundle_note is nullable|string" validation still holds.
+    groupBundleChoices(choices) {
+      if (!choices || !choices.length) return null;
+      let counts = {};
+      choices.forEach((name) => {
+        counts[name] = (counts[name] || 0) + 1;
+      });
+      let grouped = Object.keys(counts).map((name) => ({
+        name,
+        qty: counts[name],
+      }));
+      return JSON.stringify(grouped);
+    },
     async submit() {
       this.loading = true;
       // The bundle choice only needs to travel as far as the printed note -
@@ -652,12 +678,9 @@ export default {
       // edits. Composed here, at submit time, rather than earlier, so the
       // note always reflects whatever is currently picked.
       let items = (this.payload.items || []).map((item) => {
-        let choices = item.bundle_choices || [];
         return {
           ...item,
-          bundle_note: choices.length
-            ? choices.map((c) => this.shortBundleLabel(c)).join(", ")
-            : null,
+          bundle_note: this.groupBundleChoices(item.bundle_choices),
         };
       });
       try {
