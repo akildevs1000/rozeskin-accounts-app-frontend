@@ -143,6 +143,24 @@
                 color: #c0392b;
                 margin-top: 4px;
               }
+              .rzbundle__qty-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                padding: 3px 0;
+              }
+              .rzbundle__qty-name {
+                font-size: 12px;
+                color: #333;
+              }
+              .rzbundle__qty-input {
+                max-width: 70px;
+                flex: 0 0 auto;
+              }
+              .rzbundle__qty-input input {
+                text-align: center;
+              }
             </style>
             <table class="order-table">
               <tr class="grey lighten-3">
@@ -243,8 +261,8 @@
                   <div class="rzbundle">
                     <span class="rzbundle__label"
                       >Choose {{ bundleConfig(item.item).pick }} products
-                      <template v-if="(item.bundle_choices || []).length"
-                        >({{ (item.bundle_choices || []).length }} of
+                      <template v-if="bundleTotalQty(item)"
+                        >({{ bundleTotalQty(item) }} of
                         {{ bundleConfig(item.item).pick }} selected)</template
                       ></span
                     >
@@ -259,16 +277,35 @@
                       placeholder="Select the products the customer chose"
                       @change="applyBundleChoices(item)"
                     ></v-autocomplete>
+                    <!-- Same product picked more than once (e.g. 2x Rice Facial
+                         Cleanser) needs its own qty control - a multi-select
+                         can't represent "this option twice". -->
+                    <div
+                      v-for="name in item.bundle_choices"
+                      :key="name"
+                      class="rzbundle__qty-row"
+                    >
+                      <span class="rzbundle__qty-name">{{ name }}</span>
+                      <v-text-field
+                        type="number"
+                        min="1"
+                        dense
+                        hide-details
+                        outlined
+                        class="rzbundle__qty-input"
+                        v-model.number="item.bundle_qty[name]"
+                      ></v-text-field>
+                    </div>
                     <div
                       v-if="
-                        (item.bundle_choices || []).length &&
-                        (item.bundle_choices || []).length !==
-                          bundleConfig(item.item).pick
+                        bundleTotalQty(item) &&
+                        bundleTotalQty(item) !== bundleConfig(item.item).pick
                       "
                       class="rzbundle__warn"
                     >
                       This bundle needs exactly
-                      {{ bundleConfig(item.item).pick }} products selected.
+                      {{ bundleConfig(item.item).pick }} products selected
+                      (currently {{ bundleTotalQty(item) }}).
                     </div>
                   </div>
                 </td>
@@ -510,24 +547,37 @@ export default {
     };
 
     // A bundle line saved earlier only carries bundle_note - bundle_choices
-    // (the full catalog names the multi-select needs) is rebuilt from it here
-    // so reopening an order for edit shows the same selection rather than an
-    // empty picker. Current format is a JSON [{name, qty}, ...] string (full
-    // catalog names); older orders may still have the flat short-label comma
-    // list from before that change, so fall back to reversing that too.
+    // and bundle_qty (the full catalog names + per-product count the picker
+    // needs) are rebuilt from it here so reopening an order for edit shows
+    // the same selection rather than an empty picker. Current format is a
+    // JSON [{name, qty}, ...] string (full catalog names); older orders may
+    // still have the flat short-label comma list from before that change
+    // (with a name repeated once per pick), so fall back to reversing and
+    // counting that too. $set because bundle_qty is a fresh key on an
+    // already-reactive item - plain assignment wouldn't track it.
     (this.payload.items || []).forEach((it) => {
       if (it.bundle_note && !it.bundle_choices) {
+        let names = [];
+        let qtyMap = {};
         try {
           const grouped = JSON.parse(it.bundle_note);
-          it.bundle_choices = grouped.flatMap((g) =>
-            Array(g.qty).fill(g.name)
-          );
+          grouped.forEach((g) => {
+            qtyMap[g.name] = g.qty;
+          });
+          names = grouped.map((g) => g.name);
         } catch (e) {
           const shortNames = it.bundle_note.split(",").map((s) => s.trim());
-          it.bundle_choices = shortNames
-            .map((s) => this.fullBundleLabel(s))
-            .filter(Boolean);
+          shortNames.forEach((s) => {
+            const full = this.fullBundleLabel(s);
+            if (!full) return;
+            qtyMap[full] = (qtyMap[full] || 0) + 1;
+          });
+          names = Object.keys(qtyMap);
         }
+        it.bundle_choices = names;
+        this.$set(it, "bundle_qty", qtyMap);
+      } else if (!it.bundle_qty) {
+        this.$set(it, "bundle_qty", {});
       }
     });
   },
@@ -548,6 +598,7 @@ export default {
       // clears any earlier bundle selection so a stale choice from the
       // previous product never lingers.
       payload.bundle_choices = [];
+      payload.bundle_qty = {};
       payload.bundle_note = null;
       this.getGrandTotal();
     },
@@ -564,10 +615,27 @@ export default {
       // a real catalog name for getProductDetails()'s rate/product lookup.
       // The choice is carried as its own field and only turned into text
       // when the order is actually submitted (see submit()).
-      let max = this.bundleConfig(item.item).pick;
-      if ((item.bundle_choices || []).length > max) {
-        item.bundle_choices = item.bundle_choices.slice(0, max);
-      }
+      // Keep bundle_qty in sync with which products are currently selected -
+      // default a freshly-picked product to qty 1, drop qty for anything
+      // deselected. $set/$delete because bundle_qty starts as a plain {}
+      // and Vue 2 can't track new/removed keys on its own.
+      if (!item.bundle_qty) item.bundle_qty = {};
+      const selected = item.bundle_choices || [];
+      selected.forEach((name) => {
+        if (!item.bundle_qty[name]) this.$set(item.bundle_qty, name, 1);
+      });
+      Object.keys(item.bundle_qty).forEach((name) => {
+        if (!selected.includes(name)) this.$delete(item.bundle_qty, name);
+      });
+    },
+    // Total pieces picked across all distinct products in this bundle line -
+    // the sum of each product's quantity, not the count of distinct products
+    // (a customer can pick 2x of one product instead of 4 different ones).
+    bundleTotalQty(item) {
+      return Object.values(item.bundle_qty || {}).reduce(
+        (sum, q) => sum + (parseInt(q, 10) || 0),
+        0
+      );
     },
     // Short, printable form of a catalog name, for the note under a bundle
     // line - "Rice Facial Cleanser" rather than the full pipe-separated
@@ -630,6 +698,7 @@ export default {
         tax: 1,
         total: 1,
         bundle_choices: [],
+        bundle_qty: {},
       });
 
       this.getGrandTotal();
@@ -655,21 +724,17 @@ export default {
       this.errorResponse = null;
     },
     // Bundle picks are stored as a JSON string of {name, qty} pairs (full
-    // catalog names, duplicate picks collapsed into a quantity) so the AWB
-    // PDF/invoice can print each chosen product as its own line item rather
-    // than one flat comma list. Stays a plain string field either way, so
-    // the existing "bundle_note is nullable|string" validation still holds.
-    groupBundleChoices(choices) {
-      if (!choices || !choices.length) return null;
-      let counts = {};
-      choices.forEach((name) => {
-        counts[name] = (counts[name] || 0) + 1;
-      });
-      let grouped = Object.keys(counts).map((name) => ({
-        name,
-        qty: counts[name],
-      }));
-      return JSON.stringify(grouped);
+    // catalog names, each with how many of that product were picked) so the
+    // AWB PDF/invoice can print each chosen product as its own line item
+    // rather than one flat comma list. Stays a plain string field either
+    // way, so the existing "bundle_note is nullable|string" validation
+    // still holds.
+    groupBundleChoices(qtyMap) {
+      if (!qtyMap) return null;
+      let grouped = Object.keys(qtyMap)
+        .filter((name) => (parseInt(qtyMap[name], 10) || 0) > 0)
+        .map((name) => ({ name, qty: parseInt(qtyMap[name], 10) }));
+      return grouped.length ? JSON.stringify(grouped) : null;
     },
     async submit() {
       this.loading = true;
@@ -680,7 +745,7 @@ export default {
       let items = (this.payload.items || []).map((item) => {
         return {
           ...item,
-          bundle_note: this.groupBundleChoices(item.bundle_choices),
+          bundle_note: this.groupBundleChoices(item.bundle_qty),
         };
       });
       try {
