@@ -550,32 +550,40 @@
                           <td class="text-right">Total</td>
                         </tr>
 
-                        <tr
+                        <template
                           v-for="(item, index) in selectedItem?.order?.items"
-                          :key="index"
                         >
-                          <td>
-                            {{ item?.item }}
-                            <div
-                              v-if="item?.bundle_note"
-                              class="caption grey--text"
-                            >
-                              {{ formatBundleNote(item.bundle_note) }}
-                            </div>
-                          </td>
-                          <td class="text-right">
-                            {{ item?.quantity }}
-                          </td>
-                          <td class="text-right">
-                            {{ $utils.currency_format(item?.rate) }}
-                          </td>
-                          <td class="text-right">
-                            {{ $utils.currency_format(item?.tax) }}
-                          </td>
-                          <td class="text-right">
-                            {{ $utils.currency_format(item?.total) }}
-                          </td>
-                        </tr>
+                          <tr :key="'row-' + index">
+                            <td>
+                              {{ item?.item }}
+                            </td>
+                            <td class="text-right">
+                              {{ item?.quantity }}
+                            </td>
+                            <td class="text-right">
+                              {{ $utils.currency_format(item?.rate) }}
+                            </td>
+                            <td class="text-right">
+                              {{ $utils.currency_format(item?.tax) }}
+                            </td>
+                            <td class="text-right">
+                              {{ $utils.currency_format(item?.total) }}
+                            </td>
+                          </tr>
+                          <!-- Bundle-chosen products (Any 3/4), one full row per
+                               product instead of a cramped note squeezed under
+                               the bundle line. -->
+                          <tr
+                            v-for="(g, gi) in bundleGroups(item.bundle_note)"
+                            :key="'bundle-' + index + '-' + gi"
+                          >
+                            <td class="caption">{{ g.name }}</td>
+                            <td class="text-right caption">{{ g.qty }}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                          </tr>
+                        </template>
                         <tr>
                           <td colspan="4" class="text-right">
                             Shipping Charges
@@ -957,6 +965,18 @@ export default {
         return grouped.map((g) => `${g.name} x${g.qty}`).join(", ");
       } catch (e) {
         return note;
+      }
+    },
+    // Same source as formatBundleNote, but as an array so each chosen
+    // product can be its own table row instead of one squeezed-in line.
+    bundleGroups(note) {
+      if (!note) return [];
+      try {
+        const grouped = JSON.parse(note);
+        return Array.isArray(grouped) ? grouped : [];
+      } catch (e) {
+        // Legacy flat short-label text - show as a single row, no qty.
+        return [{ name: note, qty: "" }];
       }
     },
     async setCompanyProfile(id) {
