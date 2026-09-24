@@ -748,9 +748,14 @@ export default {
           bundle_note: this.groupBundleChoices(item.bundle_qty),
         };
       });
+      // This form has no control for order_status, so it must never send one.
+      // It used to post back the value copied when the dialog was built, which
+      // quietly re-cancelled an order that had been reverted in the meantime.
+      let { order_status, ...payload } = this.payload;
+
       try {
         await this.$axios.put(`${this.endpoint}/${this.item.id}`, {
-          ...this.payload,
+          ...payload,
           items,
         });
         this.close();

@@ -213,6 +213,7 @@
                   <v-list-item>
                     <v-list-item-title>
                       <OrderEdit
+                        :key="`${item.id}-${item.order_status}-${invoiceCompKey}`"
                         :model="Model"
                         :endpoint="endpoint"
                         :item="item"
