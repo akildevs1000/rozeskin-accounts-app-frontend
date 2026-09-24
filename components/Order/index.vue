@@ -253,7 +253,11 @@
                       />
                     </v-list-item-title>
                   </v-list-item>
-                  <v-list-item v-if="item.order_status === 'completed'">
+                  <v-list-item
+                    v-if="
+                      ['completed', 'cancelled'].includes(item.order_status)
+                    "
+                  >
                     <v-list-item-title>
                       <OrderRevertToProcessing
                         :key="invoiceCompKey"

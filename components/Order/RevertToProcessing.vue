@@ -18,17 +18,27 @@
         <v-row>
           <v-col cols="12">
             <p class="mb-2">
-              This undoes the convert-to-invoice for order
-              <b>{{ item.order_id }}</b
-              >.
+              <template v-if="item.order_status === 'cancelled'">
+                This puts cancelled order <b>{{ item.order_id }}</b> back into
+                play.
+              </template>
+              <template v-else>
+                This undoes the convert-to-invoice for order
+                <b>{{ item.order_id }}</b
+                >.
+              </template>
             </p>
             <ul class="caption mb-0">
               <li>The order goes back to <b>processing</b>.</li>
+              <li v-if="item.cancel_reason">
+                The cancel reason
+                <b>{{ item.cancel_reason }}</b> is cleared.
+              </li>
               <li v-if="item.invoice">
                 Invoice <b>{{ item.invoice.reference_id || item.invoice.id }}</b>
                 is removed, so converting again raises a fresh one.
               </li>
-              <li>Any stock deducted for it is added back.</li>
+              <li v-if="item.invoice">Any stock deducted for it is added back.</li>
               <li v-if="item.tracking_number">
                 The courier booking
                 <b>{{ item.tracking_number }}</b> stays as it is — cancel that
