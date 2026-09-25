@@ -1,5 +1,12 @@
 <template>
   <v-card style="background: none">
+    <v-snackbar v-model="snackbar" :color="snackColor" timeout="6000" top>
+      {{ snackText }}
+      <template v-slot:action="{ attrs }">
+        <v-btn text v-bind="attrs" @click="snackbar = false">Close</v-btn>
+      </template>
+    </v-snackbar>
+
     <!-- Image preview dialog -->
     <v-dialog v-model="imageDialog" max-width="500">
       <v-card>
@@ -149,6 +156,9 @@ export default {
     options: {},
     dialog: false,
     error: null,
+    snackbar: false,
+    snackText: "",
+    snackColor: "error",
     filters: { search: null },
     form: {},
     imageFile: null,
@@ -235,14 +245,22 @@ export default {
       }
     },
     async remove(item) {
-      const r = await (this.$swal ? this.$swal.fire({ icon: "warning", title: `Delete ${item.name}?`, showCancelButton: true, confirmButtonText: "Yes, delete" }) : { isConfirmed: confirm("Delete?") });
-      if (!r.isConfirmed) return;
+      // This app has no $swal plugin, so the old call silently swallowed every
+      // refusal - the backend blocks deleting an item that has stock history,
+      // and clicking Delete simply appeared to do nothing.
+      if (!confirm(`Delete ${item.name}?`)) return;
       try {
         await this.$axios.delete(`${this.endpoint}/${item.id}`);
+        this.notify(`${item.name} deleted.`, "success");
         this.getDataFromApi();
       } catch (e) {
-        this.$swal && this.$swal.fire({ icon: "error", title: "Cannot delete", text: e?.response?.data?.message || "Error" });
+        this.notify(e?.response?.data?.message || "Could not delete this item.", "error");
       }
+    },
+    notify(text, color) {
+      this.snackText = text;
+      this.snackColor = color;
+      this.snackbar = true;
     },
   },
 };
