@@ -500,10 +500,18 @@ export default {
             this.money(sum("total")),
           ]],
           theme: "grid",
-          styles: { fontSize: 8, cellPadding: 1.6, halign: "right" },
+          styles: { fontSize: 7.5, cellPadding: 1.2, halign: "right", overflow: "linebreak" },
+          tableWidth: pageW - 16,
           headStyles: { fillColor: [242, 242, 242], textColor: HEAD, fontStyle: "bold", halign: "center" },
           footStyles: { fillColor: [253, 243, 243], textColor: RED, fontStyle: "bold", halign: "right" },
-          columnStyles: { 0: { halign: "center", fontStyle: "bold" } },
+          // 11 columns overflow A4 landscape unless each one is pinned.
+          columnStyles: Object.assign(
+            { 0: { halign: "center", fontStyle: "bold", cellWidth: 20 } },
+            Object.fromEntries(
+              channels.map((_, i) => [i + 1, { cellWidth: (pageW - 16 - 20 - 24) / channels.length }])
+            ),
+            { [channels.length + 1]: { cellWidth: 24, fontStyle: "bold" } }
+          ),
           // Repeating the header is the whole reason for drawing the table
           // rather than slicing an image across pages.
           showHead: "everyPage",
@@ -536,8 +544,7 @@ export default {
         autoTable(pdf, {
           startY: pdf.lastAutoTable.finalY + 6,
           head: [[
-            "Payment method / Platform", "Total Orders", "Gross Sales",
-            "Delivered (collected)", "RTO / Returns", "Refunds", "Pending Value",
+            "Channel", "Orders", "Gross Sales", "Delivered", "RTO / Returns", "Refunds", "Pending",
           ]],
           body: this.data.channels.map((c) => [
             c.channel,
@@ -577,7 +584,8 @@ export default {
           ],
           theme: "grid",
           styles: { fontSize: 9, cellPadding: 2 },
-          columnStyles: { 0: { cellWidth: 90 }, 1: { halign: "right", cellWidth: 40 } },
+          tableWidth: 155,
+          columnStyles: { 0: { cellWidth: 110 }, 1: { halign: "right", cellWidth: 45 } },
           // The net line is the number the whole report exists to produce.
           didParseCell: (d) => {
             if (d.row.index === 3) {
