@@ -330,6 +330,15 @@ export default {
         const sum = (key) =>
           this.data.daily.reduce((a, d) => a + Number(d[key] || 0), 0);
 
+        // Built with a plain loop rather than Object.fromEntries, which is
+        // newer than this app transpiles for.
+        const channelWidth = (pageW - 16 - 20 - 24) / channels.length;
+        const dailyColumnStyles = { 0: { halign: "center", fontStyle: "bold", cellWidth: 20 } };
+        channels.forEach((_, i) => {
+          dailyColumnStyles[i + 1] = { cellWidth: channelWidth };
+        });
+        dailyColumnStyles[channels.length + 1] = { cellWidth: 24, fontStyle: "bold" };
+
         const totalRow = ws.addRow([
           "TOTAL",
           ...channels.map((c) => sum(c)),
@@ -448,7 +457,7 @@ export default {
         a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 10000);
       } catch (e) {
-        this.notify("Could not build the Excel file.", "error");
+        this.notify("Could not build the Excel file: " + (e && e.message ? e.message : e), "error");
       } finally {
         this.excelLoading = false;
       }
@@ -463,7 +472,20 @@ export default {
     async exportPdf() {
       this.pdfLoading = true;
       try {
-        const autoTable = (await import("jspdf-autotable")).default;
+        // Depending on how the bundler interops this CommonJS plugin, the
+        // callable can arrive as the default export, a named one, or hang off
+        // the module object. Resolve whichever is actually a function.
+        const mod = await import("jspdf-autotable");
+        const autoTable =
+          typeof mod.default === "function"
+            ? mod.default
+            : typeof mod.autoTable === "function"
+            ? mod.autoTable
+            : mod.default && mod.default.autoTable;
+
+        if (typeof autoTable !== "function") {
+          throw new Error("PDF table plugin did not load.");
+        }
 
         const RED = [192, 0, 0];
         const HEAD = [26, 35, 126];
@@ -510,13 +532,7 @@ export default {
           headStyles: { fillColor: [242, 242, 242], textColor: HEAD, fontStyle: "bold", halign: "center", fontSize: 9 },
           footStyles: { fillColor: [253, 243, 243], textColor: RED, fontStyle: "bold", halign: "right", fontSize: 9 },
           // 11 columns overflow A4 landscape unless each one is pinned.
-          columnStyles: Object.assign(
-            { 0: { halign: "center", fontStyle: "bold", cellWidth: 20 } },
-            Object.fromEntries(
-              channels.map((_, i) => [i + 1, { cellWidth: (pageW - 16 - 20 - 24) / channels.length }])
-            ),
-            { [channels.length + 1]: { cellWidth: 24, fontStyle: "bold" } }
-          ),
+          columnStyles: dailyColumnStyles,
           // Repeating the header is the whole reason for drawing the table
           // rather than slicing an image across pages.
           showHead: "everyPage",
@@ -604,7 +620,7 @@ export default {
 
         pdf.save(`monthly-sales-${this.month}-${this.basis}.pdf`);
       } catch (e) {
-        this.notify("Could not build the PDF.", "error");
+        this.notify("Could not build the PDF: " + (e && e.message ? e.message : e), "error");
       } finally {
         this.pdfLoading = false;
       }
