@@ -281,6 +281,11 @@ export default {
         // Columns are whatever channels actually traded this month, so a month
         // with no Tamara does not carry an empty Tamara column.
         const channels = this.data.channels.map((c) => c.channel);
+
+        // Column headers drive the minimum width autotable will accept, so the
+        // longest names are abbreviated here to buy back readable type size.
+        const shortHead = { Complimentary: "Compl.", "Bank/Courier": "Bank", Trendyol: "Trend." };
+        const headLabel = (c) => shortHead[c] || c;
         const title = `TOTAL AMOUNT SALES - ${this.data.month_label.toUpperCase()}`;
 
         /* ---------- Sheet 1: daily grid, laid out like the kept sheet ------- */
@@ -488,7 +493,7 @@ export default {
 
         autoTable(pdf, {
           startY: 24,
-          head: [["DATE", ...channels, "TOTAL"]],
+          head: [["DATE", ...channels.map(headLabel), "TOTAL"]],
           body: this.data.daily.map((d) => [
             this.dmy(d.date),
             ...channels.map((c) => this.money(d[c] || 0)),
@@ -500,10 +505,10 @@ export default {
             this.money(sum("total")),
           ]],
           theme: "grid",
-          styles: { fontSize: 7.5, cellPadding: 1.2, halign: "right", overflow: "linebreak" },
+          styles: { fontSize: 9, cellPadding: 1.2, halign: "right", overflow: "linebreak" },
           tableWidth: pageW - 16,
-          headStyles: { fillColor: [242, 242, 242], textColor: HEAD, fontStyle: "bold", halign: "center" },
-          footStyles: { fillColor: [253, 243, 243], textColor: RED, fontStyle: "bold", halign: "right" },
+          headStyles: { fillColor: [242, 242, 242], textColor: HEAD, fontStyle: "bold", halign: "center", fontSize: 9 },
+          footStyles: { fillColor: [253, 243, 243], textColor: RED, fontStyle: "bold", halign: "right", fontSize: 9 },
           // 11 columns overflow A4 landscape unless each one is pinned.
           columnStyles: Object.assign(
             { 0: { halign: "center", fontStyle: "bold", cellWidth: 20 } },
@@ -565,7 +570,7 @@ export default {
             this.money(t.pending),
           ]],
           theme: "grid",
-          styles: { fontSize: 8.5, cellPadding: 1.8, halign: "right" },
+          styles: { fontSize: 10, cellPadding: 2.2, halign: "right" },
           headStyles: { fillColor: [242, 242, 242], textColor: HEAD, fontStyle: "bold", halign: "center" },
           footStyles: { fillColor: [253, 243, 243], textColor: RED, fontStyle: "bold" },
           columnStyles: { 0: { halign: "left", fontStyle: "bold" } },
@@ -583,7 +588,7 @@ export default {
             ["Cancelled (excluded from gross)", this.money(t.cancelled)],
           ],
           theme: "grid",
-          styles: { fontSize: 9, cellPadding: 2 },
+          styles: { fontSize: 10, cellPadding: 2.5 },
           tableWidth: 155,
           columnStyles: { 0: { cellWidth: 110 }, 1: { halign: "right", cellWidth: 45 } },
           // The net line is the number the whole report exists to produce.
