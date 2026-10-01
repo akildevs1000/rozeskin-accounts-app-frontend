@@ -188,7 +188,6 @@
 
 <script>
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 export default {
   data() {
@@ -453,46 +452,142 @@ export default {
       const [y, m, d] = String(iso).split("-");
       return `${d}.${m}.${y}`;
     },
+    // A drawn document rather than a screenshot of the page: real text that
+    // can be selected and searched, headers that repeat across pages, and the
+    // same layout as the workbook.
     async exportPdf() {
       this.pdfLoading = true;
       try {
-        const el = document.getElementById("monthly-report-capture");
-        const canvas = await html2canvas(el, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: "#ffffff",
+        const autoTable = (await import("jspdf-autotable")).default;
+
+        const RED = [192, 0, 0];
+        const HEAD = [26, 35, 126];
+        const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+        const pageW = pdf.internal.pageSize.getWidth();
+
+        const channels = this.data.channels.map((c) => c.channel);
+        const title = `TOTAL AMOUNT SALES - ${this.data.month_label.toUpperCase()}`;
+
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(14);
+        pdf.setTextColor(RED[0], RED[1], RED[2]);
+        pdf.text(title, pageW / 2, 14, { align: "center" });
+
+        pdf.setFontSize(9);
+        pdf.setTextColor(110);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(
+          this.basis === "order" ? "By order date" : "By collection date",
+          pageW / 2,
+          19,
+          { align: "center" }
+        );
+
+        const sum = (key) =>
+          this.data.daily.reduce((a, d) => a + Number(d[key] || 0), 0);
+
+        autoTable(pdf, {
+          startY: 24,
+          head: [["DATE", ...channels, "TOTAL"]],
+          body: this.data.daily.map((d) => [
+            this.dmy(d.date),
+            ...channels.map((c) => this.money(d[c] || 0)),
+            this.money(d.total || 0),
+          ]),
+          foot: [[
+            "TOTAL",
+            ...channels.map((c) => this.money(sum(c))),
+            this.money(sum("total")),
+          ]],
+          theme: "grid",
+          styles: { fontSize: 8, cellPadding: 1.6, halign: "right" },
+          headStyles: { fillColor: [242, 242, 242], textColor: HEAD, fontStyle: "bold", halign: "center" },
+          footStyles: { fillColor: [253, 243, 243], textColor: RED, fontStyle: "bold", halign: "right" },
+          columnStyles: { 0: { halign: "center", fontStyle: "bold" } },
+          // Repeating the header is the whole reason for drawing the table
+          // rather than slicing an image across pages.
+          showHead: "everyPage",
+          margin: { left: 8, right: 8 },
         });
 
-        const pdf = new jsPDF("p", "mm", "a4");
-        const margin = 8;
-        const imgWidthMm = 210 - margin * 2;
-        const pxPerMm = canvas.width / imgWidthMm;
-        const pageHeightPx = Math.max(1, Math.floor((297 - margin * 2) * pxPerMm));
-        const pages = Math.max(1, Math.min(20, Math.ceil(canvas.height / pageHeightPx)));
+        /* ---- summary page ---- */
+        pdf.addPage();
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(13);
+        pdf.setTextColor(RED[0], RED[1], RED[2]);
+        pdf.text(`SUMMARY - ${this.data.month_label.toUpperCase()}`, pageW / 2, 14, {
+          align: "center",
+        });
 
-        for (let i = 0; i < pages; i++) {
-          const sy = i * pageHeightPx;
-          const sh = Math.min(pageHeightPx, canvas.height - sy);
-          if (sh <= 0) break;
+        const s2 = this.data.summary;
 
-          const slice = document.createElement("canvas");
-          slice.width = canvas.width;
-          slice.height = sh;
-          const ctx = slice.getContext("2d");
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 0, slice.width, slice.height);
-          ctx.drawImage(canvas, 0, sy, canvas.width, sh, 0, 0, canvas.width, sh);
+        autoTable(pdf, {
+          startY: 20,
+          head: [["Orders received", "Delivered", "Pending", "Cancelled", "RTO / Returned"]],
+          body: [[s2.orders, s2.delivered, s2.pending, s2.cancelled, s2.rto]],
+          theme: "grid",
+          styles: { fontSize: 9, halign: "center", cellPadding: 2 },
+          headStyles: { fillColor: [242, 242, 242], textColor: HEAD, fontStyle: "bold" },
+          margin: { left: 8, right: 8 },
+        });
 
-          if (i > 0) pdf.addPage();
-          pdf.addImage(
-            slice.toDataURL("image/png"),
-            "PNG",
-            margin,
-            margin,
-            imgWidthMm,
-            sh / pxPerMm
-          );
-        }
+        const t = this.data.totals;
+
+        autoTable(pdf, {
+          startY: pdf.lastAutoTable.finalY + 6,
+          head: [[
+            "Payment method / Platform", "Total Orders", "Gross Sales",
+            "Delivered (collected)", "RTO / Returns", "Refunds", "Pending Value",
+          ]],
+          body: this.data.channels.map((c) => [
+            c.channel,
+            c.orders,
+            this.money(c.gross),
+            this.money(c.delivered),
+            this.money(c.rto),
+            this.money(c.refunds),
+            this.money(c.pending),
+          ]),
+          foot: [[
+            "TOTAL",
+            s2.orders,
+            this.money(t.gross),
+            this.money(t.delivered),
+            this.money(t.rto),
+            this.money(t.refunds),
+            this.money(t.pending),
+          ]],
+          theme: "grid",
+          styles: { fontSize: 8.5, cellPadding: 1.8, halign: "right" },
+          headStyles: { fillColor: [242, 242, 242], textColor: HEAD, fontStyle: "bold", halign: "center" },
+          footStyles: { fillColor: [253, 243, 243], textColor: RED, fontStyle: "bold" },
+          columnStyles: { 0: { halign: "left", fontStyle: "bold" } },
+          margin: { left: 8, right: 8 },
+        });
+
+        autoTable(pdf, {
+          startY: pdf.lastAutoTable.finalY + 6,
+          body: [
+            ["Total Gross Sales", this.money(t.gross)],
+            ["Total RTO / Returns", "- " + this.money(t.rto)],
+            ["Total Refunds", "- " + this.money(t.refunds)],
+            ["Total Net Revenue (delivered less refunds)", this.money(t.net_revenue)],
+            ["Total Pending Order Value", this.money(t.pending)],
+            ["Cancelled (excluded from gross)", this.money(t.cancelled)],
+          ],
+          theme: "grid",
+          styles: { fontSize: 9, cellPadding: 2 },
+          columnStyles: { 0: { cellWidth: 90 }, 1: { halign: "right", cellWidth: 40 } },
+          // The net line is the number the whole report exists to produce.
+          didParseCell: (d) => {
+            if (d.row.index === 3) {
+              d.cell.styles.fontStyle = "bold";
+              d.cell.styles.fillColor = [241, 248, 243];
+              d.cell.styles.textColor = [27, 94, 32];
+            }
+          },
+          margin: { left: 8, right: 8 },
+        });
 
         pdf.save(`monthly-sales-${this.month}-${this.basis}.pdf`);
       } catch (e) {
@@ -500,7 +595,7 @@ export default {
       } finally {
         this.pdfLoading = false;
       }
-    },
+    }
   },
 };
 </script>
