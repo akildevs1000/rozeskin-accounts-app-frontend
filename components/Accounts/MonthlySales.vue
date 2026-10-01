@@ -91,6 +91,7 @@
             <th class="text-right">Gross Sales</th>
             <th class="text-right">Delivered (collected)</th>
             <th class="text-right">RTO / Returns</th>
+            <th class="text-right">Refunds</th>
             <th class="text-right">Pending Value</th>
           </tr>
         </thead>
@@ -105,10 +106,11 @@
             <td class="text-right" :class="row.rto ? 'red--text' : 'grey--text'">
               {{ money(row.rto) }}
             </td>
+            <td class="text-right" :class="row.refunds ? 'red--text' : 'grey--text'">{{ money(row.refunds) }}</td>
             <td class="text-right">{{ money(row.pending) }}</td>
           </tr>
           <tr v-if="!data.channels.length && !loading">
-            <td colspan="6" class="text-center grey--text">
+            <td colspan="7" class="text-center grey--text">
               No orders in this month.
             </td>
           </tr>
@@ -120,6 +122,7 @@
             <th class="text-right">{{ money(data.totals.gross) }}</th>
             <th class="text-right">{{ money(data.totals.delivered) }}</th>
             <th class="text-right">{{ money(data.totals.rto) }}</th>
+            <th class="text-right">{{ money(data.totals.refunds) }}</th>
             <th class="text-right">{{ money(data.totals.pending) }}</th>
           </tr>
         </tfoot>
@@ -166,39 +169,15 @@
       </v-row>
     </div>
 
-    <!-- refunds are not captured anywhere in the order flow, so they are typed in -->
     <v-card outlined class="mt-5 pa-4">
-      <div class="subtitle-2 mb-1">Refunds for {{ data.month_label }}</div>
-      <div class="caption grey--text mb-3">
-        Refunds are not recorded against orders anywhere in the system, so this
-        figure is entered by hand. It feeds Total Refunds and Net Revenue above.
+      <div class="subtitle-2 mb-1">
+        Refunds for {{ data.month_label }}:
+        <span class="red--text">AED {{ money(data.totals.refunds) }}</span>
       </div>
-      <v-row dense class="align-center">
-        <v-col cols="12" sm="3">
-          <v-text-field
-            v-model="refundAmount"
-            label="Refund amount (AED)"
-            type="number"
-            outlined
-            dense
-            hide-details
-          />
-        </v-col>
-        <v-col cols="12" sm="6">
-          <v-text-field
-            v-model="refundNote"
-            label="Note (optional)"
-            outlined
-            dense
-            hide-details
-          />
-        </v-col>
-        <v-col cols="12" sm="3">
-          <v-btn color="primary" small :loading="savingRefund" @click="saveRefund">
-            Save refunds
-          </v-btn>
-        </v-col>
-      </v-row>
+      <div class="caption grey--text">
+        Taken from refunds recorded against orders on the Refunds tab, and
+        subtracted from Net Revenue above.
+      </div>
     </v-card>
 
     <v-snackbar v-model="snackbar" :color="snackColor" timeout="5000" top>
@@ -224,9 +203,6 @@ export default {
       loading: false,
       pdfLoading: false,
       excelLoading: false,
-      savingRefund: false,
-      refundAmount: 0,
-      refundNote: "",
       snackbar: false,
       snackText: "",
       snackColor: "success",
@@ -281,8 +257,6 @@ export default {
           params: { month: this.month, basis: this.basis },
         });
         this.data = data;
-        this.refundAmount = data.totals.refunds;
-        this.refundNote = data.refund_note || "";
       } catch (e) {
         this.notify(
           e?.response?.data?.message || "Could not load the report.",
@@ -290,25 +264,6 @@ export default {
         );
       } finally {
         this.loading = false;
-      }
-    },
-    async saveRefund() {
-      this.savingRefund = true;
-      try {
-        await this.$axios.post("monthly-sales-report/refund", {
-          period: this.month,
-          amount: Number(this.refundAmount) || 0,
-          note: this.refundNote || null,
-        });
-        await this.load();
-        this.notify("Refunds saved.");
-      } catch (e) {
-        this.notify(
-          e?.response?.data?.message || "Could not save the refunds.",
-          "error"
-        );
-      } finally {
-        this.savingRefund = false;
       }
     },
     // ExcelJS is ~1MB, and nobody pays for it until they actually export.
@@ -392,7 +347,7 @@ export default {
         /* ---------- Sheet 2: the summary shown on screen -------------------- */
         const s = wb.addWorksheet("Summary");
 
-        s.mergeCells(1, 1, 1, 6);
+        s.mergeCells(1, 1, 1, 7);
         const t2 = s.getCell(1, 1);
         t2.value = `${title} - ${this.basis === "order" ? "BY ORDER DATE" : "BY COLLECTION DATE"}`;
         t2.font = { bold: true, size: 13, color: { argb: RED } };
@@ -422,7 +377,7 @@ export default {
         s.addRow([]);
         const h2 = s.addRow([
           "Payment method / Platform", "Total Orders", "Gross Sales",
-          "Delivered (collected)", "RTO / Returns", "Pending Value",
+          "Delivered (collected)", "RTO / Returns", "Refunds", "Pending Value",
         ]);
         h2.height = 22;
         h2.eachCell((cell) => {
@@ -433,7 +388,7 @@ export default {
         });
 
         this.data.channels.forEach((c) => {
-          const r = s.addRow([c.channel, c.orders, c.gross, c.delivered, c.rto, c.pending]);
+          const r = s.addRow([c.channel, c.orders, c.gross, c.delivered, c.rto, c.refunds, c.pending]);
           r.eachCell((cell, col) => {
             cell.border = border;
             if (col >= 3) cell.numFmt = money;
@@ -442,7 +397,7 @@ export default {
         });
 
         const t = this.data.totals;
-        const tr = s.addRow(["TOTAL", this.data.summary.orders, t.gross, t.delivered, t.rto, t.pending]);
+        const tr = s.addRow(["TOTAL", this.data.summary.orders, t.gross, t.delivered, t.rto, t.refunds, t.pending]);
         tr.eachCell((cell, col) => {
           cell.border = border;
           cell.font = { bold: true, color: { argb: RED } };
@@ -474,7 +429,7 @@ export default {
         });
 
         s.getColumn(1).width = 38;
-        for (let i = 2; i <= 6; i++) s.getColumn(i).width = 18;
+        for (let i = 2; i <= 7; i++) s.getColumn(i).width = 18;
 
         const buf = await wb.xlsx.writeBuffer();
         const blob = new Blob([buf], {
