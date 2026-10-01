@@ -46,6 +46,7 @@
       </v-toolbar>
 
       <v-tabs class="pt-3" color="primary" right>
+        <v-tab> Monthly Sales </v-tab>
         <v-tab> Customer Report </v-tab>
         <v-tab> Product Report </v-tab>
         <v-tab> Source Report </v-tab>
@@ -54,6 +55,11 @@
 
         <!-- <v-tab> Reports New </v-tab> -->
         <v-tab> Analytics </v-tab>
+        <v-tab-item>
+          <v-container fluid>
+            <AccountsMonthlySales />
+          </v-container>
+        </v-tab-item>
         <v-tab-item>
           <v-container fluid>
             <AccountsCustomerReport />
