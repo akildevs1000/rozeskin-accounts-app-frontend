@@ -43,7 +43,7 @@
       </v-col>
 
       <v-col cols="12" sm="4" class="text-right">
-        <v-btn small color="green darken-1" dark class="mr-2" @click="exportExcel">
+        <v-btn small color="green darken-1" dark class="mr-2" @click="exportExcel" :loading="excelLoading">
           <v-icon left small>mdi-file-excel</v-icon> Excel
         </v-btn>
         <v-btn small color="red darken-1" dark :loading="pdfLoading" @click="exportPdf">
@@ -208,7 +208,6 @@
 </template>
 
 <script>
-import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -224,6 +223,7 @@ export default {
       monthMenu: false,
       loading: false,
       pdfLoading: false,
+      excelLoading: false,
       savingRefund: false,
       refundAmount: 0,
       refundNote: "",
@@ -234,6 +234,7 @@ export default {
         month_label: "",
         summary: { orders: 0, delivered: 0, pending: 0, cancelled: 0, rto: 0 },
         channels: [],
+        daily: [],
         totals: {
           gross: 0,
           delivered: 0,
@@ -310,36 +311,192 @@ export default {
         this.savingRefund = false;
       }
     },
-    exportExcel() {
-      const rows = this.data.channels.map((c) => ({
-        "Payment method / Platform": c.channel,
-        "Total Orders": c.orders,
-        "Gross Sales (AED)": c.gross,
-        "Delivered (AED)": c.delivered,
-        "RTO / Returns (AED)": c.rto,
-        "Pending Value (AED)": c.pending,
-      }));
+    // ExcelJS is ~1MB, and nobody pays for it until they actually export.
+    async exportExcel() {
+      this.excelLoading = true;
+      try {
+        const ExcelJS = (await import("exceljs")).default;
+        const wb = new ExcelJS.Workbook();
+        wb.created = new Date();
 
-      const t = this.data.totals;
-      rows.push({});
-      rows.push({
-        "Payment method / Platform": "TOTAL",
-        "Total Orders": this.data.summary.orders,
-        "Gross Sales (AED)": t.gross,
-        "Delivered (AED)": t.delivered,
-        "RTO / Returns (AED)": t.rto,
-        "Pending Value (AED)": t.pending,
-      });
-      rows.push({});
-      rows.push({ "Payment method / Platform": "Total Refunds", "Gross Sales (AED)": t.refunds });
-      rows.push({ "Payment method / Platform": "Total Net Revenue", "Gross Sales (AED)": t.net_revenue });
-      rows.push({ "Payment method / Platform": "Total Pending Order Value", "Gross Sales (AED)": t.pending });
-      rows.push({ "Payment method / Platform": "Cancelled (excluded)", "Gross Sales (AED)": t.cancelled });
+        const RED = "FFC00000";
+        const money = "#,##0.00";
+        const thin = { style: "thin", color: { argb: "FF9E9E9E" } };
+        const border = { top: thin, left: thin, bottom: thin, right: thin };
 
-      const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Monthly Sales");
-      XLSX.writeFile(wb, `monthly-sales-${this.month}-${this.basis}.xlsx`);
+        // Columns are whatever channels actually traded this month, so a month
+        // with no Tamara does not carry an empty Tamara column.
+        const channels = this.data.channels.map((c) => c.channel);
+        const title = `TOTAL AMOUNT SALES - ${this.data.month_label.toUpperCase()}`;
+
+        /* ---------- Sheet 1: daily grid, laid out like the kept sheet ------- */
+        const ws = wb.addWorksheet("Daily Sales");
+
+        ws.mergeCells(1, 1, 1, channels.length + 2);
+        const titleCell = ws.getCell(1, 1);
+        titleCell.value = title;
+        titleCell.font = { bold: true, size: 14, color: { argb: RED } };
+        titleCell.alignment = { horizontal: "center", vertical: "middle" };
+        ws.getRow(1).height = 26;
+
+        const head = ["DATE", ...channels, "TOTAL"];
+        const headRow = ws.addRow(head);
+        headRow.height = 22;
+        headRow.eachCell((cell) => {
+          cell.font = { bold: true, color: { argb: "FF1A237E" } };
+          cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF2F2F2" } };
+          cell.border = border;
+        });
+
+        this.data.daily.forEach((d) => {
+          const row = ws.addRow([
+            this.dmy(d.date),
+            ...channels.map((c) => Number(d[c] || 0)),
+            Number(d.total || 0),
+          ]);
+          row.eachCell((cell, col) => {
+            cell.border = border;
+            if (col === 1) {
+              cell.alignment = { horizontal: "center" };
+              cell.font = { bold: true };
+            } else {
+              cell.numFmt = money;
+              cell.alignment = { horizontal: "right" };
+            }
+          });
+          row.getCell(head.length).font = { bold: true, color: { argb: RED } };
+        });
+
+        const sum = (key) =>
+          this.data.daily.reduce((a, d) => a + Number(d[key] || 0), 0);
+
+        const totalRow = ws.addRow([
+          "TOTAL",
+          ...channels.map((c) => sum(c)),
+          sum("total"),
+        ]);
+        totalRow.height = 20;
+        totalRow.eachCell((cell, col) => {
+          cell.border = border;
+          cell.font = { bold: true, color: { argb: RED } };
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDF3F3" } };
+          cell.alignment = { horizontal: col === 1 ? "center" : "right" };
+          if (col > 1) cell.numFmt = money;
+        });
+
+        ws.getColumn(1).width = 14;
+        for (let i = 2; i <= head.length; i++) ws.getColumn(i).width = 15;
+        ws.views = [{ state: "frozen", xSplit: 1, ySplit: 2 }];
+
+        /* ---------- Sheet 2: the summary shown on screen -------------------- */
+        const s = wb.addWorksheet("Summary");
+
+        s.mergeCells(1, 1, 1, 6);
+        const t2 = s.getCell(1, 1);
+        t2.value = `${title} - ${this.basis === "order" ? "BY ORDER DATE" : "BY COLLECTION DATE"}`;
+        t2.font = { bold: true, size: 13, color: { argb: RED } };
+        t2.alignment = { horizontal: "center" };
+        s.getRow(1).height = 24;
+
+        s.addRow([]);
+        const counts = s.addRow([
+          "Orders received", this.data.summary.orders,
+          "Delivered", this.data.summary.delivered,
+          "Pending", this.data.summary.pending,
+        ]);
+        counts.eachCell((c, i) => {
+          c.border = border;
+          if (i % 2 === 1) c.font = { bold: true };
+        });
+        const counts2 = s.addRow([
+          "Cancelled", this.data.summary.cancelled,
+          "RTO / Returned", this.data.summary.rto,
+          "", "",
+        ]);
+        counts2.eachCell((c, i) => {
+          c.border = border;
+          if (i % 2 === 1) c.font = { bold: true };
+        });
+
+        s.addRow([]);
+        const h2 = s.addRow([
+          "Payment method / Platform", "Total Orders", "Gross Sales",
+          "Delivered (collected)", "RTO / Returns", "Pending Value",
+        ]);
+        h2.height = 22;
+        h2.eachCell((cell) => {
+          cell.font = { bold: true, color: { argb: "FF1A237E" } };
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF2F2F2" } };
+          cell.alignment = { horizontal: "center", wrapText: true };
+          cell.border = border;
+        });
+
+        this.data.channels.forEach((c) => {
+          const r = s.addRow([c.channel, c.orders, c.gross, c.delivered, c.rto, c.pending]);
+          r.eachCell((cell, col) => {
+            cell.border = border;
+            if (col >= 3) cell.numFmt = money;
+            if (col === 1) cell.font = { bold: true };
+          });
+        });
+
+        const t = this.data.totals;
+        const tr = s.addRow(["TOTAL", this.data.summary.orders, t.gross, t.delivered, t.rto, t.pending]);
+        tr.eachCell((cell, col) => {
+          cell.border = border;
+          cell.font = { bold: true, color: { argb: RED } };
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFDF3F3" } };
+          if (col >= 3) cell.numFmt = money;
+        });
+
+        s.addRow([]);
+        const bottom = [
+          ["Total Gross Sales", t.gross],
+          ["Total RTO / Returns", -t.rto],
+          ["Total Refunds", -t.refunds],
+          ["Total Net Revenue (delivered less refunds)", t.net_revenue],
+          ["Total Pending Order Value", t.pending],
+          ["Cancelled (excluded from gross)", t.cancelled],
+        ];
+        bottom.forEach(([label, value], idx) => {
+          const r = s.addRow([label, "", value]);
+          s.mergeCells(r.number, 1, r.number, 2);
+          r.getCell(1).font = { bold: idx === 3 };
+          r.getCell(3).numFmt = money;
+          r.getCell(3).font = { bold: idx === 3, color: { argb: idx === 3 ? "FF1B5E20" : "FF000000" } };
+          [1, 2, 3].forEach((c) => (r.getCell(c).border = border));
+          if (idx === 3) {
+            [1, 2, 3].forEach((c) => {
+              r.getCell(c).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF1F8F3" } };
+            });
+          }
+        });
+
+        s.getColumn(1).width = 38;
+        for (let i = 2; i <= 6; i++) s.getColumn(i).width = 18;
+
+        const buf = await wb.xlsx.writeBuffer();
+        const blob = new Blob([buf], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `monthly-sales-${this.month}-${this.basis}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      } catch (e) {
+        this.notify("Could not build the Excel file.", "error");
+      } finally {
+        this.excelLoading = false;
+      }
+    },
+    dmy(iso) {
+      const [y, m, d] = String(iso).split("-");
+      return `${d}.${m}.${y}`;
     },
     async exportPdf() {
       this.pdfLoading = true;
