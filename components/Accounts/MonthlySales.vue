@@ -281,11 +281,6 @@ export default {
         // Columns are whatever channels actually traded this month, so a month
         // with no Tamara does not carry an empty Tamara column.
         const channels = this.data.channels.map((c) => c.channel);
-
-        // Column headers drive the minimum width autotable will accept, so the
-        // longest names are abbreviated here to buy back readable type size.
-        const shortHead = { Complimentary: "Compl.", "Bank/Courier": "Bank", Trendyol: "Trend." };
-        const headLabel = (c) => shortHead[c] || c;
         const title = `TOTAL AMOUNT SALES - ${this.data.month_label.toUpperCase()}`;
 
         /* ---------- Sheet 1: daily grid, laid out like the kept sheet ------- */
@@ -329,15 +324,6 @@ export default {
 
         const sum = (key) =>
           this.data.daily.reduce((a, d) => a + Number(d[key] || 0), 0);
-
-        // Built with a plain loop rather than Object.fromEntries, which is
-        // newer than this app transpiles for.
-        const channelWidth = (pageW - 16 - 20 - 24) / channels.length;
-        const dailyColumnStyles = { 0: { halign: "center", fontStyle: "bold", cellWidth: 20 } };
-        channels.forEach((_, i) => {
-          dailyColumnStyles[i + 1] = { cellWidth: channelWidth };
-        });
-        dailyColumnStyles[channels.length + 1] = { cellWidth: 24, fontStyle: "bold" };
 
         const totalRow = ws.addRow([
           "TOTAL",
@@ -493,6 +479,23 @@ export default {
         const pageW = pdf.internal.pageSize.getWidth();
 
         const channels = this.data.channels.map((c) => c.channel);
+
+        // Column headers set the minimum width autotable will accept, so the
+        // longest names are shortened here to buy back readable type size.
+        // Only in the PDF: the workbook has room for the full names.
+        const shortHead = { Complimentary: "Compl.", "Bank/Courier": "Bank", Trendyol: "Trend." };
+        const headLabel = (c) => shortHead[c] || c;
+
+        // Eleven columns overflow A4 landscape unless each one is pinned. Built
+        // with a loop rather than Object.fromEntries, which is newer than this
+        // app transpiles for.
+        const channelWidth = (pageW - 16 - 20 - 24) / channels.length;
+        const dailyColumnStyles = { 0: { halign: "center", fontStyle: "bold", cellWidth: 20 } };
+        channels.forEach((_, i) => {
+          dailyColumnStyles[i + 1] = { cellWidth: channelWidth };
+        });
+        dailyColumnStyles[channels.length + 1] = { cellWidth: 24, fontStyle: "bold" };
+
         const title = `TOTAL AMOUNT SALES - ${this.data.month_label.toUpperCase()}`;
 
         pdf.setFont("helvetica", "bold");
