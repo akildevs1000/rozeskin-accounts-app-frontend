@@ -48,6 +48,7 @@
       <v-tabs class="pt-3" color="primary" right>
         <v-tab> Monthly Sales </v-tab>
         <v-tab> Refunds </v-tab>
+        <v-tab> Customer Lists </v-tab>
         <v-tab> Customer Report </v-tab>
         <v-tab> Product Report </v-tab>
         <v-tab> Source Report </v-tab>
@@ -64,6 +65,11 @@
         <v-tab-item>
           <v-container fluid>
             <AccountsRefunds />
+          </v-container>
+        </v-tab-item>
+        <v-tab-item>
+          <v-container fluid>
+            <AccountsCustomerProductList />
           </v-container>
         </v-tab-item>
         <v-tab-item>
