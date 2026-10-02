@@ -222,8 +222,7 @@
                   <v-col cols="12">Other Info</v-col>
                   <v-col cols="4">
                     <v-text-field
-                      type="number"
-                      outlined
+                                            outlined
                       dense
                       hide-details
                       v-model="payload.order_id"
