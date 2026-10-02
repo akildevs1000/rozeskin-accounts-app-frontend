@@ -761,6 +761,7 @@ export default {
       // Options are the real catalog names (products table), not invented.
       bundleCatalog: {
         "Any 3 for 99 AED Bundle": {
+          match: "any\\s*3",
           pick: 3,
           options: [
             "Rice Facial Cleanser with Gojiberries | Aloevera for Deep Cleanse | Radiant Glow - Single",
@@ -774,6 +775,7 @@ export default {
           ],
         },
         "Any 4 Roze Skincare Products for 120 AED": {
+          match: "any\\s*4",
           pick: 4,
           options: [
             "Rice Facial Cleanser with Gojiberries | Aloevera for Deep Cleanse | Radiant Glow - Single",
@@ -863,10 +865,24 @@ export default {
     // Any 3 / Any 4 pick-your-own bundles: the extra picker row only shows
     // for these two exact catalog names.
     isBundleItem(itemName) {
-      return !!this.bundleCatalog[itemName];
+      return this.bundleConfig(itemName).pick > 0;
     },
+    // Matched on the "Any 3" / "Any 4" part of the name rather than the whole
+    // string. These get renamed for promotions - "Any 4 Roze Skincare Products
+    // for 120 AED" became "... with FREE LIP BALM" - and an exact lookup
+    // silently stops offering the picker the moment that happens, with nothing
+    // on screen to say why.
     bundleConfig(itemName) {
-      return this.bundleCatalog[itemName] || { pick: 0, options: [] };
+      const name = String(itemName || "").toLowerCase();
+
+      for (const key of Object.keys(this.bundleCatalog)) {
+        const cfg = this.bundleCatalog[key];
+        if (cfg.match && new RegExp(cfg.match, "i").test(name)) {
+          return cfg;
+        }
+      }
+
+      return { pick: 0, options: [] };
     },
     applyBundleChoices(item) {
       // Deliberately does not touch item.item: that field still has to match
