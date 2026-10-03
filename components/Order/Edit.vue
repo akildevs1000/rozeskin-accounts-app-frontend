@@ -252,22 +252,22 @@
                 under it instead.
               -->
               <tr
-                v-if="isBundleItem(item.item)"
+                v-if="isBundleItem(item)"
                 :key="'bundle-' + index"
                 class="rzbundle-row"
               >
                 <td colspan="5">
                   <div class="rzbundle">
                     <span class="rzbundle__label"
-                      >Choose {{ bundleConfig(item.item).pick }} products
+                      >Choose {{ bundleConfig(item).pick }} products
                       <template v-if="bundleTotalQty(item)"
                         >({{ bundleTotalQty(item) }} of
-                        {{ bundleConfig(item.item).pick }} selected)</template
+                        {{ bundleConfig(item).pick }} selected)</template
                       ></span
                     >
                     <v-autocomplete
                       v-model="item.bundle_choices"
-                      :items="bundleConfig(item.item).options"
+                      :items="bundleConfig(item).options"
                       multiple
                       small-chips
                       deletable-chips
@@ -298,12 +298,12 @@
                     <div
                       v-if="
                         bundleTotalQty(item) &&
-                        bundleTotalQty(item) !== bundleConfig(item.item).pick
+                        bundleTotalQty(item) !== bundleConfig(item).pick
                       "
                       class="rzbundle__warn"
                     >
                       This bundle needs exactly
-                      {{ bundleConfig(item.item).pick }} products selected
+                      {{ bundleConfig(item).pick }} products selected
                       (currently {{ bundleTotalQty(item) }}).
                     </div>
                   </div>
@@ -447,8 +447,8 @@ export default {
       // Options are the real catalog names (products table), not invented.
       // Kept in sync with the same map in Create.vue.
       bundleCatalog: {
-        "Any 3 for 99 AED Bundle": {
-          match: "any\\s*3",
+        58937: {
+          match: "(any|choose)\\s*3",
           pick: 3,
           options: [
             "Rice Facial Cleanser with Gojiberries | Aloevera for Deep Cleanse | Radiant Glow - Single",
@@ -461,8 +461,8 @@ export default {
             "All Natural | Blooming Rose lip balm | Soft, Bright Lips for All Ages",
           ],
         },
-        "Any 4 Roze Skincare Products for 120 AED": {
-          match: "any\\s*4",
+        60094: {
+          match: "(any|choose)\\s*4",
           pick: 4,
           options: [
             "Rice Facial Cleanser with Gojiberries | Aloevera for Deep Cleanse | Radiant Glow - Single",
@@ -605,16 +605,28 @@ export default {
     },
     // Any 3 / Any 4 pick-your-own bundles: the extra picker row only shows
     // for these two exact catalog names.
-    isBundleItem(itemName) {
-      return this.bundleConfig(itemName).pick > 0;
+    isBundleItem(row) {
+      return this.bundleConfig(row).pick > 0;
     },
     // Matched on the "Any 3" / "Any 4" part of the name rather than the whole
     // string. These get renamed for promotions - "Any 4 Roze Skincare Products
     // for 120 AED" became "... with FREE LIP BALM" - and an exact lookup
     // silently stops offering the picker the moment that happens, with nothing
     // on screen to say why.
-    bundleConfig(itemName) {
-      const name = String(itemName || "").toLowerCase();
+    bundleConfig(row) {
+      // Keyed on the product id: these bundles are renamed for every
+      // promotion - "Any 4 ..." became "... with FREE LIP BALM" and then
+      // "Choose 4 ..." - and each rename silently removed the picker, with
+      // nothing on screen to say why. The id does not change.
+      const item = row && typeof row === "object" ? row : { item: row };
+      const pid = String(item.product_id || "");
+
+      if (pid && this.bundleCatalog[pid]) {
+        return this.bundleCatalog[pid];
+      }
+
+      // A name typed by hand carries no id, so fall back to the wording.
+      const name = String(item.item || "").toLowerCase();
 
       for (const key of Object.keys(this.bundleCatalog)) {
         const cfg = this.bundleCatalog[key];
