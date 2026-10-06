@@ -2,7 +2,14 @@
   <div>
     <!-- controls -->
     <v-row class="align-center" dense>
-      <v-col cols="12" sm="3">
+      <v-col cols="12" sm="auto" class="pr-sm-4">
+        <v-btn-toggle v-model="mode" mandatory dense @change="onModeChange">
+          <v-btn small value="month">Whole month</v-btn>
+          <v-btn small value="range">Day range</v-btn>
+        </v-btn-toggle>
+      </v-col>
+
+      <v-col v-if="mode === 'month'" cols="12" sm="3">
         <v-menu
           v-model="monthMenu"
           :close-on-content-click="false"
@@ -35,14 +42,69 @@
         </v-menu>
       </v-col>
 
-      <v-col cols="12" sm="5">
+      <template v-else>
+        <v-col cols="6" sm="3">
+          <v-menu
+            v-model="fromMenu"
+            :close-on-content-click="false"
+            transition="scale-transition"
+            offset-y
+            min-width="auto"
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-text-field
+                :value="from"
+                label="From"
+                prepend-inner-icon="mdi-calendar-start"
+                readonly
+                outlined
+                dense
+                hide-details
+                v-bind="attrs"
+                v-on="on"
+              />
+            </template>
+            <v-date-picker v-model="from" no-title @input="pickFrom" />
+          </v-menu>
+        </v-col>
+
+        <v-col cols="6" sm="3">
+          <v-menu
+            v-model="toMenu"
+            :close-on-content-click="false"
+            transition="scale-transition"
+            offset-y
+            min-width="auto"
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-text-field
+                :value="to"
+                label="To"
+                prepend-inner-icon="mdi-calendar-end"
+                readonly
+                outlined
+                dense
+                hide-details
+                v-bind="attrs"
+                v-on="on"
+              />
+            </template>
+            <!-- Cannot end before it starts; stops an empty report being asked for. -->
+            <v-date-picker v-model="to" :min="from" no-title @input="pickTo" />
+          </v-menu>
+        </v-col>
+      </template>
+    </v-row>
+
+    <v-row class="align-center" dense>
+      <v-col cols="12" sm="6">
         <v-btn-toggle v-model="basis" mandatory dense @change="load">
           <v-btn small value="order">By order date</v-btn>
           <v-btn small value="collection">By collection date</v-btn>
         </v-btn-toggle>
       </v-col>
 
-      <v-col cols="12" sm="4" class="text-right">
+      <v-col cols="12" sm="6" class="text-right">
         <v-btn small color="green darken-1" dark class="mr-2" @click="exportExcel" :loading="excelLoading">
           <v-icon left small>mdi-file-excel</v-icon> Excel
         </v-btn>
@@ -54,12 +116,13 @@
 
     <div class="caption grey--text mt-1 mb-3">
       <span v-if="basis === 'order'">
-        Counting orders placed in the month, and what has been collected against
-        them so far.
+        Counting orders placed in {{ periodWord }}, and what has been collected
+        against them so far.
       </span>
       <span v-else>
-        Counting orders invoiced in the month, which is the closest the system
-        has to the date cash arrived. Orders not yet invoiced are excluded.
+        Counting orders invoiced in {{ periodWord }}, which is the closest the
+        system has to the date cash arrived. Orders not yet invoiced are
+        excluded.
       </span>
     </div>
 
@@ -111,7 +174,7 @@
           </tr>
           <tr v-if="!data.channels.length && !loading">
             <td colspan="7" class="text-center grey--text">
-              No orders in this month.
+              No orders in {{ periodWord }}.
             </td>
           </tr>
         </tbody>
@@ -194,11 +257,19 @@ export default {
     const now = new Date();
     const month =
       now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+    const today = month + "-" + String(now.getDate()).padStart(2, "0");
 
     return {
       month,
+      // Pre-filled so switching to Day range never opens on a blank report:
+      // month-to-date is what someone checking part of a month usually wants.
+      from: month + "-01",
+      to: today,
+      mode: "month",
       basis: "order",
       monthMenu: false,
+      fromMenu: false,
+      toMenu: false,
       loading: false,
       pdfLoading: false,
       excelLoading: false,
@@ -233,6 +304,15 @@ export default {
         { label: "RTO / Returned", value: s.rto, color: "red--text" },
       ];
     },
+    /** Reads naturally in both "No orders in ..." and "orders placed in ...". */
+    periodWord() {
+      if (this.mode !== "range") return "this month";
+      return this.from === this.to ? "this day" : "these dates";
+    },
+    /** Used for the export file names, so a range file is not named as a month. */
+    fileSlug() {
+      return this.mode === "range" ? `${this.from}_to_${this.to}` : this.month;
+    },
   },
   created() {
     this.load();
@@ -249,11 +329,52 @@ export default {
       this.snackColor = color || "success";
       this.snackbar = true;
     },
+    /**
+     * Switching to a range starts from the month already on screen, so the
+     * figures stay comparable instead of jumping to an unrelated period.
+     */
+    onModeChange() {
+      if (this.mode === "range") {
+        const first = this.month + "-01";
+        const last = new Date(
+          Number(this.month.slice(0, 4)),
+          Number(this.month.slice(5, 7)),
+          0
+        );
+        const lastDay =
+          this.month + "-" + String(last.getDate()).padStart(2, "0");
+
+        this.from = first;
+        this.to = lastDay;
+      } else {
+        this.month = this.from.slice(0, 7);
+      }
+
+      this.load();
+    },
+    pickFrom(value) {
+      this.fromMenu = false;
+
+      // Dragging the start past the end would ask for a backwards range, which
+      // the API reads as no range at all and answers with the whole month.
+      if (this.to < value) this.to = value;
+
+      this.load();
+    },
+    pickTo() {
+      this.toMenu = false;
+      this.load();
+    },
     async load() {
       this.loading = true;
       try {
+        const params =
+          this.mode === "range"
+            ? { from: this.from, to: this.to, basis: this.basis }
+            : { month: this.month, basis: this.basis };
+
         const { data } = await this.$axios.get("monthly-sales-report", {
-          params: { month: this.month, basis: this.basis },
+          params,
         });
         this.data = data;
       } catch (e) {
@@ -437,7 +558,7 @@ export default {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `monthly-sales-${this.month}-${this.basis}.xlsx`;
+        a.download = `monthly-sales-${this.fileSlug}-${this.basis}.xlsx`;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -621,7 +742,7 @@ export default {
           margin: { left: 8, right: 8 },
         });
 
-        pdf.save(`monthly-sales-${this.month}-${this.basis}.pdf`);
+        pdf.save(`monthly-sales-${this.fileSlug}-${this.basis}.pdf`);
       } catch (e) {
         this.notify("Could not build the PDF: " + (e && e.message ? e.message : e), "error");
       } finally {
