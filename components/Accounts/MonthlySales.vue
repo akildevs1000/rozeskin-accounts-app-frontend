@@ -230,6 +230,47 @@
           </table>
         </v-col>
       </v-row>
+
+      <!-- day by day, the same grid the Excel and PDF exports carry -->
+      <div class="text-subtitle-1 font-weight-bold mt-8 mb-2">
+        Day by Day Sales
+      </div>
+      <div class="rep-scroll">
+        <table class="rep-table rep-daily">
+          <thead>
+            <tr>
+              <th>DATE</th>
+              <th v-for="c in dailyColumns" :key="c">{{ c }}</th>
+              <th>TOTAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="d in data.daily" :key="d.date">
+              <td class="font-weight-bold text-center">{{ dmy(d.date) }}</td>
+              <td v-for="c in dailyColumns" :key="c" class="text-right">
+                {{ money(d[c]) }}
+              </td>
+              <td class="text-right font-weight-bold red--text">
+                {{ money(d.total) }}
+              </td>
+            </tr>
+            <tr v-if="!data.daily.length && !loading">
+              <td :colspan="dailyColumns.length + 2" class="text-center grey--text">
+                No sales in {{ periodWord }}.
+              </td>
+            </tr>
+          </tbody>
+          <tfoot v-if="data.daily.length">
+            <tr>
+              <th class="text-center">TOTAL</th>
+              <th v-for="c in dailyColumns" :key="c" class="text-right">
+                {{ money(dailyTotals[c]) }}
+              </th>
+              <th class="text-right">{{ money(dailyTotals.total) }}</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </div>
 
     <v-card outlined class="mt-5 pa-4">
@@ -303,6 +344,30 @@ export default {
         { label: "Cancelled", value: s.cancelled, color: "grey--text" },
         { label: "RTO / Returned", value: s.rto, color: "red--text" },
       ];
+    },
+    /**
+     * One column per channel that actually traded, taken from the channel table
+     * so the grid on screen and the one in the exports always carry the same
+     * columns in the same order.
+     */
+    dailyColumns() {
+      return this.data.channels.map((c) => c.channel);
+    },
+    dailyTotals() {
+      const totals = { total: 0 };
+
+      this.dailyColumns.forEach((c) => {
+        totals[c] = 0;
+      });
+
+      this.data.daily.forEach((d) => {
+        this.dailyColumns.forEach((c) => {
+          totals[c] += Number(d[c] || 0);
+        });
+        totals.total += Number(d.total || 0);
+      });
+
+      return totals;
     },
     /** Reads naturally in both "No orders in ..." and "orders placed in ...". */
     periodWord() {
@@ -779,5 +844,21 @@ export default {
 .rep-net td {
   background: #f1f8f3;
   font-weight: 700;
+}
+/* A month with several channels is wider than a phone; scroll it rather than
+   letting the figures wrap into unreadable columns. */
+.rep-scroll {
+  overflow-x: auto;
+}
+.rep-daily {
+  min-width: 620px;
+}
+.rep-daily thead th {
+  color: #1a237e;
+  text-align: center;
+}
+.rep-daily tfoot th {
+  background: #fdf3f3;
+  color: #c00000;
 }
 </style>
