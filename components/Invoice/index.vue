@@ -1,7 +1,7 @@
 <template>
   <span>
     <v-row>
-      <v-col cols="3" v-for="(stat, index) in stats" :key="index">
+      <v-col :cols="statCols" v-for="(stat, index) in stats" :key="index">
         <v-card outlined>
           <v-card-text>
             <div class="d-flex justify-space-between">
@@ -947,6 +947,15 @@ export default {
     },
   },
   computed: {
+    /**
+     * Share the row between however many cards the API returns, so removing
+     * one does not leave a gap where it used to sit. Falls back to a quarter
+     * for counts that do not divide into twelve.
+     */
+    statCols() {
+      const n = this.stats.length || 1;
+      return 12 % n === 0 ? 12 / n : 3;
+    },
     currentCompanyProfile() {
       return (
         this.companyProfiles.find((p) => p.id === this.companyProfile) ||
