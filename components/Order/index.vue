@@ -146,6 +146,15 @@
           >
             <template v-slot:top>
               <v-toolbar flat dense class="mb-5">
+                <v-btn
+                  small
+                  color="red darken-1"
+                  dark
+                  :loading="pdfLoading"
+                  @click="downloadOrdersPdf"
+                >
+                  <v-icon size="15" left>mdi-file-pdf-box</v-icon> PDF
+                </v-btn>
                 <v-spacer></v-spacer>
                 <OrderCreate
                   :model="Model"
@@ -316,9 +325,11 @@ export default {
     invoiceCompKey: 1,
     Model: "Orders",
     endpoint: "orders",
+    pdfLoading: false,
     filters: {
       search: null,
       status: null,
+      order_status: null,
       business_source_id: null,
       delivery_service_id: null,
       customer_id: null,
@@ -478,6 +489,200 @@ export default {
         this.loading = false;
       }
     },
+    /**
+     * Every order matching the filters, not just the page on screen.
+     *
+     * The API caps per_page, so a date range needs paging. Capped at 50 pages
+     * as a guard: a runaway loop would hammer the API, and 5,000 orders is
+     * already far more than anyone prints.
+     */
+    async fetchAllForPdf() {
+      const rows = [];
+      let page = 1;
+
+      while (page <= 50) {
+        const { data } = await this.$axios.get(this.endpoint, {
+          params: { ...this.filters, page, per_page: 100 },
+        });
+
+        const batch = data?.data || [];
+        rows.push(...batch);
+
+        if (batch.length < 100) {
+          break;
+        }
+
+        page++;
+      }
+
+      return rows;
+    },
+
+    async downloadOrdersPdf() {
+      this.pdfLoading = true;
+
+      try {
+        // jsPDF and the table plugin are ~400 KB together; loaded only when
+        // someone actually presses the button rather than on every page view.
+        const jsPDF = (await import("jspdf")).default;
+
+        // Depending on how the bundler interops this CommonJS plugin, the
+        // callable can arrive as the default export, a named one, or hang off
+        // the module object. Resolve whichever is actually a function.
+        const mod = await import("jspdf-autotable");
+        const autoTable =
+          typeof mod.default === "function"
+            ? mod.default
+            : typeof mod.autoTable === "function"
+            ? mod.autoTable
+            : mod.default && mod.default.autoTable;
+
+        if (typeof autoTable !== "function") {
+          throw new Error("PDF table plugin did not load.");
+        }
+
+        const rows = await this.fetchAllForPdf();
+
+        if (!rows.length) {
+          alert("No orders match these filters, so there is nothing to print.");
+          return;
+        }
+
+        const money = (n) =>
+          Number(n || 0).toLocaleString("en-AE", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+
+        const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+        const pageW = pdf.internal.pageSize.getWidth();
+
+        // What the reader needs in order to trust the figures: which filters
+        // produced this list. A report that does not say what it excludes is
+        // worse than no report.
+        const f = this.filters;
+        const some = (v, d) => (v === null || v === undefined || v === "" ? d : v);
+        const named = (list, id) =>
+          id ? ((list || []).find((x) => x.id === id) || {}).name || id : "all";
+
+        const criteria = [
+          `Dates: ${some(f.from, "today")} to ${some(f.to, "today")}`,
+          `Status: ${some(f.order_status, "all")}`,
+          `Source: ${named(this.business_sources, f.business_source_id)}`,
+          `Delivery: ${named(this.delivery_services, f.delivery_service_id)}`,
+          `Payment: ${named(this.payment_modes, f.payment_method)}`,
+          f.search ? `Search: ${f.search}` : null,
+        ].filter(Boolean);
+
+        pdf.setFontSize(15);
+        pdf.setFont(undefined, "bold");
+        pdf.text("ROZE SKIN - ORDER REPORT", pageW / 2, 13, { align: "center" });
+
+        pdf.setFontSize(9);
+        pdf.setFont(undefined, "normal");
+        pdf.setTextColor(90);
+        pdf.text(criteria.join("   |   "), pageW / 2, 19, { align: "center" });
+        pdf.text(
+          `${rows.length} order(s)   |   generated ${new Date().toLocaleString("en-GB", {
+            timeZone: "Asia/Dubai",
+          })}`,
+          pageW / 2,
+          24,
+          { align: "center" }
+        );
+        pdf.setTextColor(0);
+
+        let total = 0;
+
+        const body = rows.map((r, i) => {
+          total += Number(r.total || 0);
+
+          return [
+            i + 1,
+            r.order_id || "",
+            r.tracking_number && r.tracking_number !== "0" ? r.tracking_number : "",
+            (r.customer || {}).full_name || "",
+            (r.customer || {}).phone || "",
+            r.date_time || "",
+            r.payment_method_title || r.payment_method || "",
+            (r.business_source || {}).name || "",
+            (r.delivery_service || {}).name || "",
+            money(r.total),
+            r.invoice && r.invoice.id ? "Yes" : "No",
+            (r.order_status || "").toUpperCase(),
+          ];
+        });
+
+        autoTable(pdf, {
+          startY: 28,
+          head: [
+            [
+              "#",
+              "Order Ref",
+              "Tracking Id",
+              "Customer",
+              "Phone",
+              "Date Time",
+              "Payment",
+              "Source",
+              "Delivery",
+              "Total AED",
+              "Invoiced",
+              "Status",
+            ],
+          ],
+          body,
+          foot: [["", "", "", "", "", "", "", "", "TOTAL", money(total), "", ""]],
+          theme: "grid",
+          styles: { fontSize: 7.5, cellPadding: 1.6, overflow: "linebreak" },
+          headStyles: {
+            fillColor: [219, 113, 55],
+            textColor: 255,
+            fontSize: 7.5,
+            halign: "center",
+          },
+          footStyles: { fillColor: [245, 240, 236], textColor: 0, fontStyle: "bold" },
+          columnStyles: {
+            0: { cellWidth: 8, halign: "right" },
+            1: { cellWidth: 24 },
+            2: { cellWidth: 28 },
+            3: { cellWidth: 38 },
+            4: { cellWidth: 28 },
+            5: { cellWidth: 30 },
+            6: { cellWidth: 28 },
+            7: { cellWidth: 20 },
+            8: { cellWidth: 17 },
+            9: { cellWidth: 19, halign: "right" },
+            10: { cellWidth: 16, halign: "center" },
+            11: { cellWidth: 23, halign: "center" },
+          },
+          // autotable reports an overflow when the declared width and the
+          // column widths disagree, so this must equal their sum.
+          tableWidth: 279,
+          margin: { left: 9, right: 9 },
+          didDrawPage: () => {
+            pdf.setFontSize(8);
+            pdf.setTextColor(120);
+            pdf.text(
+              `Page ${pdf.internal.getNumberOfPages()}`,
+              pageW - 10,
+              pdf.internal.pageSize.getHeight() - 5,
+              { align: "right" }
+            );
+            pdf.setTextColor(0);
+          },
+        });
+
+        const slug = [f.order_status || "all", f.from || "today", f.to || "today"].join("_");
+
+        pdf.save(`roze-orders-${slug}.pdf`);
+      } catch (e) {
+        alert("Could not build the PDF: " + (e && e.message ? e.message : e));
+      } finally {
+        this.pdfLoading = false;
+      }
+    },
+
     async getStats() {
       try {
         const { data } = await this.$axios.get(this.endpoint + "-stats");
