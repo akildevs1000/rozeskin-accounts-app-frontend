@@ -91,11 +91,31 @@
                   ]"
                   item-text="name"
                   item-value="id"
-                  label="Status"
+                  label="Payment"
                   dense
                   outlined
                   flat
                   v-model="filters.status"
+                  hide-details
+                ></v-autocomplete>
+              </v-col>
+              <v-col>
+                <!-- The order's progress, not the invoice's Paid/Unpaid. -->
+                <v-autocomplete
+                  :items="[
+                    { id: null, name: 'Select All' },
+                    { id: 'processing', name: 'Processing' },
+                    { id: 'completed', name: 'Completed' },
+                    { id: 'cancelled', name: 'Cancelled' },
+                    { id: 'returned', name: 'Returned' },
+                  ]"
+                  item-text="name"
+                  item-value="id"
+                  label="Order Status"
+                  dense
+                  outlined
+                  flat
+                  v-model="filters.order_status"
                   hide-details
                 ></v-autocomplete>
               </v-col>
@@ -643,6 +663,16 @@
                     <v-btn small class="primary" @click="downloadAWBPrintReport"
                       ><v-icon size="15">mdi-download</v-icon> AWB Print</v-btn
                     >
+                    <v-spacer />
+                    <v-btn
+                      small
+                      color="red darken-1"
+                      dark
+                      :loading="pdfLoading"
+                      @click="downloadInvoicesPdf"
+                    >
+                      <v-icon size="15" left>mdi-file-pdf-box</v-icon> PDF
+                    </v-btn>
                   </v-toolbar>
                 </template>
 
@@ -807,12 +837,14 @@ export default {
     filters: {
       search: null,
       status: null,
+      order_status: null,
       customer_id: null,
       from: null,
       to: null,
     },
     options: {},
     loading: false,
+    pdfLoading: false,
     response: "",
     items: [],
     errors: [],
@@ -1254,6 +1286,217 @@ export default {
         // Optionally handle user notification or fallback
       } finally {
         this.loading = false;
+      }
+    },
+
+    /**
+     * Every invoice matching the filters, not just the page on screen.
+     *
+     * The API caps per_page at 100, so a month's worth needs paging. Capped
+     * at 50 pages as a guard: a runaway loop here would hammer the API, and
+     * 5,000 rows is already far more than anyone prints.
+     */
+    async fetchAllForPdf() {
+      const rows = [];
+      let page = 1;
+
+      while (page <= 50) {
+        const { data } = await this.$axios.get(this.endpoint, {
+          params: { ...this.filters, page, per_page: 100 },
+        });
+
+        const batch = data?.data || [];
+        rows.push(...batch);
+
+        if (batch.length < 100) {
+          break;
+        }
+
+        page++;
+      }
+
+      return rows;
+    },
+
+    async downloadInvoicesPdf() {
+      this.pdfLoading = true;
+
+      try {
+        // Depending on how the bundler interops this CommonJS plugin, the
+        // callable can arrive as the default export, a named one, or hang off
+        // the module object. Resolve whichever is actually a function.
+        const mod = await import("jspdf-autotable");
+        const autoTable =
+          typeof mod.default === "function"
+            ? mod.default
+            : typeof mod.autoTable === "function"
+            ? mod.autoTable
+            : mod.default && mod.default.autoTable;
+
+        if (typeof autoTable !== "function") {
+          throw new Error("PDF table plugin did not load.");
+        }
+
+        const rows = await this.fetchAllForPdf();
+
+        if (!rows.length) {
+          alert("No invoices match these filters, so there is nothing to print.");
+          return;
+        }
+
+        const money = (n) =>
+          Number(n || 0).toLocaleString("en-AE", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          });
+
+        const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+        const pageW = pdf.internal.pageSize.getWidth();
+
+        // What the reader needs in order to trust the figures: which filters
+        // produced this list. A report that does not say what it excludes is
+        // worse than no report.
+        const f = this.filters;
+        const label = (v, d) => (v === null || v === undefined || v === "" ? d : v);
+        const criteria = [
+          `Dates: ${label(f.from, "today")} to ${label(f.to, "today")}`,
+          `Order status: ${label(f.order_status, "all")}`,
+          `Payment: ${label(f.status, "all")}`,
+          `Payment mode: ${label(f.payment_method, "all")}`,
+          `Delivery: ${
+            f.delivery_service_id
+              ? (this.delivery_services.find((d) => d.id === f.delivery_service_id) || {}).name ||
+                f.delivery_service_id
+              : "all"
+          }`,
+          f.search ? `Search: ${f.search}` : null,
+        ].filter(Boolean);
+
+        pdf.setFontSize(15);
+        pdf.setFont(undefined, "bold");
+        pdf.text("ROZE SKIN - INVOICE REPORT", pageW / 2, 13, { align: "center" });
+
+        pdf.setFontSize(9);
+        pdf.setFont(undefined, "normal");
+        pdf.setTextColor(90);
+        pdf.text(criteria.join("   |   "), pageW / 2, 19, { align: "center" });
+        pdf.text(
+          `${rows.length} invoice(s)   |   generated ${new Date().toLocaleString("en-GB", {
+            timeZone: "Asia/Dubai",
+          })}`,
+          pageW / 2,
+          24,
+          { align: "center" }
+        );
+        pdf.setTextColor(0);
+
+        let grossTotal = 0;
+
+        const body = rows.map((r, i) => {
+          const o = r.order || {};
+          const c = r.customer || {};
+          const total = Number(o.total || 0);
+
+          grossTotal += total;
+
+          return [
+            i + 1,
+            r.reference_id || r.id,
+            r.date_time || r.created_at || "",
+            c.full_name || "",
+            c.phone || "",
+            o.order_id || "",
+            (o.order_status || "").toUpperCase(),
+            (o.delivery_service || {}).name || "",
+            o.tracking_number || "",
+            o.payment_method_title || o.payment_method || "",
+            money(total),
+            r.status || "",
+          ];
+        });
+
+        autoTable(pdf, {
+          startY: 28,
+          head: [
+            [
+              "#",
+              "Invoice #",
+              "Date",
+              "Customer",
+              "Phone",
+              "Order Ref",
+              "Order Status",
+              "Delivery",
+              "Tracking",
+              "Payment Mode",
+              "Total AED",
+              "Paid",
+            ],
+          ],
+          body,
+          foot: [
+            [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "",
+              "TOTAL",
+              money(grossTotal),
+              "",
+            ],
+          ],
+          theme: "grid",
+          styles: { fontSize: 7.5, cellPadding: 1.6, overflow: "linebreak" },
+          headStyles: { fillColor: [219, 113, 55], textColor: 255, fontSize: 7.5, halign: "center" },
+          footStyles: { fillColor: [245, 240, 236], textColor: 0, fontStyle: "bold" },
+          columnStyles: {
+            0: { cellWidth: 8, halign: "right" },
+            1: { cellWidth: 22 },
+            2: { cellWidth: 28 },
+            3: { cellWidth: 40 },
+            4: { cellWidth: 28 },
+            5: { cellWidth: 22 },
+            6: { cellWidth: 23, halign: "center" },
+            7: { cellWidth: 20 },
+            8: { cellWidth: 28 },
+            9: { cellWidth: 30 },
+            10: { cellWidth: 20, halign: "right" },
+            11: { cellWidth: 16, halign: "center" },
+          },
+          // autotable reports an overflow when the declared width and the
+          // column widths disagree, so this must equal their sum.
+          tableWidth: 285,
+          margin: { left: 6, right: 6 },
+          didDrawPage: (data) => {
+            const page = pdf.internal.getNumberOfPages();
+            pdf.setFontSize(8);
+            pdf.setTextColor(120);
+            pdf.text(
+              `Page ${page}`,
+              pageW - 10,
+              pdf.internal.pageSize.getHeight() - 5,
+              { align: "right" }
+            );
+            pdf.setTextColor(0);
+          },
+        });
+
+        const slug = [
+          f.order_status || "all",
+          f.from || "today",
+          f.to || "today",
+        ].join("_");
+
+        pdf.save(`roze-invoices-${slug}.pdf`);
+      } catch (e) {
+        alert("Could not build the PDF: " + (e && e.message ? e.message : e));
+      } finally {
+        this.pdfLoading = false;
       }
     },
 
