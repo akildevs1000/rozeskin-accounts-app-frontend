@@ -387,7 +387,7 @@
               <!-- Bundle-chosen products (Any 3/4), one full row per product
                    instead of a cramped note squeezed under the bundle line. -->
               <tr
-                v-for="(g, gi) in bundleGroups(item.bundle_note)"
+                v-for="(g, gi) in bundleRows(item)"
                 :key="'bundle-' + index + '-' + gi"
               >
                 <td class="caption">{{ g.name }}</td>
@@ -568,6 +568,9 @@ export default {
       business_sources: [],
       delivery_services: [],
       products: [],
+      // wp_product_id => [{ name, qty }] for the fixed bundles, so their
+      // contents can print under the bundle line. See bundleRows().
+      bundleContents: {},
       cities: require(`../../json/cities.json`),
     };
   },
@@ -592,6 +595,15 @@ export default {
   async created() {
     let { data: products } = await this.$axios.get(`product-list`);
     this.products = products;
+
+    // Never let this stop the invoice screen opening - without it the
+    // bundle lines simply print as they did before.
+    try {
+      const { data: bundles } = await this.$axios.get(`bundle-contents-list`);
+      this.bundleContents = bundles || {};
+    } catch (e) {
+      this.bundleContents = {};
+    }
 
     let { data } = await this.$axios.get(`payment-mode-list`);
     this.payment_modes = data;
@@ -661,6 +673,24 @@ export default {
         // Legacy flat short-label text - show as a single row, no qty.
         return [{ name: note, qty: "" }];
       }
+    },
+    // The rows to print underneath one invoice line.
+    //
+    // A pick-your-own bundle (Any 3/4) carries what was chosen on the
+    // line itself, because it differs every order. A fixed bundle -
+    // Glow Routine, Combo Pack, Trio Pack and the rest - contains the
+    // same things every time, so it is looked up by product id from the
+    // stock mapping instead.
+    //
+    // The line's own note always wins: if someone ever edits what went
+    // into a particular order, the invoice shows what was actually sent
+    // rather than what the bundle usually holds.
+    bundleRows(item) {
+      if (!item) return [];
+      if (item.bundle_note) return this.bundleGroups(item.bundle_note);
+      const pid = item.product_id;
+      if (pid === undefined || pid === null) return [];
+      return this.bundleContents[String(pid)] || [];
     },
     getProductDetails(item) {
       if (!item.item) return;

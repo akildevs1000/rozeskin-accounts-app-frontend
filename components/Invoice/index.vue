@@ -592,9 +592,10 @@
                           </tr>
                           <!-- Bundle-chosen products (Any 3/4), one full row per
                                product instead of a cramped note squeezed under
-                               the bundle line. -->
+                               the bundle line. Fixed bundles are looked up by
+                               product id - see bundleRows(). -->
                           <tr
-                            v-for="(g, gi) in bundleGroups(item.bundle_note)"
+                            v-for="(g, gi) in bundleRows(item)"
                             :key="'bundle-' + index + '-' + gi"
                           >
                             <td class="caption">{{ g.name }}</td>
@@ -905,6 +906,10 @@ export default {
     customer_list: [],
     delivery_services: [],
     payment_modes: [],
+    // wp_product_id => [{ name, qty }] for the fixed bundles. Fetched once so
+    // every invoice in the list can print its bundle contents without a
+    // request each. See bundleGroups().
+    bundleContents: {},
   }),
 
   async created() {
@@ -920,6 +925,15 @@ export default {
     }
 
     await this.getStats();
+
+    // Never let this stop an invoice opening - without it the bundle lines
+    // simply print as they did before.
+    try {
+      const { data } = await this.$axios.get(`bundle-contents-list`);
+      this.bundleContents = data || {};
+    } catch (e) {
+      this.bundleContents = {};
+    }
 
     let { data: payment_modes } = await this.$axios.get(`payment-mode-list`);
 
@@ -1019,6 +1033,23 @@ export default {
         // Legacy flat short-label text - show as a single row, no qty.
         return [{ name: note, qty: "" }];
       }
+    },
+    // The rows to print underneath one invoice line.
+    //
+    // A pick-your-own bundle (Any 3/4) carries what was chosen on the line
+    // itself, because it differs every order. A fixed bundle - Glow Routine,
+    // Combo Pack, Trio Pack and the rest - contains the same things every
+    // time, so it is looked up by product id from the stock mapping instead.
+    //
+    // The line's own note always wins: if someone ever edits what went into a
+    // particular order, the invoice shows what was actually sent rather than
+    // what the bundle usually holds.
+    bundleRows(item) {
+      if (!item) return [];
+      if (item.bundle_note) return this.bundleGroups(item.bundle_note);
+      const pid = item.product_id;
+      if (pid === undefined || pid === null) return [];
+      return this.bundleContents[String(pid)] || [];
     },
     async setCompanyProfile(id) {
       this.companyProfile = id;
