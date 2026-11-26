@@ -828,8 +828,17 @@ export default {
           : { ...this.default_address };
     },
 
-    "payload.customer.phone"(newVal) {
-      this.payload.customer.whatsapp = newVal;
+    // Most customers give one number, so Whatsapp follows Phone as you type
+    // and nobody has to key it twice. But both numbers are sent to the
+    // courier as two separate contacts, so a customer who gives a second
+    // number is worth keeping - and this used to overwrite it the moment
+    // anyone went back and corrected the phone. Mirror only while Whatsapp
+    // is still the copy this made.
+    "payload.customer.phone"(newVal, oldVal) {
+      const wa = this.payload.customer.whatsapp;
+      if (!wa || wa === oldVal) {
+        this.payload.customer.whatsapp = newVal;
+      }
     },
   },
   async created() {

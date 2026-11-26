@@ -332,8 +332,14 @@ export default {
           : { ...this.default_address };
     },
 
-    "payload.customer.phone"(newVal) {
-      this.payload.customer.whatsapp = newVal;
+    // Mirrors Phone into Whatsapp so one number only has to be keyed once,
+    // but stops as soon as a different second number has been entered -
+    // both are sent to the courier as separate contacts. See Order/Create.
+    "payload.customer.phone"(newVal, oldVal) {
+      const wa = this.payload.customer.whatsapp;
+      if (!wa || wa === oldVal) {
+        this.payload.customer.whatsapp = newVal;
+      }
     },
   },
   created() {},
