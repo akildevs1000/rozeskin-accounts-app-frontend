@@ -455,26 +455,29 @@ export default {
             "Roze Coconut Milk Keratin Shampoo | Anti-hairfall | Anti - Dandruff | Anti - Frizz",
             "Rice Moisturizing Cream with Retinol & SPF 50 | Centella for 10X glow | No Dark Spots",
             "Roze Acne Control cleanser | For Oily or Acne prone skin | Pore Minimizer.",
-            "Roze Velvet Glow Moisturizing Body Lotion | Brightening | SPF 50 | All Skin types",
+            "Roze Velvet Glow Body Lotion | Brightening | Fades marks | All Skin types",
             "Roze Black Gold Luxury Body Wash | Men & Women | Normal to Dry skin",
             "Roze Moisturizing Sunscreen | Lightweight Formula  | Suitable for All Skin Types | No White Cast",
             "All Natural | Blooming Rose lip balm | Soft, Bright Lips for All Ages",
           ],
         },
         60094: {
-          match: "(any|choose)\\s*4",
+          match: "(any|choose|mega)\\s*(sale|4)",
           pick: 4,
           options: [
             "Rice Facial Cleanser with Gojiberries | Aloevera for Deep Cleanse | Radiant Glow - Single",
             "Roze Coconut Milk Keratin Shampoo | Anti-hairfall | Anti - Dandruff | Anti - Frizz",
             "Rice Moisturizing Cream with Retinol & SPF 50 | Centella for 10X glow | No Dark Spots",
             "Roze Acne Control cleanser | For Oily or Acne prone skin | Pore Minimizer.",
-            "Roze Velvet Glow Moisturizing Body Lotion | Brightening | SPF 50 | All Skin types",
+            "Roze Velvet Glow Body Lotion | Brightening | Fades marks | All Skin types",
             "Roze Black Gold Luxury Body Wash | Men & Women | Normal to Dry skin",
             "Roze Moisturizing Sunscreen | Lightweight Formula  | Suitable for All Skin Types | No White Cast",
             "All Natural | Blooming Rose lip balm | Soft, Bright Lips for All Ages",
             "Roze 7 Day Glow Serum | Plumper, Bouncier Radiant skin Powered by Plant Extracts",
             "Roze Botanical Hair Growth Serum | Stops Hair Fall | Promotes Hair growth | Increases Volume",
+            // The 11th product on the offer page. It was missing here, so an
+            // order taken over the phone could not record it.
+            "Roze Advanced Eye Serum | Targets Dark circles | Puffiness | Wrinkles",
           ],
         },
       },
@@ -688,7 +691,7 @@ export default {
           "Rice Moisturizing Cream",
         "Roze Acne Control cleanser | For Oily or Acne prone skin | Pore Minimizer.":
           "Acne Control Cleanser",
-        "Roze Velvet Glow Moisturizing Body Lotion | Brightening | SPF 50 | All Skin types":
+        "Roze Velvet Glow Body Lotion | Brightening | Fades marks | All Skin types":
           "Velvet Glow Body Lotion",
         "Roze Black Gold Luxury Body Wash | Men & Women | Normal to Dry skin":
           "Black Gold Body Wash",
@@ -700,6 +703,8 @@ export default {
           "7 Day Glow Serum",
         "Roze Botanical Hair Growth Serum | Stops Hair Fall | Promotes Hair growth | Increases Volume":
           "Botanical Hair Growth Serum",
+        "Roze Advanced Eye Serum | Targets Dark circles | Puffiness | Wrinkles":
+          "Advanced Eye Roll-On Serum",
       };
     },
     doCalculate(item) {
